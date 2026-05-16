@@ -1,0 +1,9 @@
+quote_policy:
+  default_image_approval: human_required
+  default_text_quote_approval: human_required
+  require_source_url: true
+  require_quote_reason: true
+  require_attribution: true
+  prefer_original_diagram_when_possible: true
+  max_unreviewed_external_assets: 0
+

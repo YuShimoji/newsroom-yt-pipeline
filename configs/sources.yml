@@ -1,0 +1,44 @@
+feeds:
+  - id: microsoft_blog
+    name: Microsoft Blog
+    kind: rss
+    url: https://blogs.microsoft.com/feed/
+    source_type: official
+    tags:
+      - watch/bigtech
+      - series/copilot
+    enabled: true
+    fetch_interval_minutes: 360
+
+  - id: youtube_blog
+    name: YouTube Official Blog
+    kind: rss
+    url: https://blog.youtube/rss/
+    source_type: official
+    tags:
+      - watch/platform
+      - series/creator-economy
+    enabled: true
+    fetch_interval_minutes: 360
+
+  - id: competitor_example
+    name: Competitor Watch Example
+    kind: rss
+    url: https://example.com/feed.xml
+    source_type: competitor
+    tags:
+      - pool/competitor-watch
+    enabled: false
+    fetch_interval_minutes: 720
+
+inoreader:
+  enabled: false
+  client_id_env: INOREADER_CLIENT_ID
+  client_secret_env: INOREADER_CLIENT_SECRET
+  token_store: data/secrets/inoreader_token.json
+  streams:
+    - id: ai_watch
+      stream_id: user/-/label/watch-ai
+      tags:
+        - watch/ai
+

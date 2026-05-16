@@ -1,0 +1,27 @@
+series:
+  - id: copilot_watch
+    title: Copilot Watch
+    description: Track Microsoft Copilot as a workplace information interface.
+    tags:
+      - series/copilot
+      - watch/bigtech
+    default_format: anchor
+    strategic_question: How does Copilot change internal knowledge access?
+
+  - id: silent_nerf_observatory
+    title: Silent Nerf Observatory
+    description: Track quiet free-tier shrinkage, API limits, UI degradation, and policy changes.
+    tags:
+      - series/silent-nerf
+    default_format: yukkuri
+    strategic_question: Which service changes reduce user value without clear announcement?
+
+  - id: creator_economy_news
+    title: Creator Economy News
+    description: Track monetization, AI-generated content policy, copyright, and platform review standards.
+    tags:
+      - series/creator-economy
+      - watch/platform
+    default_format: anchor
+    strategic_question: How should individual creators adapt to platform rule changes?
+

@@ -1,0 +1,134 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from hashlib import sha256
+from typing import Any
+
+
+def stable_hash(value: str) -> str:
+    return sha256(value.strip().lower().encode("utf-8")).hexdigest()
+
+
+@dataclass(frozen=True)
+class SourceFeed:
+    id: str
+    name: str
+    kind: str
+    url: str | None = None
+    inoreader_stream_id: str | None = None
+    source_type: str = "unknown"
+    tags: list[str] = field(default_factory=list)
+    enabled: bool = True
+    fetch_interval_minutes: int = 360
+    last_fetched_at: str | None = None
+    last_cursor: str | None = None
+
+    @classmethod
+    def from_mapping(cls, data: dict[str, Any]) -> "SourceFeed":
+        feed_id = str(data.get("id") or "").strip()
+        name = str(data.get("name") or feed_id).strip()
+        kind = str(data.get("kind") or "rss").strip()
+        if not feed_id:
+            raise ValueError("SourceFeed requires 'id'")
+        if not name:
+            raise ValueError(f"SourceFeed {feed_id!r} requires 'name'")
+        if kind not in {"rss", "inoreader_stream", "manual"}:
+            raise ValueError(f"Unsupported source feed kind: {kind}")
+
+        raw_tags = data.get("tags") or []
+        if not isinstance(raw_tags, list):
+            raise ValueError(f"SourceFeed {feed_id!r} tags must be a list")
+
+        return cls(
+            id=feed_id,
+            name=name,
+            kind=kind,
+            url=data.get("url"),
+            inoreader_stream_id=data.get("inoreader_stream_id"),
+            source_type=str(data.get("source_type") or "unknown"),
+            tags=[str(tag) for tag in raw_tags],
+            enabled=bool(data.get("enabled", True)),
+            fetch_interval_minutes=int(data.get("fetch_interval_minutes", 360)),
+            last_fetched_at=data.get("last_fetched_at"),
+            last_cursor=data.get("last_cursor"),
+        )
+
+
+@dataclass(frozen=True)
+class Article:
+    id: str
+    url: str
+    canonical_url: str | None
+    title: str
+    source_name: str
+    source_url: str | None
+    author: str | None
+    published_at: str | None
+    fetched_at: str
+    body_text: str | None = None
+    summary: str | None = None
+    language: str | None = None
+    tags: list[str] = field(default_factory=list)
+    source_type: str = "unknown"
+    license_hint: str | None = None
+    hash_url: str = ""
+    hash_title: str = ""
+    hash_body: str | None = None
+    fetch_status: str = "fetched"
+    fetch_error: str | None = None
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        url: str,
+        title: str,
+        source_name: str,
+        fetched_at: str,
+        canonical_url: str | None = None,
+        source_url: str | None = None,
+        author: str | None = None,
+        published_at: str | None = None,
+        body_text: str | None = None,
+        summary: str | None = None,
+        language: str | None = None,
+        tags: list[str] | None = None,
+        source_type: str = "unknown",
+        license_hint: str | None = None,
+        fetch_status: str = "fetched",
+        fetch_error: str | None = None,
+    ) -> "Article":
+        clean_url = url.strip()
+        clean_title = " ".join(title.split())
+        if not clean_url:
+            raise ValueError("Article requires url")
+        if not clean_title:
+            raise ValueError("Article requires title")
+
+        canonical = canonical_url.strip() if canonical_url else clean_url
+        url_hash = stable_hash(canonical)
+        body_hash = stable_hash(body_text) if body_text else None
+
+        return cls(
+            id=f"article_{url_hash[:16]}",
+            url=clean_url,
+            canonical_url=canonical,
+            title=clean_title,
+            source_name=source_name,
+            source_url=source_url,
+            author=author,
+            published_at=published_at,
+            fetched_at=fetched_at,
+            body_text=body_text,
+            summary=summary,
+            language=language,
+            tags=tags or [],
+            source_type=source_type,
+            license_hint=license_hint,
+            hash_url=url_hash,
+            hash_title=stable_hash(clean_title),
+            hash_body=body_hash,
+            fetch_status=fetch_status,
+            fetch_error=fetch_error,
+        )
+

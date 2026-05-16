@@ -1,0 +1,11 @@
+autonomy:
+  topic_selection: assist
+  source_packet: auto
+  script_generation: draft_only
+  structure_design: approve
+  visual_assets: suggest_only
+  quote_policy: human_required
+  voice_terms: human_required
+  ymm4_export: auto_csv_manual_render
+  publishing: manual
+

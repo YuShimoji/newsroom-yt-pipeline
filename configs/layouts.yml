@@ -1,0 +1,21 @@
+visual_density:
+  target_update_interval_sec_min: 8
+  target_update_interval_sec_max: 12
+  max_simultaneous_cards: 3
+  prefer_static_readable_cards: true
+
+templates:
+  source_card:
+    required_fields:
+      - source_name
+      - published_at
+      - claim_summary
+  claim_evidence_card:
+    required_fields:
+      - claim
+      - evidence
+      - source
+  timeline_spine:
+    required_fields:
+      - events
+
