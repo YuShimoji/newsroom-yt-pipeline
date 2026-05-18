@@ -8,12 +8,14 @@ from newsroom.store.models import Article, StoryCluster
 
 
 def _make_article(seed: str, source_type: str = "news", source: str | None = None) -> Article:
+    suffix = seed[-1]
+    hour_seed = int(suffix) if suffix.isdigit() else 0
     return Article.create(
         url=f"https://example.com/{seed}",
         title=f"Copilot announcement {seed}",
         source_name=source or f"Source {seed}",
         source_type=source_type,
-        published_at=f"2026-05-18T0{int(seed[-1]) % 9 + 1}:00:00+00:00",
+        published_at=f"2026-05-18T0{hour_seed % 9 + 1}:00:00+00:00",
         fetched_at="2026-05-18T12:00:00+00:00",
         tags=["series/copilot"],
     )
