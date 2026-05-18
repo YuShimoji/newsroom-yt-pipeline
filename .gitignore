@@ -3,7 +3,10 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 .venv/
+build/
+dist/
 data/*.sqlite
 data/*.sqlite-shm
 data/*.sqlite-wal
+data/secrets/
 
