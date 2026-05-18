@@ -1,6 +1,7 @@
-"""NotebookLM packet interfaces.
+"""NotebookLM packet builder.
 
-Reserved for M3. Functional implementation lands in M3 Notebook Packet
-Builder (see docs/PROJECT_SPEC.md §16). The current contents are an
-interface placeholder and must not be depended on as working code.
+M3 component. Renders the artifact bundle (packet.md, sources.json,
+timeline.md, glossary.md, questions.md, operator_notes.md) that an
+operator manually feeds into NotebookLM. DR-005 fixes NotebookLM API
+automation as out of scope; this module produces local files only.
 """
