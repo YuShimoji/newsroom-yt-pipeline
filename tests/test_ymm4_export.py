@@ -163,6 +163,27 @@ def test_export_warns_when_critical_views_missing(tmp_path):
     assert "critical_views" in joined
 
 
+def test_export_does_not_duplicate_critical_view_when_critic_emits_it(tmp_path):
+    findings = [
+        CritiqueFinding(
+            guard="critical_view",
+            severity="warn",
+            message="Packet has no critical_views; conflict chapter segments need manual critical input.",
+        )
+    ]
+
+    _, manifest = build_ymm4_package(
+        _plan(),
+        _script(),
+        _packet(critical_views_empty=True),
+        findings,
+        export_root=tmp_path,
+    )
+
+    critical_lines = [w for w in manifest["warnings"] if "critical_view" in w.lower()]
+    assert len(critical_lines) == 1
+
+
 def test_export_omits_critical_warning_when_packet_has_critical_views(tmp_path):
     _, manifest = build_ymm4_package(
         _plan(),

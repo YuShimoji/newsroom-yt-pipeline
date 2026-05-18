@@ -68,8 +68,12 @@ def _collect_warnings(
     findings: list[CritiqueFinding],
 ) -> list[str]:
     warnings: list[str] = []
+    guard_names = {finding.guard for finding in findings}
 
-    if not packet.critical_views:
+    # Only emit the direct critical_views warning when the critic did not
+    # already raise one. Otherwise the bundle carried two nearly-identical
+    # lines for the same condition.
+    if not packet.critical_views and "critical_view" not in guard_names:
         warnings.append(
             "Packet has no critical_views; conflict chapter relies on operator augmentation."
         )
