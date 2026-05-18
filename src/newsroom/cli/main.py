@@ -13,16 +13,25 @@ from newsroom.ingest.rss_client import RssClient
 from newsroom.notebook.exporters import write_packet
 from newsroom.notebook.packet_builder import DEFAULT_PACKET_ROOT, NotebookPacketBuilder
 from newsroom.scoring.topic_scorer import TopicScorer
+from newsroom.script.episode_planner import EpisodePlanner
+from newsroom.script.exporters import DEFAULT_SCRIPT_ROOT, write_script_bundle
+from newsroom.script.script_critic import ScriptCritic
+from newsroom.script.script_drafter import ScriptDrafter
 from newsroom.store.db import (
     DEFAULT_DB_PATH,
     init_db,
     list_articles_for_date,
     list_clusters_for_date,
     list_topic_scores_for_date,
+    load_episode_plan,
+    load_script_ir,
     replace_clusters_for_date,
     upsert_article,
+    upsert_episode_plan,
+    upsert_script_ir,
     upsert_topic_score,
 )
+from newsroom.store.models import ScriptIR, StoryCluster
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -76,6 +85,45 @@ def build_parser() -> argparse.ArgumentParser:
         dest="format_override",
         choices=["yukkuri", "anchor", "information_program"],
         help="Override the auto-resolved format_hint",
+    )
+
+    script_parser = subparsers.add_parser("script", help="Script workbench operations")
+    script_sub = script_parser.add_subparsers(dest="script_command", required=True)
+
+    script_draft = script_sub.add_parser("draft", help="Draft a script skeleton from a story cluster")
+    script_draft.add_argument("--story", required=True, help="Story cluster id")
+    script_draft.add_argument(
+        "--format",
+        required=True,
+        choices=["yukkuri", "anchor"],
+        help="Script format (yukkuri -> yukkuri_dialogue, anchor -> anchor_narration)",
+    )
+    script_draft.add_argument(
+        "--series-config",
+        default=str(DEFAULT_SERIES_CONFIG),
+        help="series.yml path used to resolve series strategic_question",
+    )
+    script_draft.add_argument(
+        "--script-root",
+        default=str(DEFAULT_SCRIPT_ROOT),
+        help="Root directory for script bundles",
+    )
+
+    script_critique = script_sub.add_parser("critique", help="Re-run editorial guards on a script")
+    script_critique.add_argument("--script", required=True, help="Script id")
+    script_critique.add_argument(
+        "--script-root",
+        default=str(DEFAULT_SCRIPT_ROOT),
+        help="Root directory for script bundles",
+    )
+
+    script_revise = script_sub.add_parser("revise", help="Adjust script gear and rewrite bundle")
+    script_revise.add_argument("--script", required=True, help="Script id")
+    script_revise.add_argument("--gear", type=int, choices=[0, 1, 2, 3], required=True)
+    script_revise.add_argument(
+        "--script-root",
+        default=str(DEFAULT_SCRIPT_ROOT),
+        help="Root directory for script bundles",
     )
 
     return parser
@@ -237,6 +285,32 @@ def cmd_shortlist(args: argparse.Namespace) -> int:
     return 0
 
 
+def _iter_cluster_dates(db_path: Path) -> list[str]:
+    from newsroom.store.db import connect
+
+    with connect(db_path) as connection:
+        rows = connection.execute(
+            "SELECT DISTINCT cluster_date FROM story_clusters ORDER BY cluster_date DESC"
+        ).fetchall()
+    return [row["cluster_date"] for row in rows]
+
+
+def _find_cluster(db_path: Path, cluster_id: str) -> tuple[StoryCluster, str] | None:
+    for date in _iter_cluster_dates(db_path):
+        for cluster in list_clusters_for_date(db_path, date):
+            if cluster.id == cluster_id:
+                return cluster, date
+    return None
+
+
+def _load_series_index(path: str) -> dict[str, object]:
+    try:
+        series_list = load_series(path)
+    except FileNotFoundError:
+        return {}
+    return {series.id: series for series in series_list}
+
+
 def cmd_packet(args: argparse.Namespace) -> int:
     if args.packet_command != "build":
         print(f"Unsupported packet subcommand: {args.packet_command}")
@@ -245,21 +319,11 @@ def cmd_packet(args: argparse.Namespace) -> int:
     db_path = Path(args.db)
     init_db(db_path)
 
-    target_cluster = None
-    target_date = None
-    for date_dir_row in _iter_cluster_dates(db_path):
-        clusters = list_clusters_for_date(db_path, date_dir_row)
-        for cluster in clusters:
-            if cluster.id == args.story:
-                target_cluster = cluster
-                target_date = date_dir_row
-                break
-        if target_cluster is not None:
-            break
-
-    if target_cluster is None:
+    found = _find_cluster(db_path, args.story)
+    if found is None:
         print(f"Story cluster not found: {args.story}")
         return 1
+    target_cluster, target_date = found
 
     articles = [
         article
@@ -270,12 +334,7 @@ def cmd_packet(args: argparse.Namespace) -> int:
         print(f"No articles resolvable for cluster {args.story}")
         return 1
 
-    try:
-        series_list = load_series(args.series_config)
-        series_index = {series.id: series for series in series_list}
-    except FileNotFoundError:
-        series_index = {}
-
+    series_index = _load_series_index(args.series_config)
     builder = NotebookPacketBuilder(series_index=series_index)
     packet = builder.build(target_cluster, articles, packet_root=Path(args.packet_root))
     if args.format_override:
@@ -289,14 +348,151 @@ def cmd_packet(args: argparse.Namespace) -> int:
     return 0
 
 
-def _iter_cluster_dates(db_path: Path) -> list[str]:
-    from newsroom.store.db import connect
+def _format_to_ir_name(short_name: str) -> str:
+    return {"yukkuri": "yukkuri_dialogue", "anchor": "anchor_narration"}[short_name]
 
-    with connect(db_path) as connection:
-        rows = connection.execute(
-            "SELECT DISTINCT cluster_date FROM story_clusters ORDER BY cluster_date DESC"
-        ).fetchall()
-    return [row["cluster_date"] for row in rows]
+
+def _series_for_cluster(series_index: dict, cluster: StoryCluster):
+    for series_tag in cluster.related_series:
+        series_id = series_tag.split("/", 1)[1] if "/" in series_tag else series_tag
+        series = series_index.get(series_id)
+        if series is not None:
+            return series
+    return None
+
+
+def _apply_gear(script: ScriptIR, gear: int) -> ScriptIR:
+    if gear == 3:
+        new_segments = [
+            replace(segment, needs_human_review=(segment.claim_type == "fact"))
+            for segment in script.segments
+        ]
+    else:
+        new_segments = [replace(segment, needs_human_review=True) for segment in script.segments]
+    return replace(script, segments=new_segments)
+
+
+def cmd_script(args: argparse.Namespace) -> int:
+    db_path = Path(args.db)
+    init_db(db_path)
+
+    if args.script_command == "draft":
+        return _cmd_script_draft(args, db_path)
+    if args.script_command == "critique":
+        return _cmd_script_critique(args, db_path)
+    if args.script_command == "revise":
+        return _cmd_script_revise(args, db_path)
+    print(f"Unsupported script subcommand: {args.script_command}")
+    return 2
+
+
+def _cmd_script_draft(args: argparse.Namespace, db_path: Path) -> int:
+    found = _find_cluster(db_path, args.story)
+    if found is None:
+        print(f"Story cluster not found: {args.story}")
+        return 1
+    cluster, cluster_date = found
+
+    articles = [
+        article
+        for article in list_articles_for_date(db_path, cluster_date)
+        if article.id in cluster.article_ids
+    ]
+    if not articles:
+        print(f"No articles resolvable for cluster {args.story}")
+        return 1
+
+    series_index = _load_series_index(args.series_config)
+    packet_builder = NotebookPacketBuilder(series_index=series_index)
+    packet = packet_builder.build(cluster, articles)
+
+    series = _series_for_cluster(series_index, cluster)
+    plan = EpisodePlanner().plan(cluster, packet, series=series)
+    upsert_episode_plan(db_path, plan)
+
+    ir_format = _format_to_ir_name(args.format)
+    script = ScriptDrafter().draft(plan, packet, ir_format)
+    upsert_script_ir(db_path, script)
+
+    findings = ScriptCritic().critique(script, plan, packet)
+    output_dir = write_script_bundle(plan, script, findings, script_root=Path(args.script_root))
+
+    fail_count = sum(1 for f in findings if f.severity == "fail")
+    warn_count = sum(1 for f in findings if f.severity == "warn")
+    print(f"Script drafted: {script.id}")
+    print(f"Episode plan: {plan.id}")
+    print(f"Format: {script.format}  Segments: {len(script.segments)}")
+    print(f"Output dir: {output_dir}")
+    print(f"Critique: fail={fail_count}  warn={warn_count}  ok={len(findings) - fail_count - warn_count}")
+    return 0
+
+
+def _cmd_script_critique(args: argparse.Namespace, db_path: Path) -> int:
+    script = load_script_ir(db_path, args.script)
+    if script is None:
+        print(f"Script not found: {args.script}")
+        return 1
+    plan = load_episode_plan(db_path, script.episode_plan_id)
+    if plan is None:
+        print(f"Episode plan not found for script {args.script}: {script.episode_plan_id}")
+        return 1
+
+    found = _find_cluster(db_path, plan.story_cluster_id)
+    if found is None:
+        print(f"Cluster not found for plan {plan.id}: {plan.story_cluster_id}")
+        return 1
+    cluster, cluster_date = found
+    articles = [
+        article
+        for article in list_articles_for_date(db_path, cluster_date)
+        if article.id in cluster.article_ids
+    ]
+    series_index = _load_series_index(str(DEFAULT_SERIES_CONFIG))
+    packet = NotebookPacketBuilder(series_index=series_index).build(cluster, articles)
+
+    findings = ScriptCritic().critique(script, plan, packet)
+    output_dir = write_script_bundle(plan, script, findings, script_root=Path(args.script_root))
+
+    print(f"Critique refreshed for {script.id}")
+    for finding in findings:
+        print(f"  [{finding.severity}] {finding.guard}: {finding.message}")
+    print(f"Output dir: {output_dir}")
+    return 0
+
+
+def _cmd_script_revise(args: argparse.Namespace, db_path: Path) -> int:
+    script = load_script_ir(db_path, args.script)
+    if script is None:
+        print(f"Script not found: {args.script}")
+        return 1
+    plan = load_episode_plan(db_path, script.episode_plan_id)
+    if plan is None:
+        print(f"Episode plan not found for script {args.script}: {script.episode_plan_id}")
+        return 1
+
+    updated = _apply_gear(script, args.gear)
+    upsert_script_ir(db_path, updated)
+
+    found = _find_cluster(db_path, plan.story_cluster_id)
+    if found is None:
+        print(f"Cluster not found for plan {plan.id}: {plan.story_cluster_id}")
+        return 1
+    cluster, cluster_date = found
+    articles = [
+        article
+        for article in list_articles_for_date(db_path, cluster_date)
+        if article.id in cluster.article_ids
+    ]
+    series_index = _load_series_index(str(DEFAULT_SERIES_CONFIG))
+    packet = NotebookPacketBuilder(series_index=series_index).build(cluster, articles)
+    findings = ScriptCritic().critique(updated, plan, packet)
+    output_dir = write_script_bundle(plan, updated, findings, script_root=Path(args.script_root))
+
+    print(f"Script revised to gear {args.gear}: {updated.id}")
+    print(f"Output dir: {output_dir}")
+    review_segments = sum(1 for seg in updated.segments if seg.needs_human_review)
+    print(f"Segments flagged for human review: {review_segments} / {len(updated.segments)}")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -310,6 +506,7 @@ def main(argv: list[str] | None = None) -> int:
         "score": cmd_score,
         "shortlist": cmd_shortlist,
         "packet": cmd_packet,
+        "script": cmd_script,
     }
     handler = dispatchers.get(args.command)
     if handler is None:
