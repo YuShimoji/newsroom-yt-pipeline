@@ -35,7 +35,8 @@ def build_ymm4_package(
     warnings = _collect_warnings(packet, script, findings)
     exported_at = datetime.now(UTC).isoformat()
 
-    _write_script_csv(output_dir / "script.csv", script)
+    chapter_lookup = {chapter.id: chapter for chapter in plan.chapter_outline}
+    _write_script_csv(output_dir / "script.csv", script, chapter_lookup)
     _write_script_ir_json(output_dir / "script_ir.json", script)
     _write_source_list_md(output_dir / "source_list.md", packet)
     _write_ymm4_notes_md(output_dir / "ymm4_notes.md", plan, script, packet, warnings)
@@ -90,13 +91,15 @@ def _collect_warnings(
     return warnings
 
 
-def _write_script_csv(path: Path, script: ScriptIR) -> None:
+def _write_script_csv(path: Path, script: ScriptIR, chapter_lookup: dict) -> None:
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.writer(handle, quoting=csv.QUOTE_MINIMAL)
         current_chapter: str | None = None
         for segment in script.segments:
             if segment.chapter_id != current_chapter:
-                writer.writerow([f"# Chapter: {segment.chapter_id}"])
+                chapter = chapter_lookup.get(segment.chapter_id)
+                label = chapter.title if chapter else segment.chapter_id
+                writer.writerow([f"# Chapter: {label}"])
                 current_chapter = segment.chapter_id
             writer.writerow([segment.speaker, segment.text])
 

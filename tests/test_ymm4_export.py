@@ -145,6 +145,10 @@ def test_script_csv_quotes_commas_and_newlines(tmp_path):
     assert "\n" in speaker_rows[0][1]
     assert speaker_rows[1][0] == "魔理沙"
 
+    comment_rows = [row for row in rows if row[0].startswith("#")]
+    assert any("導入" in row[0] for row in comment_rows)
+    assert any("事実" in row[0] for row in comment_rows)
+
 
 def test_export_warns_when_critical_views_missing(tmp_path):
     _, manifest = build_ymm4_package(
