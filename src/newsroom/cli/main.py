@@ -10,6 +10,7 @@ from newsroom.clustering.story_clusterer import StoryClusterer
 from newsroom.config import DEFAULT_SERIES_CONFIG, load_series, load_source_feeds
 from newsroom.ingest.inoreader_client import InoreaderClient
 from newsroom.ingest.rss_client import RssClient
+from newsroom.adapters.ymm4_export import DEFAULT_EXPORT_ROOT, build_ymm4_package
 from newsroom.notebook.exporters import write_packet
 from newsroom.notebook.packet_builder import DEFAULT_PACKET_ROOT, NotebookPacketBuilder
 from newsroom.scoring.topic_scorer import TopicScorer
@@ -124,6 +125,22 @@ def build_parser() -> argparse.ArgumentParser:
         "--script-root",
         default=str(DEFAULT_SCRIPT_ROOT),
         help="Root directory for script bundles",
+    )
+
+    export_parser = subparsers.add_parser("export", help="Export packages for downstream tools")
+    export_sub = export_parser.add_subparsers(dest="export_command", required=True)
+
+    export_ymm4 = export_sub.add_parser("ymm4", help="Build the YMM4 export bundle for a script")
+    export_ymm4.add_argument("--script", required=True, help="Script id")
+    export_ymm4.add_argument(
+        "--export-root",
+        default=str(DEFAULT_EXPORT_ROOT),
+        help="Root directory for episode export bundles",
+    )
+    export_ymm4.add_argument(
+        "--series-config",
+        default=str(DEFAULT_SERIES_CONFIG),
+        help="series.yml path used when rebuilding the packet",
     )
 
     return parser
@@ -495,6 +512,57 @@ def _cmd_script_revise(args: argparse.Namespace, db_path: Path) -> int:
     return 0
 
 
+def cmd_export(args: argparse.Namespace) -> int:
+    if args.export_command != "ymm4":
+        print(f"Unsupported export subcommand: {args.export_command}")
+        return 2
+
+    db_path = Path(args.db)
+    init_db(db_path)
+
+    script = load_script_ir(db_path, args.script)
+    if script is None:
+        print(f"Script not found: {args.script}")
+        return 1
+    plan = load_episode_plan(db_path, script.episode_plan_id)
+    if plan is None:
+        print(f"Episode plan not found for script {args.script}: {script.episode_plan_id}")
+        return 1
+
+    found = _find_cluster(db_path, plan.story_cluster_id)
+    if found is None:
+        print(f"Cluster not found for plan {plan.id}: {plan.story_cluster_id}")
+        return 1
+    cluster, cluster_date = found
+    articles = [
+        article
+        for article in list_articles_for_date(db_path, cluster_date)
+        if article.id in cluster.article_ids
+    ]
+    if not articles:
+        print(f"No articles resolvable for cluster {cluster.id}")
+        return 1
+
+    series_index = _load_series_index(args.series_config)
+    packet = NotebookPacketBuilder(series_index=series_index).build(cluster, articles)
+    findings = ScriptCritic().critique(script, plan, packet)
+    output_dir, manifest = build_ymm4_package(
+        plan,
+        script,
+        packet,
+        findings,
+        export_root=Path(args.export_root),
+    )
+
+    print(f"YMM4 export ready: {manifest['episode_id']}")
+    print(f"Output dir: {output_dir}")
+    print(f"Format: {manifest['format']}")
+    print(f"Warnings: {len(manifest['warnings'])}")
+    for warning in manifest["warnings"]:
+        print(f"  - {warning}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -507,6 +575,7 @@ def main(argv: list[str] | None = None) -> int:
         "shortlist": cmd_shortlist,
         "packet": cmd_packet,
         "script": cmd_script,
+        "export": cmd_export,
     }
     handler = dispatchers.get(args.command)
     if handler is None:
