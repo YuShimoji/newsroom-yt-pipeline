@@ -20,9 +20,16 @@ Implemented in M1:
 
 ## Install
 
+A virtual environment is recommended to avoid polluting the system Python and to keep dev extras isolated.
+
 ```bash
+python -m venv .venv
+.venv\Scripts\Activate.ps1      # PowerShell on Windows
+# source .venv/bin/activate     # POSIX shells
 python -m pip install -e .[dev]
 ```
+
+The `newsroom` CLI is exposed on PATH inside the activated venv.
 
 ## Usage
 
@@ -43,6 +50,14 @@ Use a custom database path:
 ```bash
 newsroom fetch --source rss --db data/newsroom.sqlite
 newsroom report --today --db data/newsroom.sqlite
+```
+
+## Tests
+
+Focused tests cover config load, RSS normalization, DB deduplication, and report output. Run them when verifying a change; they are not intended to be wired into a continuous loop.
+
+```bash
+python -m pytest -q
 ```
 
 ## Architecture Boundary
