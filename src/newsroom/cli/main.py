@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import argparse
 import sys
+from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 
 from newsroom.clustering.story_clusterer import StoryClusterer
-from newsroom.config import load_source_feeds
+from newsroom.config import DEFAULT_SERIES_CONFIG, load_series, load_source_feeds
 from newsroom.ingest.inoreader_client import InoreaderClient
 from newsroom.ingest.rss_client import RssClient
+from newsroom.notebook.exporters import write_packet
+from newsroom.notebook.packet_builder import DEFAULT_PACKET_ROOT, NotebookPacketBuilder
 from newsroom.scoring.topic_scorer import TopicScorer
 from newsroom.store.db import (
     DEFAULT_DB_PATH,
@@ -52,6 +55,28 @@ def build_parser() -> argparse.ArgumentParser:
     shortlist_parser = subparsers.add_parser("shortlist", help="Print the top scored story clusters")
     _add_date_args(shortlist_parser)
     shortlist_parser.add_argument("--top", type=int, default=10, help="Number of stories to print")
+
+    packet_parser = subparsers.add_parser("packet", help="NotebookLM packet operations")
+    packet_sub = packet_parser.add_subparsers(dest="packet_command", required=True)
+
+    packet_build = packet_sub.add_parser("build", help="Build a packet from a story cluster")
+    packet_build.add_argument("--story", required=True, help="Story cluster id")
+    packet_build.add_argument(
+        "--series-config",
+        default=str(DEFAULT_SERIES_CONFIG),
+        help="series.yml path used to resolve format_hint",
+    )
+    packet_build.add_argument(
+        "--packet-root",
+        default=str(DEFAULT_PACKET_ROOT),
+        help="Root directory for packet artifact bundles",
+    )
+    packet_build.add_argument(
+        "--format",
+        dest="format_override",
+        choices=["yukkuri", "anchor", "information_program"],
+        help="Override the auto-resolved format_hint",
+    )
 
     return parser
 
@@ -212,6 +237,68 @@ def cmd_shortlist(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_packet(args: argparse.Namespace) -> int:
+    if args.packet_command != "build":
+        print(f"Unsupported packet subcommand: {args.packet_command}")
+        return 2
+
+    db_path = Path(args.db)
+    init_db(db_path)
+
+    target_cluster = None
+    target_date = None
+    for date_dir_row in _iter_cluster_dates(db_path):
+        clusters = list_clusters_for_date(db_path, date_dir_row)
+        for cluster in clusters:
+            if cluster.id == args.story:
+                target_cluster = cluster
+                target_date = date_dir_row
+                break
+        if target_cluster is not None:
+            break
+
+    if target_cluster is None:
+        print(f"Story cluster not found: {args.story}")
+        return 1
+
+    articles = [
+        article
+        for article in list_articles_for_date(db_path, target_date)
+        if article.id in target_cluster.article_ids
+    ]
+    if not articles:
+        print(f"No articles resolvable for cluster {args.story}")
+        return 1
+
+    try:
+        series_list = load_series(args.series_config)
+        series_index = {series.id: series for series in series_list}
+    except FileNotFoundError:
+        series_index = {}
+
+    builder = NotebookPacketBuilder(series_index=series_index)
+    packet = builder.build(target_cluster, articles, packet_root=Path(args.packet_root))
+    if args.format_override:
+        packet = replace(packet, format_hint=args.format_override)
+
+    output_dir = write_packet(packet)
+    print(f"Packet built: {packet.id}")
+    print(f"Export dir: {output_dir}")
+    print(f"Format hint: {packet.format_hint}")
+    print(f"Primary sources: {len(packet.primary_sources)}  News sources: {len(packet.news_sources)}")
+    return 0
+
+
+def _iter_cluster_dates(db_path: Path) -> list[str]:
+    from newsroom.store.db import connect
+
+    with connect(db_path) as connection:
+        rows = connection.execute(
+            "SELECT DISTINCT cluster_date FROM story_clusters ORDER BY cluster_date DESC"
+        ).fetchall()
+    return [row["cluster_date"] for row in rows]
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -222,6 +309,7 @@ def main(argv: list[str] | None = None) -> int:
         "cluster": cmd_cluster,
         "score": cmd_score,
         "shortlist": cmd_shortlist,
+        "packet": cmd_packet,
     }
     handler = dispatchers.get(args.command)
     if handler is None:
