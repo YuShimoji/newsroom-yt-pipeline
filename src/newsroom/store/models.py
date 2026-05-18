@@ -55,6 +55,30 @@ class SourceFeed:
 
 
 @dataclass(frozen=True)
+class Chapter:
+    id: str
+    title: str
+    intent: str
+    target_duration_sec: int
+
+
+@dataclass(frozen=True)
+class EpisodePlan:
+    id: str
+    story_cluster_id: str
+    series_id: str | None
+    title_candidates: list[str]
+    thumbnail_angles: list[str]
+    hook: str
+    chapter_outline: list[Chapter]
+    target_duration_sec: int
+    viewer_utility: str
+    risk_notes: list[str]
+    approval_state: str
+    created_at: str
+
+
+@dataclass(frozen=True)
 class SourceRef:
     article_id: str
     url: str
@@ -92,6 +116,27 @@ class NotebookPacket:
     questions: list[str]
     format_hint: str
     export_dir: str
+    created_at: str
+
+
+@dataclass(frozen=True)
+class ScriptSegment:
+    id: str
+    chapter_id: str
+    speaker: str
+    text: str
+    source_refs: list[str] = field(default_factory=list)
+    visual_refs: list[str] = field(default_factory=list)
+    claim_type: str = "interpretation"
+    needs_human_review: bool = True
+
+
+@dataclass(frozen=True)
+class ScriptIR:
+    id: str
+    episode_plan_id: str
+    format: str
+    segments: list[ScriptSegment]
     created_at: str
 
 

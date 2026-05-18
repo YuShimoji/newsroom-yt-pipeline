@@ -4,7 +4,15 @@ import json
 import sqlite3
 from pathlib import Path
 
-from newsroom.store.models import Article, StoryCluster, TopicScore
+from newsroom.store.models import (
+    Article,
+    Chapter,
+    EpisodePlan,
+    ScriptIR,
+    ScriptSegment,
+    StoryCluster,
+    TopicScore,
+)
 
 
 DEFAULT_DB_PATH = Path("data/newsroom.sqlite")
@@ -71,6 +79,34 @@ CREATE TABLE IF NOT EXISTS topic_scores (
   scored_at TEXT NOT NULL,
   FOREIGN KEY (cluster_id) REFERENCES story_clusters(id)
 );
+
+CREATE TABLE IF NOT EXISTS episode_plans (
+  id TEXT PRIMARY KEY,
+  story_cluster_id TEXT NOT NULL,
+  series_id TEXT,
+  title_candidates TEXT NOT NULL,
+  thumbnail_angles TEXT NOT NULL,
+  hook TEXT NOT NULL,
+  chapter_outline TEXT NOT NULL,
+  target_duration_sec INTEGER NOT NULL,
+  viewer_utility TEXT NOT NULL,
+  risk_notes TEXT NOT NULL,
+  approval_state TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_episode_plans_cluster ON episode_plans(story_cluster_id);
+
+CREATE TABLE IF NOT EXISTS script_irs (
+  id TEXT PRIMARY KEY,
+  episode_plan_id TEXT NOT NULL,
+  format TEXT NOT NULL,
+  segments TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (episode_plan_id) REFERENCES episode_plans(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_script_irs_plan ON script_irs(episode_plan_id);
 """
 
 
@@ -264,6 +300,173 @@ def list_topic_scores_for_date(
         )
         for row in rows
     ]
+
+
+def upsert_episode_plan(db_path: str | Path, plan: EpisodePlan) -> None:
+    init_db(db_path)
+    with connect(db_path) as connection:
+        connection.execute(
+            """
+            INSERT INTO episode_plans (
+              id, story_cluster_id, series_id, title_candidates, thumbnail_angles,
+              hook, chapter_outline, target_duration_sec, viewer_utility,
+              risk_notes, approval_state, created_at
+            ) VALUES (
+              :id, :story_cluster_id, :series_id, :title_candidates, :thumbnail_angles,
+              :hook, :chapter_outline, :target_duration_sec, :viewer_utility,
+              :risk_notes, :approval_state, :created_at
+            )
+            ON CONFLICT(id) DO UPDATE SET
+              series_id = excluded.series_id,
+              title_candidates = excluded.title_candidates,
+              thumbnail_angles = excluded.thumbnail_angles,
+              hook = excluded.hook,
+              chapter_outline = excluded.chapter_outline,
+              target_duration_sec = excluded.target_duration_sec,
+              viewer_utility = excluded.viewer_utility,
+              risk_notes = excluded.risk_notes,
+              approval_state = excluded.approval_state
+            """,
+            _episode_plan_values(plan),
+        )
+
+
+def load_episode_plan(db_path: str | Path, plan_id: str) -> EpisodePlan | None:
+    init_db(db_path)
+    with connect(db_path) as connection:
+        row = connection.execute(
+            "SELECT * FROM episode_plans WHERE id = ?", (plan_id,)
+        ).fetchone()
+    if row is None:
+        return None
+    return _row_to_episode_plan(row)
+
+
+def upsert_script_ir(db_path: str | Path, script: ScriptIR) -> None:
+    init_db(db_path)
+    with connect(db_path) as connection:
+        connection.execute(
+            """
+            INSERT INTO script_irs (id, episode_plan_id, format, segments, created_at)
+            VALUES (:id, :episode_plan_id, :format, :segments, :created_at)
+            ON CONFLICT(id) DO UPDATE SET
+              episode_plan_id = excluded.episode_plan_id,
+              format = excluded.format,
+              segments = excluded.segments
+            """,
+            {
+                "id": script.id,
+                "episode_plan_id": script.episode_plan_id,
+                "format": script.format,
+                "segments": json.dumps(
+                    [_segment_to_dict(seg) for seg in script.segments],
+                    ensure_ascii=False,
+                ),
+                "created_at": script.created_at,
+            },
+        )
+
+
+def load_script_ir(db_path: str | Path, script_id: str) -> ScriptIR | None:
+    init_db(db_path)
+    with connect(db_path) as connection:
+        row = connection.execute(
+            "SELECT * FROM script_irs WHERE id = ?", (script_id,)
+        ).fetchone()
+    if row is None:
+        return None
+    raw_segments = json.loads(row["segments"] or "[]")
+    segments = [_dict_to_segment(payload) for payload in raw_segments]
+    return ScriptIR(
+        id=row["id"],
+        episode_plan_id=row["episode_plan_id"],
+        format=row["format"],
+        segments=segments,
+        created_at=row["created_at"],
+    )
+
+
+def _episode_plan_values(plan: EpisodePlan) -> dict[str, object]:
+    return {
+        "id": plan.id,
+        "story_cluster_id": plan.story_cluster_id,
+        "series_id": plan.series_id,
+        "title_candidates": json.dumps(plan.title_candidates, ensure_ascii=False),
+        "thumbnail_angles": json.dumps(plan.thumbnail_angles, ensure_ascii=False),
+        "hook": plan.hook,
+        "chapter_outline": json.dumps(
+            [_chapter_to_dict(chapter) for chapter in plan.chapter_outline],
+            ensure_ascii=False,
+        ),
+        "target_duration_sec": plan.target_duration_sec,
+        "viewer_utility": plan.viewer_utility,
+        "risk_notes": json.dumps(plan.risk_notes, ensure_ascii=False),
+        "approval_state": plan.approval_state,
+        "created_at": plan.created_at,
+    }
+
+
+def _row_to_episode_plan(row: sqlite3.Row) -> EpisodePlan:
+    raw_chapters = json.loads(row["chapter_outline"] or "[]")
+    chapters = [_dict_to_chapter(payload) for payload in raw_chapters]
+    return EpisodePlan(
+        id=row["id"],
+        story_cluster_id=row["story_cluster_id"],
+        series_id=row["series_id"],
+        title_candidates=json.loads(row["title_candidates"] or "[]"),
+        thumbnail_angles=json.loads(row["thumbnail_angles"] or "[]"),
+        hook=row["hook"],
+        chapter_outline=chapters,
+        target_duration_sec=int(row["target_duration_sec"]),
+        viewer_utility=row["viewer_utility"],
+        risk_notes=json.loads(row["risk_notes"] or "[]"),
+        approval_state=row["approval_state"],
+        created_at=row["created_at"],
+    )
+
+
+def _chapter_to_dict(chapter: Chapter) -> dict[str, object]:
+    return {
+        "id": chapter.id,
+        "title": chapter.title,
+        "intent": chapter.intent,
+        "target_duration_sec": chapter.target_duration_sec,
+    }
+
+
+def _dict_to_chapter(payload: dict[str, object]) -> Chapter:
+    return Chapter(
+        id=str(payload["id"]),
+        title=str(payload["title"]),
+        intent=str(payload["intent"]),
+        target_duration_sec=int(payload["target_duration_sec"]),
+    )
+
+
+def _segment_to_dict(segment: ScriptSegment) -> dict[str, object]:
+    return {
+        "id": segment.id,
+        "chapter_id": segment.chapter_id,
+        "speaker": segment.speaker,
+        "text": segment.text,
+        "source_refs": segment.source_refs,
+        "visual_refs": segment.visual_refs,
+        "claim_type": segment.claim_type,
+        "needs_human_review": segment.needs_human_review,
+    }
+
+
+def _dict_to_segment(payload: dict[str, object]) -> ScriptSegment:
+    return ScriptSegment(
+        id=str(payload["id"]),
+        chapter_id=str(payload["chapter_id"]),
+        speaker=str(payload["speaker"]),
+        text=str(payload["text"]),
+        source_refs=list(payload.get("source_refs", []) or []),
+        visual_refs=list(payload.get("visual_refs", []) or []),
+        claim_type=str(payload.get("claim_type", "interpretation")),
+        needs_human_review=bool(payload.get("needs_human_review", True)),
+    )
 
 
 def _cluster_values(cluster: StoryCluster) -> dict[str, object]:

@@ -1,6 +1,8 @@
-"""Script intermediate representation interfaces.
+"""Script workbench.
 
-Reserved for M4. Functional implementation lands in M4 Script Workbench
-(see docs/PROJECT_SPEC.md §16). The current contents only define the IR
-shape; draft/critique/revise are not implemented.
+M4 component. Plans episodes from NotebookLM packets, drafts ScriptIR
+skeletons (segments with placeholder text), and critiques the result
+against the seven editorial guards listed in PROJECT_SPEC.md §12.4. LLM
+integration is intentionally out of scope; segment text stays as
+TODO-shaped placeholders for an operator to fill in.
 """
