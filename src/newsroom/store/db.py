@@ -177,6 +177,27 @@ def list_articles_for_date(db_path: str | Path, date_yyyy_mm_dd: str) -> list[Ar
     return [_row_to_article(row) for row in rows]
 
 
+def list_articles_in_date_range(
+    db_path: str | Path, start_date: str, end_date: str
+) -> list[Article]:
+    """Return articles whose published_at (or fetched_at fallback) lies in [start_date, end_date].
+
+    Both endpoints are inclusive. Used by `newsroom cluster --days N` /
+    `--from --to` to widen the clustering window beyond a single day.
+    """
+    init_db(db_path)
+    with connect(db_path) as connection:
+        rows = connection.execute(
+            """
+            SELECT * FROM articles
+            WHERE substr(COALESCE(published_at, fetched_at), 1, 10) BETWEEN ? AND ?
+            ORDER BY COALESCE(published_at, fetched_at) DESC, source_name, title
+            """,
+            (start_date, end_date),
+        ).fetchall()
+    return [_row_to_article(row) for row in rows]
+
+
 def count_articles(db_path: str | Path) -> int:
     init_db(db_path)
     with connect(db_path) as connection:

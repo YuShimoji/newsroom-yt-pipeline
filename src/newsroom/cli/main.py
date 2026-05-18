@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import sys
 from dataclasses import replace
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from newsroom.clustering.story_clusterer import StoryClusterer
@@ -22,6 +22,7 @@ from newsroom.store.db import (
     DEFAULT_DB_PATH,
     init_db,
     list_articles_for_date,
+    list_articles_in_date_range,
     list_clusters_for_date,
     list_topic_scores_for_date,
     load_episode_plan,
@@ -50,8 +51,8 @@ def build_parser() -> argparse.ArgumentParser:
     report_group.add_argument("--today", action="store_true", help="Report for the local current date")
     report_group.add_argument("--date", help="Report date in YYYY-MM-DD format")
 
-    cluster_parser = subparsers.add_parser("cluster", help="Group daily articles into story clusters")
-    _add_date_args(cluster_parser)
+    cluster_parser = subparsers.add_parser("cluster", help="Group articles into story clusters")
+    _add_cluster_window_args(cluster_parser)
     cluster_parser.add_argument(
         "--threshold",
         type=float,
@@ -152,10 +153,73 @@ def _add_date_args(parser: argparse.ArgumentParser) -> None:
     group.add_argument("--date", help="Date in YYYY-MM-DD format")
 
 
+def _add_cluster_window_args(parser: argparse.ArgumentParser) -> None:
+    """Cluster CLI accepts a single date OR a multi-day window.
+
+    --today / --date / --days are mutually exclusive single-anchor flags.
+    --from and --to must be paired and cannot mix with the single-anchor
+    flags. The resulting cluster_date is always the end of the window so
+    score / shortlist can keep using their existing --date semantics.
+    """
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--today", action="store_true", help="Use the local current date")
+    group.add_argument("--date", help="Single date YYYY-MM-DD")
+    group.add_argument(
+        "--days",
+        type=int,
+        help="Number of days back from today (inclusive); end of window is today",
+    )
+    parser.add_argument(
+        "--from",
+        dest="date_from",
+        help="Range start YYYY-MM-DD (must be paired with --to)",
+    )
+    parser.add_argument(
+        "--to",
+        dest="date_to",
+        help="Range end YYYY-MM-DD (must be paired with --from)",
+    )
+
+
 def _resolve_date(args: argparse.Namespace) -> str:
     if getattr(args, "date", None):
         return args.date
     return datetime.now().date().isoformat()
+
+
+def _resolve_date_range(args: argparse.Namespace) -> tuple[str, str]:
+    """Return (start_date, end_date) inclusive based on cluster window flags."""
+    date_from = getattr(args, "date_from", None)
+    date_to = getattr(args, "date_to", None)
+    days = getattr(args, "days", None)
+    single_date = getattr(args, "date", None)
+    today_flag = bool(getattr(args, "today", False))
+
+    range_specified = bool(date_from) or bool(date_to)
+    anchor_specified = bool(days) or bool(single_date) or today_flag
+
+    if range_specified and anchor_specified:
+        raise SystemExit("--from/--to cannot be combined with --today / --date / --days")
+    if bool(date_from) != bool(date_to):
+        raise SystemExit("--from and --to must be specified together")
+
+    if date_from and date_to:
+        if date_from > date_to:
+            raise SystemExit("--from must be on or before --to")
+        return date_from, date_to
+
+    if days:
+        if days < 1:
+            raise SystemExit("--days must be >= 1")
+        end = date.today()
+        start = end - timedelta(days=days - 1)
+        return start.isoformat(), end.isoformat()
+
+    if single_date:
+        return single_date, single_date
+
+    today = date.today().isoformat()
+    return today, today
 
 
 def cmd_fetch(args: argparse.Namespace) -> int:
@@ -230,11 +294,19 @@ def cmd_report(args: argparse.Namespace) -> int:
 def cmd_cluster(args: argparse.Namespace) -> int:
     db_path = Path(args.db)
     init_db(db_path)
-    cluster_date = _resolve_date(args)
 
-    articles = list_articles_for_date(db_path, cluster_date)
+    start_date, end_date = _resolve_date_range(args)
+    cluster_date = end_date
+
+    if start_date == end_date:
+        articles = list_articles_for_date(db_path, start_date)
+        window_label = start_date
+    else:
+        articles = list_articles_in_date_range(db_path, start_date, end_date)
+        window_label = f"{start_date}..{end_date}"
+
     if not articles:
-        print(f"No articles stored for {cluster_date}; nothing to cluster.")
+        print(f"No articles in window {window_label}; nothing to cluster.")
         replace_clusters_for_date(db_path, cluster_date, [])
         return 0
 
@@ -243,10 +315,18 @@ def cmd_cluster(args: argparse.Namespace) -> int:
     replace_clusters_for_date(db_path, cluster_date, clusters)
 
     multi_member = [c for c in clusters if len(c.article_ids) > 1]
-    print(f"Clustered {len(articles)} article(s) into {len(clusters)} story cluster(s) for {cluster_date}.")
+    print(
+        f"Clustered {len(articles)} article(s) over {window_label} into "
+        f"{len(clusters)} story cluster(s)."
+    )
+    if start_date != end_date:
+        print(f"Cluster date (for score/shortlist): {cluster_date}")
     print(f"Multi-article clusters: {len(multi_member)}")
     for index, cluster in enumerate(multi_member, start=1):
-        print(f"  {index}. {cluster.title}  ({len(cluster.article_ids)} articles, entities={cluster.entities})")
+        print(
+            f"  {index}. {cluster.title}  "
+            f"({len(cluster.article_ids)} articles, entities={cluster.entities})"
+        )
     return 0
 
 
