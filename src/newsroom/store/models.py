@@ -55,6 +55,29 @@ class SourceFeed:
 
 
 @dataclass(frozen=True)
+class StoryCluster:
+    id: str
+    title: str
+    summary: str | None
+    article_ids: list[str]
+    primary_sources: list[str]
+    related_series: list[str]
+    entities: list[str]
+    content_farm_overlap: float
+    cluster_date: str
+    created_at: str
+    updated_at: str
+
+
+@dataclass(frozen=True)
+class TopicScore:
+    cluster_id: str
+    score_total: float
+    components: dict[str, float]
+    scored_at: str
+
+
+@dataclass(frozen=True)
 class Article:
     id: str
     url: str
