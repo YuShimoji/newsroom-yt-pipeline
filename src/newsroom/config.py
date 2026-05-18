@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -9,6 +10,36 @@ from newsroom.store.models import SourceFeed
 
 
 DEFAULT_SOURCES_CONFIG = Path("configs/sources.yml")
+DEFAULT_SERIES_CONFIG = Path("configs/series.yml")
+
+
+@dataclass(frozen=True)
+class Series:
+    id: str
+    title: str
+    description: str
+    tags: list[str] = field(default_factory=list)
+    default_format: str = "anchor"
+    strategic_question: str | None = None
+
+    @classmethod
+    def from_mapping(cls, data: dict[str, Any]) -> "Series":
+        series_id = str(data.get("id") or "").strip()
+        if not series_id:
+            raise ValueError("Series requires 'id'")
+        title = str(data.get("title") or series_id).strip()
+        description = str(data.get("description") or "").strip()
+        raw_tags = data.get("tags") or []
+        if not isinstance(raw_tags, list):
+            raise ValueError(f"Series {series_id!r} tags must be a list")
+        return cls(
+            id=series_id,
+            title=title,
+            description=description,
+            tags=[str(tag) for tag in raw_tags],
+            default_format=str(data.get("default_format") or "anchor"),
+            strategic_question=(data.get("strategic_question") or None),
+        )
 
 
 def load_yaml_file(path: str | Path) -> dict[str, Any]:
@@ -38,4 +69,20 @@ def load_source_feeds(path: str | Path = DEFAULT_SOURCES_CONFIG) -> list[SourceF
             raise ValueError("Each feed entry must be a mapping")
         feeds.append(SourceFeed.from_mapping(raw_feed))
     return feeds
+
+
+def load_series(path: str | Path = DEFAULT_SERIES_CONFIG) -> list[Series]:
+    data = load_yaml_file(path)
+    raw_series = data.get("series", [])
+    if raw_series is None:
+        return []
+    if not isinstance(raw_series, list):
+        raise ValueError("series.yml field 'series' must be a list")
+
+    series: list[Series] = []
+    for raw_entry in raw_series:
+        if not isinstance(raw_entry, dict):
+            raise ValueError("Each series entry must be a mapping")
+        series.append(Series.from_mapping(raw_entry))
+    return series
 

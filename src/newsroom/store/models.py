@@ -55,6 +55,47 @@ class SourceFeed:
 
 
 @dataclass(frozen=True)
+class SourceRef:
+    article_id: str
+    url: str
+    title: str
+    source_name: str
+    source_type: str
+    published_at: str | None = None
+    license_hint: str | None = None
+
+
+@dataclass(frozen=True)
+class TimelineEvent:
+    occurred_at: str | None
+    source_name: str
+    title: str
+    article_id: str
+    url: str
+
+
+@dataclass(frozen=True)
+class GlossaryTerm:
+    term: str
+    definition: str | None = None
+
+
+@dataclass(frozen=True)
+class NotebookPacket:
+    id: str
+    story_cluster_id: str
+    primary_sources: list[SourceRef]
+    news_sources: list[SourceRef]
+    critical_views: list[SourceRef]
+    timeline: list[TimelineEvent]
+    glossary: list[GlossaryTerm]
+    questions: list[str]
+    format_hint: str
+    export_dir: str
+    created_at: str
+
+
+@dataclass(frozen=True)
 class StoryCluster:
     id: str
     title: str
