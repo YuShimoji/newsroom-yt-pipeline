@@ -9,4 +9,7 @@ data/*.sqlite
 data/*.sqlite-shm
 data/*.sqlite-wal
 data/secrets/
+data/packets/
+data/scripts/
+data/exports/
 
