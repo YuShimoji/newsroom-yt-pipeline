@@ -5,6 +5,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from newsroom.clustering.story_clusterer import StoryClusterer
 from newsroom.config import load_source_feeds
 from newsroom.ingest.inoreader_client import InoreaderClient
 from newsroom.ingest.rss_client import RssClient
@@ -13,7 +14,11 @@ from newsroom.store.db import (
     DEFAULT_DB_PATH,
     init_db,
     list_articles_for_date,
+    list_clusters_for_date,
+    list_topic_scores_for_date,
+    replace_clusters_for_date,
     upsert_article,
+    upsert_topic_score,
 )
 
 
@@ -32,7 +37,35 @@ def build_parser() -> argparse.ArgumentParser:
     report_group.add_argument("--today", action="store_true", help="Report for the local current date")
     report_group.add_argument("--date", help="Report date in YYYY-MM-DD format")
 
+    cluster_parser = subparsers.add_parser("cluster", help="Group daily articles into story clusters")
+    _add_date_args(cluster_parser)
+    cluster_parser.add_argument(
+        "--threshold",
+        type=float,
+        default=0.4,
+        help="Similarity threshold (0.0-1.0) for grouping articles",
+    )
+
+    score_parser = subparsers.add_parser("score", help="Score story clusters for a date")
+    _add_date_args(score_parser)
+
+    shortlist_parser = subparsers.add_parser("shortlist", help="Print the top scored story clusters")
+    _add_date_args(shortlist_parser)
+    shortlist_parser.add_argument("--top", type=int, default=10, help="Number of stories to print")
+
     return parser
+
+
+def _add_date_args(parser: argparse.ArgumentParser) -> None:
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--today", action="store_true", help="Use the local current date")
+    group.add_argument("--date", help="Date in YYYY-MM-DD format")
+
+
+def _resolve_date(args: argparse.Namespace) -> str:
+    if getattr(args, "date", None):
+        return args.date
+    return datetime.now().date().isoformat()
 
 
 def cmd_fetch(args: argparse.Namespace) -> int:
@@ -82,10 +115,7 @@ def cmd_report(args: argparse.Namespace) -> int:
     db_path = Path(args.db)
     init_db(db_path)
 
-    if args.date:
-        report_date = args.date
-    else:
-        report_date = datetime.now().date().isoformat()
+    report_date = _resolve_date(args)
 
     articles = list_articles_for_date(db_path, report_date)
     scorer = TopicScorer()
@@ -107,19 +137,98 @@ def cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_cluster(args: argparse.Namespace) -> int:
+    db_path = Path(args.db)
+    init_db(db_path)
+    cluster_date = _resolve_date(args)
+
+    articles = list_articles_for_date(db_path, cluster_date)
+    if not articles:
+        print(f"No articles stored for {cluster_date}; nothing to cluster.")
+        replace_clusters_for_date(db_path, cluster_date, [])
+        return 0
+
+    clusterer = StoryClusterer(threshold=args.threshold)
+    clusters = clusterer.cluster(articles, cluster_date)
+    replace_clusters_for_date(db_path, cluster_date, clusters)
+
+    multi_member = [c for c in clusters if len(c.article_ids) > 1]
+    print(f"Clustered {len(articles)} article(s) into {len(clusters)} story cluster(s) for {cluster_date}.")
+    print(f"Multi-article clusters: {len(multi_member)}")
+    for index, cluster in enumerate(multi_member, start=1):
+        print(f"  {index}. {cluster.title}  ({len(cluster.article_ids)} articles, entities={cluster.entities})")
+    return 0
+
+
+def cmd_score(args: argparse.Namespace) -> int:
+    db_path = Path(args.db)
+    init_db(db_path)
+    cluster_date = _resolve_date(args)
+
+    clusters = list_clusters_for_date(db_path, cluster_date)
+    if not clusters:
+        print(f"No clusters for {cluster_date}; run 'newsroom cluster' first.")
+        return 0
+
+    article_lookup = {article.id: article for article in list_articles_for_date(db_path, cluster_date)}
+    scorer = TopicScorer()
+    scored = 0
+    for cluster in clusters:
+        members = [article_lookup[article_id] for article_id in cluster.article_ids if article_id in article_lookup]
+        if not members:
+            continue
+        score = scorer.score_cluster(cluster, members)
+        upsert_topic_score(db_path, score)
+        scored += 1
+
+    print(f"Scored {scored} cluster(s) for {cluster_date}.")
+    return 0
+
+
+def cmd_shortlist(args: argparse.Namespace) -> int:
+    db_path = Path(args.db)
+    init_db(db_path)
+    cluster_date = _resolve_date(args)
+
+    scores = list_topic_scores_for_date(db_path, cluster_date)
+    if not scores:
+        print(f"No scored clusters for {cluster_date}; run 'newsroom cluster' then 'newsroom score'.")
+        return 0
+
+    clusters_by_id = {cluster.id: cluster for cluster in list_clusters_for_date(db_path, cluster_date)}
+
+    top = scores[: max(args.top, 0)]
+    print(f"Daily shortlist for {cluster_date} (top {len(top)} of {len(scores)}):")
+    for index, score in enumerate(top, start=1):
+        cluster = clusters_by_id.get(score.cluster_id)
+        if cluster is None:
+            continue
+        print(f"{index}. [{score.score_total:.1f}] {cluster.title}")
+        print(
+            f"   articles={len(cluster.article_ids)}  sources={cluster.primary_sources}  "
+            f"entities={cluster.entities}"
+        )
+        print(f"   components: {score.components}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    if args.command == "fetch":
-        return cmd_fetch(args)
-    if args.command == "report":
-        return cmd_report(args)
-
-    parser.error(f"Unknown command: {args.command}")
-    return 2
+    dispatchers = {
+        "fetch": cmd_fetch,
+        "report": cmd_report,
+        "cluster": cmd_cluster,
+        "score": cmd_score,
+        "shortlist": cmd_shortlist,
+    }
+    handler = dispatchers.get(args.command)
+    if handler is None:
+        parser.error(f"Unknown command: {args.command}")
+        return 2
+    return handler(args)
 
 
 if __name__ == "__main__":  # pragma: no cover
     sys.exit(main())
-
