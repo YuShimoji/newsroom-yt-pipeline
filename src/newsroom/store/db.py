@@ -177,6 +177,29 @@ def list_articles_for_date(db_path: str | Path, date_yyyy_mm_dd: str) -> list[Ar
     return [_row_to_article(row) for row in rows]
 
 
+def list_articles_by_ids(
+    db_path: str | Path, article_ids: list[str] | set[str]
+) -> list[Article]:
+    """Fetch articles by id regardless of their published_at date.
+
+    Story clusters that span a multi-day window contain article ids whose
+    published_at can fall on any day in the window. Resolving cluster
+    members by id avoids re-querying by date and keeps lookup correct
+    when the cluster_date diverges from the member dates.
+    """
+    ids = list(article_ids)
+    if not ids:
+        return []
+    init_db(db_path)
+    placeholders = ",".join("?" for _ in ids)
+    with connect(db_path) as connection:
+        rows = connection.execute(
+            f"SELECT * FROM articles WHERE id IN ({placeholders})",
+            ids,
+        ).fetchall()
+    return [_row_to_article(row) for row in rows]
+
+
 def list_articles_in_date_range(
     db_path: str | Path, start_date: str, end_date: str
 ) -> list[Article]:

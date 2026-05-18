@@ -21,6 +21,7 @@ from newsroom.script.script_drafter import ScriptDrafter
 from newsroom.store.db import (
     DEFAULT_DB_PATH,
     init_db,
+    list_articles_by_ids,
     list_articles_for_date,
     list_articles_in_date_range,
     list_clusters_for_date,
@@ -340,11 +341,13 @@ def cmd_score(args: argparse.Namespace) -> int:
         print(f"No clusters for {cluster_date}; run 'newsroom cluster' first.")
         return 0
 
-    article_lookup = {article.id: article for article in list_articles_for_date(db_path, cluster_date)}
+    all_ids = sorted({aid for cluster in clusters for aid in cluster.article_ids})
+    article_lookup = {article.id: article for article in list_articles_by_ids(db_path, all_ids)}
+
     scorer = TopicScorer()
     scored = 0
     for cluster in clusters:
-        members = [article_lookup[article_id] for article_id in cluster.article_ids if article_id in article_lookup]
+        members = [article_lookup[aid] for aid in cluster.article_ids if aid in article_lookup]
         if not members:
             continue
         score = scorer.score_cluster(cluster, members)
@@ -410,11 +413,15 @@ def _iter_cluster_dates(db_path: Path) -> list[str]:
 
 
 def _find_cluster(db_path: Path, cluster_id: str) -> tuple[StoryCluster, str] | None:
-    for date in _iter_cluster_dates(db_path):
-        for cluster in list_clusters_for_date(db_path, date):
+    for cluster_date_value in _iter_cluster_dates(db_path):
+        for cluster in list_clusters_for_date(db_path, cluster_date_value):
             if cluster.id == cluster_id:
-                return cluster, date
+                return cluster, cluster_date_value
     return None
+
+
+def _articles_for_cluster(db_path: Path, cluster: StoryCluster):
+    return list_articles_by_ids(db_path, cluster.article_ids)
 
 
 def _load_series_index(path: str) -> dict[str, object]:
@@ -437,13 +444,9 @@ def cmd_packet(args: argparse.Namespace) -> int:
     if found is None:
         print(f"Story cluster not found: {args.story}")
         return 1
-    target_cluster, target_date = found
+    target_cluster, _ = found
 
-    articles = [
-        article
-        for article in list_articles_for_date(db_path, target_date)
-        if article.id in target_cluster.article_ids
-    ]
+    articles = _articles_for_cluster(db_path, target_cluster)
     if not articles:
         print(f"No articles resolvable for cluster {args.story}")
         return 1
@@ -555,12 +558,8 @@ def _cmd_script_critique(args: argparse.Namespace, db_path: Path) -> int:
     if found is None:
         print(f"Cluster not found for plan {plan.id}: {plan.story_cluster_id}")
         return 1
-    cluster, cluster_date = found
-    articles = [
-        article
-        for article in list_articles_for_date(db_path, cluster_date)
-        if article.id in cluster.article_ids
-    ]
+    cluster, _ = found
+    articles = _articles_for_cluster(db_path, cluster)
     series_index = _load_series_index(str(DEFAULT_SERIES_CONFIG))
     packet = NotebookPacketBuilder(series_index=series_index).build(cluster, articles)
 
@@ -591,12 +590,8 @@ def _cmd_script_revise(args: argparse.Namespace, db_path: Path) -> int:
     if found is None:
         print(f"Cluster not found for plan {plan.id}: {plan.story_cluster_id}")
         return 1
-    cluster, cluster_date = found
-    articles = [
-        article
-        for article in list_articles_for_date(db_path, cluster_date)
-        if article.id in cluster.article_ids
-    ]
+    cluster, _ = found
+    articles = _articles_for_cluster(db_path, cluster)
     series_index = _load_series_index(str(DEFAULT_SERIES_CONFIG))
     packet = NotebookPacketBuilder(series_index=series_index).build(cluster, articles)
     findings = ScriptCritic().critique(updated, plan, packet)
@@ -630,12 +625,8 @@ def cmd_export(args: argparse.Namespace) -> int:
     if found is None:
         print(f"Cluster not found for plan {plan.id}: {plan.story_cluster_id}")
         return 1
-    cluster, cluster_date = found
-    articles = [
-        article
-        for article in list_articles_for_date(db_path, cluster_date)
-        if article.id in cluster.article_ids
-    ]
+    cluster, _ = found
+    articles = _articles_for_cluster(db_path, cluster)
     if not articles:
         print(f"No articles resolvable for cluster {cluster.id}")
         return 1
