@@ -302,6 +302,23 @@ def cmd_shortlist(args: argparse.Namespace) -> int:
     return 0
 
 
+def _force_utf8_stdio() -> None:
+    """Reconfigure stdout/stderr to UTF-8 so the CLI never crashes on em-dash
+    or Japanese characters when run from a Windows console (cp932 default).
+
+    The artifact files are already written in UTF-8; only the console print
+    path is affected by the legacy codec.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (OSError, ValueError):
+            continue
+
+
 def _iter_cluster_dates(db_path: Path) -> list[str]:
     from newsroom.store.db import connect
 
@@ -564,6 +581,7 @@ def cmd_export(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    _force_utf8_stdio()
     parser = build_parser()
     args = parser.parse_args(argv)
 
