@@ -1,0 +1,12 @@
+speakers:
+  yukkuri_dialogue:
+    - id: reimu
+      ymm4_name: 霊夢
+      role: 聞き役
+    - id: marisa
+      ymm4_name: 魔理沙
+      role: 解説役
+  anchor_narration:
+    - id: anchor
+      ymm4_name: ナレーター
+      role: 進行

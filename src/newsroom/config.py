@@ -11,6 +11,7 @@ from newsroom.store.models import SourceFeed
 
 DEFAULT_SOURCES_CONFIG = Path("configs/sources.yml")
 DEFAULT_SERIES_CONFIG = Path("configs/series.yml")
+DEFAULT_SPEAKERS_CONFIG = Path("configs/speakers.yml")
 
 
 @dataclass(frozen=True)
@@ -69,6 +70,44 @@ def load_source_feeds(path: str | Path = DEFAULT_SOURCES_CONFIG) -> list[SourceF
             raise ValueError("Each feed entry must be a mapping")
         feeds.append(SourceFeed.from_mapping(raw_feed))
     return feeds
+
+
+@dataclass(frozen=True)
+class SpeakerProfile:
+    id: str
+    ymm4_name: str
+    role: str
+
+
+@dataclass(frozen=True)
+class SpeakerConfig:
+    by_format: dict[str, list[SpeakerProfile]]
+
+
+def load_speaker_config(path: str | Path = DEFAULT_SPEAKERS_CONFIG) -> SpeakerConfig:
+    data = load_yaml_file(path)
+    raw_speakers = data.get("speakers")
+    if not isinstance(raw_speakers, dict):
+        raise ValueError("speakers.yml must define a 'speakers' mapping")
+
+    by_format: dict[str, list[SpeakerProfile]] = {}
+    for format_key, entries in raw_speakers.items():
+        if not isinstance(entries, list):
+            raise ValueError(f"speakers.{format_key} must be a list")
+        profiles: list[SpeakerProfile] = []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                raise ValueError(f"speakers.{format_key} entries must be mappings")
+            speaker_id = str(entry.get("id") or "").strip()
+            ymm4_name = str(entry.get("ymm4_name") or "").strip()
+            role = str(entry.get("role") or "").strip()
+            if not speaker_id or not ymm4_name:
+                raise ValueError(
+                    f"speakers.{format_key} entry requires 'id' and 'ymm4_name'"
+                )
+            profiles.append(SpeakerProfile(id=speaker_id, ymm4_name=ymm4_name, role=role))
+        by_format[str(format_key)] = profiles
+    return SpeakerConfig(by_format=by_format)
 
 
 def load_series(path: str | Path = DEFAULT_SERIES_CONFIG) -> list[Series]:

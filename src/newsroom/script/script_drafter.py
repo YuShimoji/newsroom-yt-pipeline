@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from hashlib import sha256
 
+from newsroom.config import SpeakerConfig
 from newsroom.script.speakers import speaker_for_index
 from newsroom.store.models import (
     Chapter,
@@ -36,6 +37,9 @@ class ScriptDrafter:
     seeded from packet.primary_sources.
     """
 
+    def __init__(self, speaker_config: SpeakerConfig | None = None) -> None:
+        self.speaker_config = speaker_config
+
     def draft(
         self,
         plan: EpisodePlan,
@@ -62,6 +66,7 @@ class ScriptDrafter:
                 primary_refs=primary_refs,
                 news_refs=news_refs,
                 all_refs=all_refs,
+                speaker_config=self.speaker_config,
             )
             segments.extend(chapter_segments)
             index += len(chapter_segments)
@@ -87,6 +92,7 @@ def _segments_for_chapter(
     primary_refs: list[str],
     news_refs: list[str],
     all_refs: list[str],
+    speaker_config: SpeakerConfig | None = None,
 ) -> list[ScriptSegment]:
     chapter_key = chapter.id.rsplit("__", 1)[-1]
     claim_type = _CHAPTER_INTENT_TO_CLAIM.get(chapter_key, "interpretation")
@@ -106,7 +112,7 @@ def _segments_for_chapter(
     segments: list[ScriptSegment] = []
     for slot in range(slot_count):
         segment_id = f"{chapter.id}__s{slot}"
-        speaker = speaker_for_index(format_name, start_index + slot)
+        speaker = speaker_for_index(format_name, start_index + slot, speaker_config)
         text = _placeholder_text(chapter, slot)
         segments.append(
             ScriptSegment(
