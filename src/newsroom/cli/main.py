@@ -11,6 +11,8 @@ from newsroom.config import DEFAULT_SERIES_CONFIG, load_series, load_source_feed
 from newsroom.ingest.inoreader_client import InoreaderClient
 from newsroom.ingest.rss_client import RssClient
 from newsroom.adapters.ymm4_export import DEFAULT_EXPORT_ROOT, build_ymm4_package
+from newsroom.layout.exporters import DEFAULT_VISUAL_ROOT, write_visual_bundle
+from newsroom.layout.visual_planner import VisualPlanner
 from newsroom.notebook.exporters import write_packet
 from newsroom.notebook.packet_builder import DEFAULT_PACKET_ROOT, NotebookPacketBuilder
 from newsroom.scoring.topic_scorer import TopicScorer
@@ -28,11 +30,13 @@ from newsroom.store.db import (
     list_topic_scores_for_date,
     load_episode_plan,
     load_script_ir,
+    load_visual_ir,
     replace_clusters_for_date,
     upsert_article,
     upsert_episode_plan,
     upsert_script_ir,
     upsert_topic_score,
+    upsert_visual_ir,
 )
 from newsroom.store.models import ScriptIR, StoryCluster
 
@@ -127,6 +131,22 @@ def build_parser() -> argparse.ArgumentParser:
         "--script-root",
         default=str(DEFAULT_SCRIPT_ROOT),
         help="Root directory for script bundles",
+    )
+
+    visual_parser = subparsers.add_parser("visual", help="Visual planning operations")
+    visual_sub = visual_parser.add_subparsers(dest="visual_command", required=True)
+
+    visual_plan = visual_sub.add_parser("plan", help="Plan VisualIR for a script")
+    visual_plan.add_argument("--script", required=True, help="Script id")
+    visual_plan.add_argument(
+        "--visual-root",
+        default=str(DEFAULT_VISUAL_ROOT),
+        help="Root directory for visual bundles",
+    )
+    visual_plan.add_argument(
+        "--series-config",
+        default=str(DEFAULT_SERIES_CONFIG),
+        help="series.yml path used when rebuilding the packet",
     )
 
     export_parser = subparsers.add_parser("export", help="Export packages for downstream tools")
@@ -604,6 +624,48 @@ def _cmd_script_revise(args: argparse.Namespace, db_path: Path) -> int:
     return 0
 
 
+def cmd_visual(args: argparse.Namespace) -> int:
+    if args.visual_command != "plan":
+        print(f"Unsupported visual subcommand: {args.visual_command}")
+        return 2
+
+    db_path = Path(args.db)
+    init_db(db_path)
+
+    script = load_script_ir(db_path, args.script)
+    if script is None:
+        print(f"Script not found: {args.script}")
+        return 1
+    plan = load_episode_plan(db_path, script.episode_plan_id)
+    if plan is None:
+        print(f"Episode plan not found for script {args.script}: {script.episode_plan_id}")
+        return 1
+
+    found = _find_cluster(db_path, plan.story_cluster_id)
+    if found is None:
+        print(f"Cluster not found for plan {plan.id}: {plan.story_cluster_id}")
+        return 1
+    cluster, _ = found
+    articles = _articles_for_cluster(db_path, cluster)
+    if not articles:
+        print(f"No articles resolvable for cluster {cluster.id}")
+        return 1
+
+    series_index = _load_series_index(args.series_config)
+    packet = NotebookPacketBuilder(series_index=series_index).build(cluster, articles)
+
+    visual_ir = VisualPlanner().plan(script, plan, packet)
+    upsert_visual_ir(db_path, visual_ir)
+    output_dir = write_visual_bundle(visual_ir, script, plan, visual_root=Path(args.visual_root))
+
+    human_required = sum(1 for u in visual_ir.visual_units if u.approval_state == "human_required")
+    print(f"Visual plan built: {visual_ir.id}")
+    print(f"Script: {script.id}  Plan: {plan.id}")
+    print(f"Units: {len(visual_ir.visual_units)}  human_required: {human_required}")
+    print(f"Output dir: {output_dir}")
+    return 0
+
+
 def cmd_export(args: argparse.Namespace) -> int:
     if args.export_command != "ymm4":
         print(f"Unsupported export subcommand: {args.export_command}")
@@ -664,6 +726,7 @@ def main(argv: list[str] | None = None) -> int:
         "shortlist": cmd_shortlist,
         "packet": cmd_packet,
         "script": cmd_script,
+        "visual": cmd_visual,
         "export": cmd_export,
     }
     handler = dispatchers.get(args.command)
