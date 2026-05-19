@@ -12,6 +12,8 @@ from newsroom.store.models import (
     ScriptSegment,
     StoryCluster,
     TopicScore,
+    VisualIR,
+    VisualUnit,
 )
 
 
@@ -107,6 +109,16 @@ CREATE TABLE IF NOT EXISTS script_irs (
 );
 
 CREATE INDEX IF NOT EXISTS idx_script_irs_plan ON script_irs(episode_plan_id);
+
+CREATE TABLE IF NOT EXISTS visual_irs (
+  id TEXT PRIMARY KEY,
+  script_id TEXT NOT NULL,
+  visual_units TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (script_id) REFERENCES script_irs(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_visual_irs_script ON visual_irs(script_id);
 """
 
 
@@ -427,6 +439,94 @@ def load_script_ir(db_path: str | Path, script_id: str) -> ScriptIR | None:
         format=row["format"],
         segments=segments,
         created_at=row["created_at"],
+    )
+
+
+def upsert_visual_ir(db_path: str | Path, visual_ir: VisualIR) -> None:
+    init_db(db_path)
+    with connect(db_path) as connection:
+        connection.execute(
+            """
+            INSERT INTO visual_irs (id, script_id, visual_units, created_at)
+            VALUES (:id, :script_id, :visual_units, :created_at)
+            ON CONFLICT(id) DO UPDATE SET
+              script_id = excluded.script_id,
+              visual_units = excluded.visual_units
+            """,
+            {
+                "id": visual_ir.id,
+                "script_id": visual_ir.script_id,
+                "visual_units": json.dumps(
+                    [_visual_unit_to_dict(unit) for unit in visual_ir.visual_units],
+                    ensure_ascii=False,
+                ),
+                "created_at": visual_ir.created_at,
+            },
+        )
+
+
+def load_visual_ir(db_path: str | Path, visual_ir_id: str) -> VisualIR | None:
+    init_db(db_path)
+    with connect(db_path) as connection:
+        row = connection.execute(
+            "SELECT * FROM visual_irs WHERE id = ?", (visual_ir_id,)
+        ).fetchone()
+    if row is None:
+        return None
+    raw_units = json.loads(row["visual_units"] or "[]")
+    units = [_dict_to_visual_unit(payload) for payload in raw_units]
+    return VisualIR(
+        id=row["id"],
+        script_id=row["script_id"],
+        visual_units=units,
+        created_at=row["created_at"],
+    )
+
+
+def load_visual_ir_for_script(db_path: str | Path, script_id: str) -> VisualIR | None:
+    init_db(db_path)
+    with connect(db_path) as connection:
+        row = connection.execute(
+            "SELECT * FROM visual_irs WHERE script_id = ? ORDER BY created_at DESC LIMIT 1",
+            (script_id,),
+        ).fetchone()
+    if row is None:
+        return None
+    raw_units = json.loads(row["visual_units"] or "[]")
+    units = [_dict_to_visual_unit(payload) for payload in raw_units]
+    return VisualIR(
+        id=row["id"],
+        script_id=row["script_id"],
+        visual_units=units,
+        created_at=row["created_at"],
+    )
+
+
+def _visual_unit_to_dict(unit: VisualUnit) -> dict[str, object]:
+    return {
+        "id": unit.id,
+        "segment_refs": unit.segment_refs,
+        "unit_type": unit.unit_type,
+        "duration_sec": unit.duration_sec,
+        "layout_template": unit.layout_template,
+        "source_refs": unit.source_refs,
+        "asset_refs": unit.asset_refs,
+        "density_score": unit.density_score,
+        "approval_state": unit.approval_state,
+    }
+
+
+def _dict_to_visual_unit(payload: dict[str, object]) -> VisualUnit:
+    return VisualUnit(
+        id=str(payload["id"]),
+        segment_refs=list(payload.get("segment_refs", []) or []),
+        unit_type=str(payload["unit_type"]),
+        duration_sec=float(payload["duration_sec"]),
+        layout_template=str(payload["layout_template"]),
+        source_refs=list(payload.get("source_refs", []) or []),
+        asset_refs=list(payload.get("asset_refs", []) or []),
+        density_score=float(payload.get("density_score", 0.0)),
+        approval_state=str(payload.get("approval_state", "auto_ok")),
     )
 
 
