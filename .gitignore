@@ -11,5 +11,6 @@ data/*.sqlite-wal
 data/secrets/
 data/packets/
 data/scripts/
+data/visuals/
 data/exports/
 
