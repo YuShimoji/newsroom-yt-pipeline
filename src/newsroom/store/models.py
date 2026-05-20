@@ -162,6 +162,31 @@ class VisualIR:
 
 
 @dataclass(frozen=True)
+class AssetCandidate:
+    asset_id: str
+    type: str
+    source_url: str | None
+    source_title: str | None
+    author: str | None
+    captured_at: str | None
+    intended_use: str
+    quote_reason: str | None = None
+    display_duration_sec: float | None = None
+    crop_ratio: str | None = None
+    modification: str = "none"
+    attribution_text: str | None = None
+    risk_level: str = "medium"
+    approval_state: str = "human_required"
+
+
+@dataclass(frozen=True)
+class AssetManifest:
+    episode_id: str
+    assets: list[AssetCandidate]
+    created_at: str
+
+
+@dataclass(frozen=True)
 class StoryCluster:
     id: str
     title: str
