@@ -7,16 +7,27 @@ from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
 
+from newsroom.assets.asset_registry import AssetRegistry
+from newsroom.assets.exporters import (
+    write_asset_manifest_file,
+    write_quote_manifest_file,
+)
+from newsroom.assets.quote_manifest import QuoteManifestBuilder
+from newsroom.layout.exporters import write_visual_files
+from newsroom.layout.visual_planner import VisualPlanner
 from newsroom.script.script_critic import CritiqueFinding
 from newsroom.store.models import (
+    AssetManifest,
     EpisodePlan,
     NotebookPacket,
+    QuoteManifest,
     ScriptIR,
+    VisualIR,
 )
 
 
 DEFAULT_EXPORT_ROOT = Path("data/exports")
-MANIFEST_SCHEMA_VERSION = 1
+MANIFEST_SCHEMA_VERSION = 2
 
 
 def build_ymm4_package(
@@ -26,20 +37,51 @@ def build_ymm4_package(
     findings: list[CritiqueFinding],
     *,
     export_root: Path | str = DEFAULT_EXPORT_ROOT,
+    visual_ir: VisualIR | None = None,
+    asset_manifest: AssetManifest | None = None,
+    quote_manifest: QuoteManifest | None = None,
 ) -> tuple[Path, dict]:
-    """Render the M5 artifact bundle and return (output_dir, manifest)."""
-    episode_id = _episode_id(plan, script)
+    """Render the M6.4 YMM4 handoff bundle and return (output_dir, manifest)."""
+    episode_id = export_episode_id(plan, script)
     output_dir = Path(export_root) / episode_id
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    warnings = _collect_warnings(packet, script, findings)
+    resolved_visual_ir = visual_ir or VisualPlanner().plan(script, plan, packet)
+    resolved_asset_manifest = asset_manifest or AssetRegistry().suggest(
+        resolved_visual_ir,
+        packet,
+        episode_id=plan.id,
+    )
+    resolved_quote_manifest = quote_manifest or QuoteManifestBuilder().build(
+        script,
+        resolved_visual_ir,
+        packet,
+        episode_id=plan.id,
+    )
+
+    review_counts = _review_counts(
+        resolved_visual_ir,
+        resolved_asset_manifest,
+        resolved_quote_manifest,
+    )
+    warnings = _collect_warnings(packet, script, findings, review_counts)
     exported_at = datetime.now(UTC).isoformat()
 
     chapter_lookup = {chapter.id: chapter for chapter in plan.chapter_outline}
     _write_script_csv(output_dir / "script.csv", script, chapter_lookup)
     _write_script_ir_json(output_dir / "script_ir.json", script)
     _write_source_list_md(output_dir / "source_list.md", packet)
-    _write_ymm4_notes_md(output_dir / "ymm4_notes.md", plan, script, packet, warnings)
+    write_visual_files(output_dir, resolved_visual_ir, script, plan)
+    write_asset_manifest_file(output_dir, resolved_asset_manifest)
+    write_quote_manifest_file(output_dir, resolved_quote_manifest)
+    _write_ymm4_notes_md(
+        output_dir / "ymm4_notes.md",
+        plan,
+        script,
+        packet,
+        warnings,
+        review_counts,
+    )
 
     manifest = _build_manifest(
         episode_id=episode_id,
@@ -47,6 +89,9 @@ def build_ymm4_package(
         plan=plan,
         script=script,
         packet=packet,
+        visual_ir=resolved_visual_ir,
+        asset_manifest=resolved_asset_manifest,
+        quote_manifest=resolved_quote_manifest,
         warnings=warnings,
     )
     (output_dir / "export_manifest.json").write_text(
@@ -57,7 +102,7 @@ def build_ymm4_package(
     return output_dir, manifest
 
 
-def _episode_id(plan: EpisodePlan, script: ScriptIR) -> str:
+def export_episode_id(plan: EpisodePlan, script: ScriptIR) -> str:
     digest = sha256(f"{plan.id}|{script.id}".encode("utf-8")).hexdigest()[:12]
     return f"episode_{digest}"
 
@@ -66,6 +111,7 @@ def _collect_warnings(
     packet: NotebookPacket,
     script: ScriptIR,
     findings: list[CritiqueFinding],
+    review_counts: dict[str, int],
 ) -> list[str]:
     warnings: list[str] = []
     guard_names = {finding.guard for finding in findings}
@@ -92,7 +138,36 @@ def _collect_warnings(
             f"{review_count} / {len(script.segments)} segments still flagged needs_human_review."
         )
 
+    if review_counts["total_human_required"]:
+        warnings.append(
+            "M6 handoff contains "
+            f"{review_counts['total_human_required']} human_required "
+            "visual/asset/quote review item(s); operator approval is required before publishing."
+        )
+
     return warnings
+
+
+def _review_counts(
+    visual_ir: VisualIR,
+    asset_manifest: AssetManifest,
+    quote_manifest: QuoteManifest,
+) -> dict[str, int]:
+    visual_count = sum(
+        1 for unit in visual_ir.visual_units if unit.approval_state == "human_required"
+    )
+    asset_count = sum(
+        1 for asset in asset_manifest.assets if asset.approval_state == "human_required"
+    )
+    quote_count = sum(
+        1 for quote in quote_manifest.quotes if quote.approval_state == "human_required"
+    )
+    return {
+        "visual_human_required": visual_count,
+        "asset_human_required": asset_count,
+        "quote_human_required": quote_count,
+        "total_human_required": visual_count + asset_count + quote_count,
+    }
 
 
 def _write_script_csv(path: Path, script: ScriptIR, chapter_lookup: dict) -> None:
@@ -154,6 +229,7 @@ def _write_ymm4_notes_md(
     script: ScriptIR,
     packet: NotebookPacket,
     warnings: list[str],
+    review_counts: dict[str, int],
 ) -> None:
     lines: list[str] = []
     lines.append(f"# YMM4 Notes — {script.id}")
@@ -175,16 +251,31 @@ def _write_ymm4_notes_md(
     lines.append(f"- script_id: `{script.id}`")
     lines.append(f"- packet_export_dir: `{packet.export_dir}`")
     lines.append("")
+    lines.append("## Included artifacts")
+    lines.append("- `script.csv` — YMM4 台本読み込み用 CSV")
+    lines.append("- `script_ir.json` — 台本セグメントと source_ref の機械可読控え")
+    lines.append("- `source_list.md` — primary / news / critical source の分類")
+    lines.append("- `visual_plan.md` — 画面設計の確認用")
+    lines.append("- `visual_ir.json` — VisualIR の機械可読控え")
+    lines.append("- `asset_manifest.yml` — 素材候補と承認状態の確認用")
+    lines.append("- `quote_manifest.yml` — 引用・スクショ・データ利用の公開前確認用")
+    lines.append("- `export_manifest.json` — handoff package 全体の追跡用 manifest")
+    lines.append("")
+    lines.append("## Human review gates")
+    lines.append(f"- visual human_required: {review_counts['visual_human_required']}")
+    lines.append(f"- asset human_required: {review_counts['asset_human_required']}")
+    lines.append(f"- quote human_required: {review_counts['quote_human_required']}")
+    if review_counts["total_human_required"]:
+        lines.append("- `human_required` が残る場合、公開前に operator が確認・承認・差し替え判断を行う。")
+    else:
+        lines.append("- _No human_required visual / asset / quote items recorded._")
+    lines.append("")
     lines.append("## Warnings")
     if warnings:
         for warning in warnings:
             lines.append(f"- {warning}")
     else:
         lines.append("- _No warnings emitted._")
-    lines.append("")
-    lines.append("## Deferred (not in this milestone)")
-    lines.append("- `visual_plan.md`, `visual_ir.json` — M6 VisualIR")
-    lines.append("- `asset_manifest.yml`, `quote_manifest.yml` — M6 Asset / Quote manifests")
     lines.append("")
     path.write_text("\n".join(lines), encoding="utf-8")
 
@@ -196,6 +287,9 @@ def _build_manifest(
     plan: EpisodePlan,
     script: ScriptIR,
     packet: NotebookPacket,
+    visual_ir: VisualIR,
+    asset_manifest: AssetManifest,
+    quote_manifest: QuoteManifest,
     warnings: list[str],
 ) -> dict:
     return {
@@ -209,18 +303,25 @@ def _build_manifest(
             "script_id": script.id,
             "packet_id": packet.id,
             "packet_export_dir": packet.export_dir,
+            "visual_ir_id": visual_ir.id,
+            "visual_plan_path": "visual_plan.md",
+            "visual_ir_path": "visual_ir.json",
+            "asset_manifest_episode_id": asset_manifest.episode_id,
+            "asset_manifest_path": "asset_manifest.yml",
+            "quote_manifest_episode_id": quote_manifest.episode_id,
+            "quote_manifest_path": "quote_manifest.yml",
         },
         "artifacts": {
             "script_csv": "script.csv",
             "script_ir": "script_ir.json",
             "source_list": "source_list.md",
             "ymm4_notes": "ymm4_notes.md",
+            "visual_plan": "visual_plan.md",
+            "visual_ir": "visual_ir.json",
+            "asset_manifest": "asset_manifest.yml",
+            "quote_manifest": "quote_manifest.yml",
+            "export_manifest": "export_manifest.json",
         },
         "warnings": warnings,
-        "deferred_artifacts": [
-            "visual_plan.md",
-            "visual_ir.json",
-            "asset_manifest.yml",
-            "quote_manifest.yml",
-        ],
+        "deferred_artifacts": [],
     }

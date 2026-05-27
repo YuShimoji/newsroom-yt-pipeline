@@ -18,16 +18,27 @@ def write_visual_bundle(
 ) -> Path:
     output_dir = Path(visual_root) / visual_ir.id
     output_dir.mkdir(parents=True, exist_ok=True)
+    write_visual_files(output_dir, visual_ir, script, plan)
+    return output_dir
 
-    (output_dir / "visual_plan.md").write_text(
+
+def write_visual_files(
+    output_dir: Path | str,
+    visual_ir: VisualIR,
+    script: ScriptIR,
+    plan: EpisodePlan,
+) -> None:
+    """Write visual_plan.md and visual_ir.json into an existing bundle."""
+    target_dir = Path(output_dir)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    (target_dir / "visual_plan.md").write_text(
         _render_visual_plan_md(visual_ir, script, plan),
         encoding="utf-8",
     )
-    (output_dir / "visual_ir.json").write_text(
+    (target_dir / "visual_ir.json").write_text(
         _render_visual_ir_json(visual_ir),
         encoding="utf-8",
     )
-    return output_dir
 
 
 def _render_visual_plan_md(

@@ -187,6 +187,28 @@ class AssetManifest:
 
 
 @dataclass(frozen=True)
+class QuoteEntry:
+    quote_id: str
+    source_ref: str
+    quote_type: str
+    purpose: str
+    necessity: str
+    quoted_scope: str
+    main_subordinate_assessment: str
+    distinction_method: str
+    attribution: str
+    risk_level: str = "medium"
+    approval_state: str = "human_required"
+
+
+@dataclass(frozen=True)
+class QuoteManifest:
+    episode_id: str
+    quotes: list[QuoteEntry]
+    created_at: str
+
+
+@dataclass(frozen=True)
 class StoryCluster:
     id: str
     title: str
@@ -286,4 +308,3 @@ class Article:
             fetch_status=fetch_status,
             fetch_error=fetch_error,
         )
-

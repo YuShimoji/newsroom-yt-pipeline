@@ -10,9 +10,21 @@ from newsroom.clustering.story_clusterer import StoryClusterer
 from newsroom.config import DEFAULT_SERIES_CONFIG, load_series, load_source_feeds
 from newsroom.ingest.inoreader_client import InoreaderClient
 from newsroom.ingest.rss_client import RssClient
-from newsroom.adapters.ymm4_export import DEFAULT_EXPORT_ROOT, build_ymm4_package
+from newsroom.adapters.ymm4_export import (
+    DEFAULT_EXPORT_ROOT,
+    build_ymm4_package,
+    export_episode_id,
+)
 from newsroom.assets.asset_registry import AssetRegistry
-from newsroom.assets.exporters import DEFAULT_ASSET_ROOT, write_asset_manifest
+from newsroom.assets.exporters import (
+    DEFAULT_ASSET_ROOT,
+    DEFAULT_QUOTE_ROOT,
+    load_asset_manifest,
+    load_quote_manifest,
+    write_asset_manifest,
+    write_quote_manifest,
+)
+from newsroom.assets.quote_manifest import QuoteManifestBuilder
 from newsroom.layout.exporters import DEFAULT_VISUAL_ROOT, write_visual_bundle
 from newsroom.layout.visual_planner import VisualPlanner
 from newsroom.notebook.exporters import write_packet
@@ -152,6 +164,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="series.yml path used when rebuilding the packet",
     )
 
+    quote_parser = subparsers.add_parser("quote", help="Quote manifest operations")
+    quote_sub = quote_parser.add_subparsers(dest="quote_command", required=True)
+
+    quote_suggest = quote_sub.add_parser(
+        "suggest",
+        help="Suggest quote review rows from a script",
+    )
+    quote_suggest.add_argument("--script", required=True, help="Script id")
+    quote_suggest.add_argument(
+        "--quote-root",
+        default=str(DEFAULT_QUOTE_ROOT),
+        help="Root directory for quote manifests",
+    )
+    quote_suggest.add_argument(
+        "--series-config",
+        default=str(DEFAULT_SERIES_CONFIG),
+        help="series.yml path used when rebuilding the packet",
+    )
+
     visual_parser = subparsers.add_parser("visual", help="Visual planning operations")
     visual_sub = visual_parser.add_subparsers(dest="visual_command", required=True)
 
@@ -182,6 +213,16 @@ def build_parser() -> argparse.ArgumentParser:
         "--series-config",
         default=str(DEFAULT_SERIES_CONFIG),
         help="series.yml path used when rebuilding the packet",
+    )
+    export_ymm4.add_argument(
+        "--asset-root",
+        default=str(DEFAULT_ASSET_ROOT),
+        help="Root directory used to reuse existing asset manifests",
+    )
+    export_ymm4.add_argument(
+        "--quote-root",
+        default=str(DEFAULT_QUOTE_ROOT),
+        help="Root directory used to reuse existing quote manifests",
     )
 
     return parser
@@ -686,6 +727,66 @@ def cmd_asset(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_quote(args: argparse.Namespace) -> int:
+    if args.quote_command != "suggest":
+        print(f"Unsupported quote subcommand: {args.quote_command}")
+        return 2
+
+    db_path = Path(args.db)
+    init_db(db_path)
+
+    script = load_script_ir(db_path, args.script)
+    if script is None:
+        print(f"Script not found: {args.script}")
+        return 1
+    plan = load_episode_plan(db_path, script.episode_plan_id)
+    if plan is None:
+        print(f"Episode plan not found for script {args.script}: {script.episode_plan_id}")
+        return 1
+
+    found = _find_cluster(db_path, plan.story_cluster_id)
+    if found is None:
+        print(f"Cluster not found for plan {plan.id}: {plan.story_cluster_id}")
+        return 1
+    cluster, _ = found
+    articles = _articles_for_cluster(db_path, cluster)
+    if not articles:
+        print(f"No articles resolvable for cluster {cluster.id}")
+        return 1
+
+    series_index = _load_series_index(args.series_config)
+    packet = NotebookPacketBuilder(series_index=series_index).build(cluster, articles)
+
+    visual_ir = load_visual_ir_for_script(db_path, script.id)
+    if visual_ir is None:
+        visual_ir = VisualPlanner().plan(script, plan, packet)
+        upsert_visual_ir(db_path, visual_ir)
+
+    manifest = QuoteManifestBuilder().build(
+        script,
+        visual_ir,
+        packet,
+        episode_id=plan.id,
+    )
+    output_dir = write_quote_manifest(manifest, quote_root=Path(args.quote_root))
+
+    human_required = sum(
+        1 for quote in manifest.quotes if quote.approval_state == "human_required"
+    )
+    by_type: dict[str, int] = {}
+    for quote in manifest.quotes:
+        by_type[quote.quote_type] = by_type.get(quote.quote_type, 0) + 1
+
+    print(f"Quote manifest written: {manifest.episode_id}")
+    print(f"Script: {script.id}  VisualIR: {visual_ir.id}")
+    print(
+        f"Quotes: {len(manifest.quotes)}  "
+        f"human_required: {human_required}  by_type: {by_type}"
+    )
+    print(f"Output dir: {output_dir}")
+    return 0
+
+
 def cmd_visual(args: argparse.Namespace) -> int:
     if args.visual_command != "plan":
         print(f"Unsupported visual subcommand: {args.visual_command}")
@@ -758,12 +859,33 @@ def cmd_export(args: argparse.Namespace) -> int:
     series_index = _load_series_index(args.series_config)
     packet = NotebookPacketBuilder(series_index=series_index).build(cluster, articles)
     findings = ScriptCritic().critique(script, plan, packet)
+
+    visual_ir = load_visual_ir_for_script(db_path, script.id)
+    if visual_ir is None:
+        visual_ir = VisualPlanner().plan(script, plan, packet)
+        upsert_visual_ir(db_path, visual_ir)
+
+    export_root = Path(args.export_root)
+    episode_id = export_episode_id(plan, script)
+    export_dir = export_root / episode_id
+    asset_manifest = (
+        load_asset_manifest(export_dir / "asset_manifest.yml")
+        or load_asset_manifest(Path(args.asset_root) / plan.id / "asset_manifest.yml")
+    )
+    quote_manifest = (
+        load_quote_manifest(export_dir / "quote_manifest.yml")
+        or load_quote_manifest(Path(args.quote_root) / plan.id / "quote_manifest.yml")
+    )
+
     output_dir, manifest = build_ymm4_package(
         plan,
         script,
         packet,
         findings,
-        export_root=Path(args.export_root),
+        export_root=export_root,
+        visual_ir=visual_ir,
+        asset_manifest=asset_manifest,
+        quote_manifest=quote_manifest,
     )
 
     print(f"YMM4 export ready: {manifest['episode_id']}")
@@ -790,6 +912,7 @@ def main(argv: list[str] | None = None) -> int:
         "script": cmd_script,
         "visual": cmd_visual,
         "asset": cmd_asset,
+        "quote": cmd_quote,
         "export": cmd_export,
     }
     handler = dispatchers.get(args.command)
