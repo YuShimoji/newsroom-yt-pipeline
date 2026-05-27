@@ -2,9 +2,11 @@
 
 `newsroom-yt-pipeline` is a semi-automated article ledger and editorial pipeline for a network-news-focused YouTube channel.
 
-The M1 scope is intentionally narrow: collect RSS articles, store them in SQLite, deduplicate them, and print a daily candidate report. Video generation, NotebookLM automation, YMM4 export, asset downloading, YouTube upload, GUI work, and full `.ymmp` generation are not part of M1.
+The current implementation state is tracked in [`docs/RUNTIME_STATE.md`](docs/RUNTIME_STATE.md). That file is the first stop for restart status, validation proof, implemented milestones, and the next recommended slice.
 
-## Current Milestone: M1 Article Ledger
+## Initial MVP: M1 Article Ledger
+
+M1 was intentionally narrow: collect RSS articles, store them in SQLite, deduplicate them, and print a daily candidate report. Later milestones now exist in code, so this section is retained as initial MVP context rather than the current project frontier.
 
 Implemented in M1:
 
@@ -84,4 +86,3 @@ This repository owns source ingest, article ledger, story clustering, scoring, N
 - M5: YMM4 export through a `NLMYTGen` adapter.
 - M6: VisualIR, AssetManifest, and QuoteManifest.
 - M7: series planner and channel memory.
-

@@ -547,13 +547,9 @@ def _cmd_script_draft(args: argparse.Namespace, db_path: Path) -> int:
     if found is None:
         print(f"Story cluster not found: {args.story}")
         return 1
-    cluster, cluster_date = found
+    cluster, _ = found
 
-    articles = [
-        article
-        for article in list_articles_for_date(db_path, cluster_date)
-        if article.id in cluster.article_ids
-    ]
+    articles = _articles_for_cluster(db_path, cluster)
     if not articles:
         print(f"No articles resolvable for cluster {args.story}")
         return 1
