@@ -15,6 +15,7 @@ from newsroom.adapters.ymm4_export import (
     build_ymm4_package,
     export_episode_id,
 )
+from newsroom.adapters.export_inspector import inspect_episode_bundle
 from newsroom.assets.asset_registry import AssetRegistry
 from newsroom.assets.exporters import (
     DEFAULT_ASSET_ROOT,
@@ -201,6 +202,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     export_parser = subparsers.add_parser("export", help="Export packages for downstream tools")
     export_sub = export_parser.add_subparsers(dest="export_command", required=True)
+
+    export_inspect = export_sub.add_parser(
+        "inspect",
+        help="Inspect an episode export bundle before manual YMM4 import",
+    )
+    export_inspect.add_argument("--episode-dir", required=True, help="Episode export directory")
 
     export_ymm4 = export_sub.add_parser("ymm4", help="Build the YMM4 export bundle for a script")
     export_ymm4.add_argument("--script", required=True, help="Script id")
@@ -830,10 +837,33 @@ def cmd_visual(args: argparse.Namespace) -> int:
 
 
 def cmd_export(args: argparse.Namespace) -> int:
-    if args.export_command != "ymm4":
-        print(f"Unsupported export subcommand: {args.export_command}")
-        return 2
+    if args.export_command == "inspect":
+        return _cmd_export_inspect(args)
+    if args.export_command == "ymm4":
+        return _cmd_export_ymm4(args)
+    print(f"Unsupported export subcommand: {args.export_command}")
+    return 2
 
+
+def _cmd_export_inspect(args: argparse.Namespace) -> int:
+    inspection = inspect_episode_bundle(args.episode_dir)
+    status = "PASS" if inspection.passed else "FAIL"
+    print(f"Export bundle inspect: {status}")
+    print(f"Episode dir: {inspection.episode_dir}")
+    if inspection.errors:
+        print("Errors:")
+        for issue in inspection.errors:
+            print(f"- [{issue.code}] {issue.message}")
+    if inspection.warnings:
+        print("Warnings:")
+        for issue in inspection.warnings:
+            print(f"- [{issue.code}] {issue.message}")
+    if not inspection.issues:
+        print("No issues found.")
+    return 0 if inspection.passed else 1
+
+
+def _cmd_export_ymm4(args: argparse.Namespace) -> int:
     db_path = Path(args.db)
     init_db(db_path)
 

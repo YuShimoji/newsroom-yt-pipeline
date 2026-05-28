@@ -1,0 +1,34 @@
+proof_id:
+created_at:
+operator:
+repo_head:
+export_bundle:
+script_csv:
+ymm4_version:
+import_result: untested
+checks:
+  script_csv_accepted: untested
+  speaker_names_recognized: untested
+  chapter_comments_ignored_or_safe: untested
+  comma_text_preserved: untested
+  multiline_text_preserved: untested
+  japanese_text_preserved: untested
+  notes_actionable: untested
+  source_list_present: untested
+  visual_artifacts_present: untested
+  asset_manifest_present: untested
+  quote_manifest_present: untested
+  manifest_artifacts_match_files: untested
+warnings_observed:
+  critical_views_missing:
+  speculation_vs_fact:
+  needs_human_review:
+  human_required_assets:
+  human_required_quotes:
+issues: []
+evidence:
+  screenshot_path:
+  notes:
+decision:
+  status: untested
+  next_action:

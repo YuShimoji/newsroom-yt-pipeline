@@ -1,17 +1,19 @@
 # Runtime State
 
-Last updated: 2026-05-27
+Last updated: 2026-05-28
 
 ## Sync Point
 
-- Current sync base HEAD: `1f4e563 fix: connect multi-day clusters to downstream drafts`.
-- Remote status at restart: `HEAD...origin/main` was `0 0` after fast-forward.
-- Working tree was clean before the local M6.3 slice.
+- Current sync base HEAD before this slice: `4b83531 feat: integrate M6 artifacts into YMM4 export`.
+- Remote status at restart: `HEAD...origin/main` was `0 0`.
+- M6.4 export integration is pushed to `origin/main` and was in sync before this slice.
+- Working tree was clean before the local YMM4 import proof preparation slice.
 - Development environment: `.venv` with `pip install -e .[dev]`.
 - Validation before this slice: `python -m pytest -q` passed with 34 tests, and `git diff --check` passed.
 - Validation after the upstream P0 slice: `python -m pytest -q` passed with 37 tests, `git diff --check` passed, and a temp-DB smoke reached `cluster --days 120` -> score/shortlist -> packet -> script -> visual -> asset -> YMM4 export.
 - Validation after this M6.3 slice: `python -m pytest -q` passed with 40 tests, `git diff --check` passed, and a temp-DB smoke reached `cluster --from/--to` -> score -> script -> visual -> quote.
 - Validation after this M6.4 slice: `python -m pytest -q` passed with 42 tests, `git diff --check` passed, and a temp-DB smoke reached `cluster` -> score -> shortlist -> packet -> script -> visual -> asset -> quote -> YMM4 export.
+- Validation after this YMM4 proof prep slice: `python -m pytest -q` passed with 48 tests, `git diff --check` passed, and `newsroom export inspect` was exercised against a temp episode export bundle.
 
 ## Implemented Milestones
 
@@ -26,7 +28,7 @@ Last updated: 2026-05-27
 - M6.3 QuoteManifest skeleton: done. ScriptIR plus VisualIR plus NotebookPacket produce source-backed text quote review rows and source-card screenshot review rows; all rows start as `human_required`.
 - M6.4 export integration: done. `newsroom export ymm4` now bundles `visual_plan.md`, `visual_ir.json`, `asset_manifest.yml`, and `quote_manifest.yml` alongside the existing script/source/notes/manifest handoff files.
 
-## Current M6.4 Completed In This Slice
+## M6.4 Completed In Previous Slice
 
 - Upgraded YMM4 export manifest to `schema_version: 2`.
 - `newsroom export ymm4` now writes `visual_plan.md`, `visual_ir.json`, `asset_manifest.yml`, and `quote_manifest.yml` into the episode export directory.
@@ -36,12 +38,20 @@ Last updated: 2026-05-27
 - M6 visual / asset / quote artifacts are no longer listed in `deferred_artifacts` when generated.
 - `ymm4_notes.md` now explains how to read visual / asset / quote artifacts and states that any remaining `human_required` item requires operator review before publishing.
 
+## Current YMM4 Proof Prep Completed In This Slice
+
+- Added `docs/YMM4_IMPORT_PROOF.md` as the operator hand-run procedure for YMM4 CSV import proof.
+- Added `docs/templates/ymm4_import_proof_template.yml` as the proof record template.
+- Added `newsroom export inspect --episode-dir <path>` as a pre-import self-check for M6.4 episode bundles.
+- The inspect command checks required bundle files, `export_manifest.json` schema v2, manifest artifact path consistency, `script.csv` CSV shape, readable asset / quote YAML, and `human_required` warning counts.
+- YMM4 GUI import itself is still operator-pending. No YMM4 GUI automation was performed.
+
 ## Handoff Snapshot
 
-- Assistant status: M6.4 export integration is implemented and tested locally.
-- User action: run or inspect a YMM4 episode export bundle and verify that script, visual, asset, quote, source, notes, and manifest artifacts are all present.
-- Assistant next after restart: choose either YMM4 GUI import proof or critical-view source entry as the next P0 slice.
-- What counts as progress next: a clear YMM4 import proof artifact, a durable path for operator-added critical sources, QuoteManifest review tightening, or packet persistence.
+- Assistant status: YMM4 manual import proof preparation is implemented locally.
+- User action: choose an episode export bundle, run `newsroom export inspect --episode-dir <path>`, manually import `script.csv` into YMM4, and fill a proof YAML from `docs/templates/ymm4_import_proof_template.yml`.
+- Assistant next after restart: either help the operator execute and record the YMM4 GUI import proof, or begin the other P0 slice: critical-view source entry.
+- What counts as progress next: a completed proof YAML with YMM4 version / import result / evidence, or a durable path for operator-added critical sources.
 - What does not count as progress next: NotebookLM API automation, Inoreader OAuth, GUI/dashboard work, `.ymmp` generation, YouTube upload, or NLMYTGen subprocess/path integration.
 
 ## Not Complete Or Not Proven
@@ -51,7 +61,8 @@ Last updated: 2026-05-27
 - QuoteManifest persistence is artifact-only; quote records are not stored as first-class DB rows.
 - QuoteManifest rows are conservative candidates, not legal decisions; all start as `human_required`.
 - Additional visual cards from PROJECT_SPEC §14 (`version_diff`, `actor_map`, `risk_meter`, `context_stack`, `quote_screenshot`, `neutral_background`) are not implemented.
-- YMM4 GUI import proof has not been performed.
+- YMM4 GUI import proof is prepared but has not been performed by the operator.
+- YMM4 GUI automation has not been performed and remains out of scope.
 - NotebookLM API automation is out of scope.
 - Full `.ymmp` generation is out of scope.
 - YouTube upload and publishing are out of scope.
@@ -61,8 +72,8 @@ Last updated: 2026-05-27
 
 ## Next Recommended Work
 
-1. P0: YMM4 GUI import proof.
-   Purpose: confirm the generated `script.csv` and `ymm4_notes.md` are usable in the actual editor.
+1. P0: Operator-run YMM4 GUI import proof.
+   Purpose: manually confirm the generated `script.csv` and `ymm4_notes.md` are usable in the actual editor.
    Effect: M5/M6 can be described as YMM4-import proven rather than package-only.
 
 2. P0: Critical-view source path.
@@ -93,6 +104,7 @@ git pull --ff-only origin main
 .venv\Scripts\Activate.ps1
 python -m pytest -q
 git diff --check
+newsroom export inspect --episode-dir <episode export dir>
 ```
 
 If `.venv` is missing:
