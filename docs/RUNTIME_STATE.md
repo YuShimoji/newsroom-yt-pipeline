@@ -5,8 +5,10 @@ Last updated: 2026-05-28
 ## Sync Point
 
 - Current sync base HEAD before this slice: `4b83531 feat: integrate M6 artifacts into YMM4 export`.
+- Current pushed HEAD after this slice: `1d79959 chore: prepare YMM4 import proof workflow`.
 - Remote status at restart: `HEAD...origin/main` was `0 0`.
 - M6.4 export integration is pushed to `origin/main` and was in sync before this slice.
+- YMM4 import proof preparation is pushed to `origin/main` and is the restart point for other terminals.
 - Working tree was clean before the local YMM4 import proof preparation slice.
 - Development environment: `.venv` with `pip install -e .[dev]`.
 - Validation before this slice: `python -m pytest -q` passed with 34 tests, and `git diff --check` passed.
@@ -48,7 +50,7 @@ Last updated: 2026-05-28
 
 ## Handoff Snapshot
 
-- Assistant status: YMM4 manual import proof preparation is implemented locally.
+- Assistant status: YMM4 manual import proof preparation is implemented, tested, and pushed to `origin/main`.
 - User action: choose an episode export bundle, run `newsroom export inspect --episode-dir <path>`, manually import `script.csv` into YMM4, and fill a proof YAML from `docs/templates/ymm4_import_proof_template.yml`.
 - Assistant next after restart: either help the operator execute and record the YMM4 GUI import proof, or begin the other P0 slice: critical-view source entry.
 - What counts as progress next: a completed proof YAML with YMM4 version / import result / evidence, or a durable path for operator-added critical sources.
