@@ -1,14 +1,14 @@
 # Runtime State
 
-Last updated: 2026-05-28
+Last updated: 2026-06-01
 
 ## Sync Point
 
 - Current sync base HEAD before this slice: `4b83531 feat: integrate M6 artifacts into YMM4 export`.
-- Current pushed HEAD after this slice: `1d79959 chore: prepare YMM4 import proof workflow`.
+- Current pushed HEAD after handoff confirmation: `2de4ab7 docs: mark YMM4 proof prep handoff pushed`.
 - Remote status at restart: `HEAD...origin/main` was `0 0`.
 - M6.4 export integration is pushed to `origin/main` and was in sync before this slice.
-- YMM4 import proof preparation is pushed to `origin/main` and is the restart point for other terminals.
+- YMM4 import proof preparation and handoff confirmation are pushed to `origin/main`; `2de4ab7` is the restart point for other terminals.
 - Working tree was clean before the local YMM4 import proof preparation slice.
 - Development environment: `.venv` with `pip install -e .[dev]`.
 - Validation before this slice: `python -m pytest -q` passed with 34 tests, and `git diff --check` passed.
@@ -16,6 +16,7 @@ Last updated: 2026-05-28
 - Validation after this M6.3 slice: `python -m pytest -q` passed with 40 tests, `git diff --check` passed, and a temp-DB smoke reached `cluster --from/--to` -> score -> script -> visual -> quote.
 - Validation after this M6.4 slice: `python -m pytest -q` passed with 42 tests, `git diff --check` passed, and a temp-DB smoke reached `cluster` -> score -> shortlist -> packet -> script -> visual -> asset -> quote -> YMM4 export.
 - Validation after this YMM4 proof prep slice: `python -m pytest -q` passed with 48 tests, `git diff --check` passed, and `newsroom export inspect` was exercised against a temp episode export bundle.
+- Handoff confirmation on 2026-06-01: `HEAD...origin/main` was `0 0` before this doc refresh, working tree was clean, and no implementation changes were pending.
 
 ## Implemented Milestones
 
@@ -50,7 +51,7 @@ Last updated: 2026-05-28
 
 ## Handoff Snapshot
 
-- Assistant status: YMM4 manual import proof preparation is implemented, tested, and pushed to `origin/main`.
+- Assistant status: YMM4 manual import proof preparation is implemented, tested, handoff-confirmed, and pushed to `origin/main`.
 - User action: choose an episode export bundle, run `newsroom export inspect --episode-dir <path>`, manually import `script.csv` into YMM4, and fill a proof YAML from `docs/templates/ymm4_import_proof_template.yml`.
 - Assistant next after restart: either help the operator execute and record the YMM4 GUI import proof, or begin the other P0 slice: critical-view source entry.
 - What counts as progress next: a completed proof YAML with YMM4 version / import result / evidence, or a durable path for operator-added critical sources.
