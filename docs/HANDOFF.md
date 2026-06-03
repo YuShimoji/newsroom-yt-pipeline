@@ -36,12 +36,19 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 
 - Branch: `main`
 - Remote: `origin/main`
-- Last pulled upstream before this handoff refresh: `8c3bc27 docs: refresh handoff restart point`
-- Local validation on 2026-06-03 before this docs-only handoff refresh:
+- Last pulled upstream before this handoff refresh: `20cfd7a docs: add restart handoff packet`
+- Local validation on 2026-06-03 before this handoff refresh:
   - `.venv\Scripts\python.exe -m pytest -q` -> 48 passed
   - `git diff --check` -> passed
   - `.venv\Scripts\python.exe -m newsroom.cli.main export inspect --help` -> command available
-- Implementation frontier: M1 through M6.4 are implemented; YMM4 import proof is prepared but operator GUI proof is not completed.
+- Local YMM4 proof target prepared on 2026-06-03:
+  - proof DB: `data\ymm4_import_proof.sqlite`
+  - export bundle: `data\exports\episode_756343df9853`
+  - script CSV: `data\exports\episode_756343df9853\script.csv`
+  - proof draft: `data\proofs\ymm4_import\episode_756343df9853\proof.yml`
+  - inspector result: `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings.
+- Runtime proof artifacts under `data\proofs\` are intentionally git-ignored.
+- Implementation frontier: M1 through M6.4 are implemented; a YMM4 GUI import proof target exists locally, but operator GUI proof is not completed.
 
 ## Immediate Resume Packet
 
@@ -50,9 +57,9 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - purpose: prove that the generated `script.csv` is accepted by real YMM4, not just by local machine checks.
 - effect: upgrades the M5/M6 handoff from package-ready to YMM4-import-proven.
 - requirements: an episode export bundle, `newsroom export inspect --episode-dir <episode_dir>` output, YMM4 manual import, and a filled proof YAML based on `docs/templates/ymm4_import_proof_template.yml`.
-- state: prepared, not operator-proven.
+- state: local bundle generated and inspected; not operator-proven.
 - owner: operator performs GUI import and records proof; assistant can inspect failures, tighten bundle checks, and update docs after proof is returned.
-- next move: choose an export bundle, run the inspector, import `<episode_dir>\script.csv` in YMM4, then save proof under `data\proofs\ymm4_import\<episode_id>\proof.yml`.
+- next move: import `data\exports\episode_756343df9853\script.csv` in YMM4, then update `data\proofs\ymm4_import\episode_756343df9853\proof.yml` with YMM4 version, import result, checks, evidence, and decision. If this local artifact is missing, regenerate a bundle with the CLI flow below.
 
 ### P0-B: Critical-view source entry
 
@@ -99,3 +106,20 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - Standard export bundles: `data\exports\episode_<id>\`
 - Recommended runtime proof path: `data\proofs\ymm4_import\<episode_id>\proof.yml`
 
+## Regenerate Current Proof Target If Needed
+
+The 2026-06-03 local target used real RSS input and selected the Microsoft Blog story `story_20260603_503c39418f15862d` / script `script_d2a46430e084` / episode `episode_756343df9853`. These runtime artifacts are git-ignored, so a different checkout may need to regenerate an equivalent target. If the exact story id is absent because RSS changed, use `shortlist --today --top 5`, choose a current official-source story, and replace the story/script/episode ids below with the ids printed by the CLI.
+
+```powershell
+.venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite fetch --source rss
+.venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite cluster --days 120
+.venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite score --today
+.venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite shortlist --today --top 5
+.venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite packet build --story story_20260603_503c39418f15862d
+.venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite script draft --story story_20260603_503c39418f15862d --format anchor
+.venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite visual plan --script script_d2a46430e084
+.venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite asset suggest --script script_d2a46430e084
+.venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite quote suggest --script script_d2a46430e084
+.venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite export ymm4 --script script_d2a46430e084
+.venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite export inspect --episode-dir data\exports\episode_756343df9853
+```

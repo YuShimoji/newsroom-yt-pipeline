@@ -18,6 +18,7 @@ Last updated: 2026-06-03
 - Validation after this YMM4 proof prep slice: `python -m pytest -q` passed with 48 tests, `git diff --check` passed, and `newsroom export inspect` was exercised against a temp episode export bundle.
 - Handoff confirmation on 2026-06-01: `HEAD...origin/main` was `0 0` before that doc refresh, working tree was clean, and no implementation changes were pending.
 - Handoff refresh on 2026-06-03: fast-forwarded from `4b83531` to `8c3bc27`, `HEAD...origin/main` was `0 0`, `.venv\Scripts\python.exe -m pytest -q` passed with 48 tests, `git diff --check` passed, and `newsroom export inspect --help` was available.
+- YMM4 GUI proof handoff on 2026-06-03: fast-forwarded to `20cfd7a`, fetched real RSS into `data\ymm4_import_proof.sqlite`, generated `data\exports\episode_756343df9853`, wrote a git-ignored proof draft at `data\proofs\ymm4_import\episode_756343df9853\proof.yml`, and confirmed `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings. YMM4 GUI import itself is still operator-pending.
 
 ## Implemented Milestones
 
@@ -50,11 +51,22 @@ Last updated: 2026-06-03
 - The inspect command checks required bundle files, `export_manifest.json` schema v2, manifest artifact path consistency, `script.csv` CSV shape, readable asset / quote YAML, and `human_required` warning counts.
 - YMM4 GUI import itself is still operator-pending. No YMM4 GUI automation was performed.
 
+## Current YMM4 GUI Proof Handoff Completed In This Slice
+
+- Pulled latest `origin/main` to `20cfd7a docs: add restart handoff packet`.
+- Generated a local proof target from real RSS input using the standard CLI flow: fetch -> cluster `--days 120` -> score -> shortlist -> packet -> script -> visual -> asset -> quote -> YMM4 export.
+- Selected Microsoft Blog story `story_20260603_503c39418f15862d` and generated script `script_d2a46430e084`.
+- Exported episode bundle `data\exports\episode_756343df9853` containing `script.csv`, `script_ir.json`, `source_list.md`, `ymm4_notes.md`, `visual_plan.md`, `visual_ir.json`, `asset_manifest.yml`, `quote_manifest.yml`, and `export_manifest.json`.
+- Ran `newsroom export inspect --episode-dir data\exports\episode_756343df9853`; result was PASS.
+- Inspector warnings remain as publication review gates: `speculation_vs_fact`, `critical_view`, 6 segments flagged `needs_human_review`, 1 human-required visual unit, 1 human-required asset, and 7 human-required quotes.
+- Created proof draft `data\proofs\ymm4_import\episode_756343df9853\proof.yml` with GUI-dependent checks left `untested`.
+- Added `data/proofs/` to `.gitignore` so operator proof artifacts stay local unless explicitly promoted to docs.
+
 ## Handoff Snapshot
 
-- Assistant status: YMM4 manual import proof preparation is implemented, tested, handoff-confirmed, and pushed to `origin/main`.
-- User action: choose an episode export bundle, run `newsroom export inspect --episode-dir <path>`, manually import `script.csv` into YMM4, and fill a proof YAML from `docs/templates/ymm4_import_proof_template.yml`.
-- Assistant next after restart: either help the operator execute and record the YMM4 GUI import proof, or begin the other P0 slice: critical-view source entry.
+- Assistant status: YMM4 manual import proof preparation is implemented, tested, and a local GUI-proof target has been generated and inspected. This handoff slice records the final docs and `.gitignore` update for `origin/main`.
+- User action: manually import `data\exports\episode_756343df9853\script.csv` into YMM4 and update `data\proofs\ymm4_import\episode_756343df9853\proof.yml`. If those git-ignored artifacts are absent in a different checkout, regenerate an equivalent bundle from `docs/HANDOFF.md`.
+- Assistant next after restart: either help record the YMM4 GUI result after the operator proof is returned, or begin the other P0 slice: critical-view source entry.
 - What counts as progress next: a completed proof YAML with YMM4 version / import result / evidence, or a durable path for operator-added critical sources.
 - What does not count as progress next: NotebookLM API automation, Inoreader OAuth, GUI/dashboard work, `.ymmp` generation, YouTube upload, or NLMYTGen subprocess/path integration.
 
@@ -109,7 +121,11 @@ git pull --ff-only origin main
 Get-Content -Raw -Encoding UTF8 docs\HANDOFF.md
 python -m pytest -q
 git diff --check
-newsroom export inspect --episode-dir <episode export dir>
+if (Test-Path data\exports\episode_756343df9853) {
+  newsroom export inspect --episode-dir data\exports\episode_756343df9853
+} else {
+  Get-Content -Raw -Encoding UTF8 docs\HANDOFF.md
+}
 ```
 
 If `.venv` is missing:
