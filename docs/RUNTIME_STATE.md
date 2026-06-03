@@ -1,14 +1,14 @@
 # Runtime State
 
-Last updated: 2026-06-01
+Last updated: 2026-06-03
 
 ## Sync Point
 
 - Current sync base HEAD before this slice: `4b83531 feat: integrate M6 artifacts into YMM4 export`.
-- Current pushed HEAD after handoff confirmation: `2de4ab7 docs: mark YMM4 proof prep handoff pushed`.
+- Current pulled HEAD before this docs-only handoff refresh: `8c3bc27 docs: refresh handoff restart point`.
 - Remote status at restart: `HEAD...origin/main` was `0 0`.
 - M6.4 export integration is pushed to `origin/main` and was in sync before this slice.
-- YMM4 import proof preparation and handoff confirmation are pushed to `origin/main`; `2de4ab7` is the restart point for other terminals.
+- YMM4 import proof preparation and handoff confirmation are pushed to `origin/main`; pull latest `origin/main` and read `docs/HANDOFF.md` as the short restart packet.
 - Working tree was clean before the local YMM4 import proof preparation slice.
 - Development environment: `.venv` with `pip install -e .[dev]`.
 - Validation before this slice: `python -m pytest -q` passed with 34 tests, and `git diff --check` passed.
@@ -16,7 +16,8 @@ Last updated: 2026-06-01
 - Validation after this M6.3 slice: `python -m pytest -q` passed with 40 tests, `git diff --check` passed, and a temp-DB smoke reached `cluster --from/--to` -> score -> script -> visual -> quote.
 - Validation after this M6.4 slice: `python -m pytest -q` passed with 42 tests, `git diff --check` passed, and a temp-DB smoke reached `cluster` -> score -> shortlist -> packet -> script -> visual -> asset -> quote -> YMM4 export.
 - Validation after this YMM4 proof prep slice: `python -m pytest -q` passed with 48 tests, `git diff --check` passed, and `newsroom export inspect` was exercised against a temp episode export bundle.
-- Handoff confirmation on 2026-06-01: `HEAD...origin/main` was `0 0` before this doc refresh, working tree was clean, and no implementation changes were pending.
+- Handoff confirmation on 2026-06-01: `HEAD...origin/main` was `0 0` before that doc refresh, working tree was clean, and no implementation changes were pending.
+- Handoff refresh on 2026-06-03: fast-forwarded from `4b83531` to `8c3bc27`, `HEAD...origin/main` was `0 0`, `.venv\Scripts\python.exe -m pytest -q` passed with 48 tests, `git diff --check` passed, and `newsroom export inspect --help` was available.
 
 ## Implemented Milestones
 
@@ -105,6 +106,7 @@ Last updated: 2026-06-01
 git checkout main
 git pull --ff-only origin main
 .venv\Scripts\Activate.ps1
+Get-Content -Raw -Encoding UTF8 docs\HANDOFF.md
 python -m pytest -q
 git diff --check
 newsroom export inspect --episode-dir <episode export dir>

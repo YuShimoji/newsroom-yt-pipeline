@@ -2,7 +2,7 @@
 
 `newsroom-yt-pipeline` is a semi-automated article ledger and editorial pipeline for a network-news-focused YouTube channel.
 
-The current implementation state is tracked in [`docs/RUNTIME_STATE.md`](docs/RUNTIME_STATE.md). That file is the first stop for restart status, validation proof, implemented milestones, and the next recommended slice.
+For immediate restart from another terminal, start with [`docs/HANDOFF.md`](docs/HANDOFF.md). The fuller current implementation state is tracked in [`docs/RUNTIME_STATE.md`](docs/RUNTIME_STATE.md).
 
 ## Initial MVP: M1 Article Ledger
 
