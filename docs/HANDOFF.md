@@ -1,6 +1,6 @@
 # Handoff
 
-Last updated: 2026-06-03
+Last updated: 2026-06-04
 
 ## Restart Order
 
@@ -29,6 +29,7 @@ Then read:
 3. `docs/RUNTIME_STATE.md`
 4. `docs/YMM4_IMPORT_PROOF.md`
 5. `docs/PROJECT_SPEC.md` only when the specification boundary is needed
+6. `docs/META_REVIEW_LEDGER.md` only when blocker/scope review context is needed
 
 There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is later added; do not turn it into roadmap, status, closeout, or history.
 
@@ -36,11 +37,15 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 
 - Branch: `main`
 - Remote: `origin/main`
-- Last pulled upstream before this handoff refresh: `20cfd7a docs: add restart handoff packet`
+- Last pulled upstream before this handoff refresh: `36c1988 docs: refresh YMM4 proof handoff after local target prep`
 - Local validation on 2026-06-03 before this handoff refresh:
   - `.venv\Scripts\python.exe -m pytest -q` -> 48 passed
   - `git diff --check` -> passed
   - `.venv\Scripts\python.exe -m newsroom.cli.main export inspect --help` -> command available
+- Local validation on 2026-06-04 during the meta-review / critical-source slice:
+  - `.venv\Scripts\python.exe -m pytest -q` -> 53 passed.
+  - `.venv\Scripts\python.exe -m newsroom.cli.main export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings.
+  - `git diff --check` -> passed.
 - Local YMM4 proof target prepared on 2026-06-03:
   - proof DB: `data\ymm4_import_proof.sqlite`
   - export bundle: `data\exports\episode_756343df9853`
@@ -48,7 +53,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - proof draft: `data\proofs\ymm4_import\episode_756343df9853\proof.yml`
   - inspector result: `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings.
 - Runtime proof artifacts under `data\proofs\` are intentionally git-ignored.
-- Implementation frontier: M1 through M6.4 are implemented; a YMM4 GUI import proof target exists locally, but operator GUI proof is not completed.
+- Implementation frontier: M1 through M6.4 are implemented; a YMM4 GUI import proof target exists locally but operator GUI proof is not completed; P0-B critical-view source entry now has a DB-backed CLI path.
 
 ## Immediate Resume Packet
 
@@ -65,10 +70,10 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 
 - purpose: give operators a durable way to add or classify critical sources before packet/script review.
 - effect: turns the current `critical_views` warning into an actionable workflow instead of a permanent manual reminder.
-- requirements: decide the minimal storage surface first: packet artifact input, DB-backed source rows, or a CLI import command.
-- state: not implemented.
+- requirements: use DB-backed source rows and `newsroom packet add-critical`; rebuild packet/script/visual/asset/quote/export artifacts after adding or classifying the source.
+- state: implemented as a narrow CLI/persistence path. `story_critical_sources` records story-to-article critical views. `packet build` writes them to `sources.json` and `packet.md`; script conflict chapters prefer critical source refs; visual/asset/quote/export rebuilds use the same packet helper.
 - owner: assistant.
-- next move: implement the smallest CLI and persistence path that lets a critical source survive packet, script, visual, quote, and export steps.
+- next move: use `newsroom packet add-critical --story <story_id> --article <article_id>` for an existing article, or `newsroom packet add-critical --story <story_id> --url <url> --title <title> --source-name <name>` for a manual runtime source, then rebuild downstream artifacts. Do not commit runtime DB rows.
 
 ### P1: QuoteManifest tightening
 

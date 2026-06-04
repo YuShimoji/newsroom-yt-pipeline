@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from datetime import UTC, datetime
 from pathlib import Path
 
 from newsroom.store.models import (
@@ -73,6 +74,21 @@ CREATE TABLE IF NOT EXISTS cluster_articles (
 
 CREATE INDEX IF NOT EXISTS idx_cluster_articles_cluster ON cluster_articles(cluster_id);
 CREATE INDEX IF NOT EXISTS idx_cluster_articles_article ON cluster_articles(article_id);
+
+CREATE TABLE IF NOT EXISTS story_critical_sources (
+  cluster_id TEXT NOT NULL,
+  article_id TEXT NOT NULL,
+  note TEXT,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (cluster_id, article_id),
+  FOREIGN KEY (cluster_id) REFERENCES story_clusters(id),
+  FOREIGN KEY (article_id) REFERENCES articles(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_story_critical_sources_cluster
+  ON story_critical_sources(cluster_id);
+CREATE INDEX IF NOT EXISTS idx_story_critical_sources_article
+  ON story_critical_sources(article_id);
 
 CREATE TABLE IF NOT EXISTS topic_scores (
   cluster_id TEXT PRIMARY KEY,
@@ -238,6 +254,48 @@ def count_articles(db_path: str | Path) -> int:
     with connect(db_path) as connection:
         row = connection.execute("SELECT COUNT(*) AS count FROM articles").fetchone()
     return int(row["count"])
+
+
+def add_story_critical_source(
+    db_path: str | Path,
+    *,
+    cluster_id: str,
+    article_id: str,
+    note: str | None = None,
+    created_at: str | None = None,
+) -> None:
+    init_db(db_path)
+    timestamp = created_at or datetime.now(UTC).isoformat()
+    clean_note = note.strip() if note else None
+    with connect(db_path) as connection:
+        connection.execute(
+            """
+            INSERT INTO story_critical_sources (cluster_id, article_id, note, created_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(cluster_id, article_id) DO UPDATE SET
+              note = excluded.note,
+              created_at = excluded.created_at
+            """,
+            (cluster_id, article_id, clean_note, timestamp),
+        )
+
+
+def list_story_critical_source_articles(
+    db_path: str | Path, cluster_id: str
+) -> list[Article]:
+    init_db(db_path)
+    with connect(db_path) as connection:
+        rows = connection.execute(
+            """
+            SELECT articles.*
+            FROM story_critical_sources
+            JOIN articles ON articles.id = story_critical_sources.article_id
+            WHERE story_critical_sources.cluster_id = ?
+            ORDER BY story_critical_sources.created_at, story_critical_sources.article_id
+            """,
+            (cluster_id,),
+        ).fetchall()
+    return [_row_to_article(row) for row in rows]
 
 
 def replace_clusters_for_date(
@@ -694,4 +752,3 @@ def _row_to_article(row: sqlite3.Row) -> Article:
         fetch_status=row["fetch_status"],
         fetch_error=row["fetch_error"],
     )
-

@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import sys
 from dataclasses import replace
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 from newsroom.clustering.story_clusterer import StoryClusterer
@@ -37,11 +37,13 @@ from newsroom.script.script_critic import ScriptCritic
 from newsroom.script.script_drafter import ScriptDrafter
 from newsroom.store.db import (
     DEFAULT_DB_PATH,
+    add_story_critical_source,
     init_db,
     list_articles_by_ids,
     list_articles_for_date,
     list_articles_in_date_range,
     list_clusters_for_date,
+    list_story_critical_source_articles,
     list_topic_scores_for_date,
     load_episode_plan,
     load_script_ir,
@@ -54,7 +56,7 @@ from newsroom.store.db import (
     upsert_topic_score,
     upsert_visual_ir,
 )
-from newsroom.store.models import ScriptIR, StoryCluster
+from newsroom.store.models import Article, NotebookPacket, ScriptIR, StoryCluster
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -109,6 +111,25 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["yukkuri", "anchor", "information_program"],
         help="Override the auto-resolved format_hint",
     )
+    packet_critical = packet_sub.add_parser(
+        "add-critical",
+        help="Record a critical-view source for a story packet",
+    )
+    packet_critical.add_argument("--story", required=True, help="Story cluster id")
+    critical_source = packet_critical.add_mutually_exclusive_group(required=True)
+    critical_source.add_argument("--article", dest="article_id", help="Existing article id")
+    critical_source.add_argument("--url", help="Manual source URL")
+    packet_critical.add_argument("--title", help="Manual source title; required with --url")
+    packet_critical.add_argument("--source-name", help="Manual source name; required with --url")
+    packet_critical.add_argument(
+        "--source-type",
+        choices=["official", "news", "commentary", "competitor", "social", "unknown"],
+        default="commentary",
+        help="Manual source type used when --url is supplied",
+    )
+    packet_critical.add_argument("--published-at", help="Manual source published timestamp")
+    packet_critical.add_argument("--license-hint", help="Manual source license hint")
+    packet_critical.add_argument("--note", help="Operator note explaining the critical angle")
 
     script_parser = subparsers.add_parser("script", help="Script workbench operations")
     script_sub = script_parser.add_subparsers(dest="script_command", required=True)
@@ -520,13 +541,18 @@ def _load_series_index(path: str) -> dict[str, object]:
 
 
 def cmd_packet(args: argparse.Namespace) -> int:
-    if args.packet_command != "build":
-        print(f"Unsupported packet subcommand: {args.packet_command}")
-        return 2
-
     db_path = Path(args.db)
     init_db(db_path)
 
+    if args.packet_command == "build":
+        return _cmd_packet_build(args, db_path)
+    if args.packet_command == "add-critical":
+        return _cmd_packet_add_critical(args, db_path)
+    print(f"Unsupported packet subcommand: {args.packet_command}")
+    return 2
+
+
+def _cmd_packet_build(args: argparse.Namespace, db_path: Path) -> int:
     found = _find_cluster(db_path, args.story)
     if found is None:
         print(f"Story cluster not found: {args.story}")
@@ -538,9 +564,13 @@ def cmd_packet(args: argparse.Namespace) -> int:
         print(f"No articles resolvable for cluster {args.story}")
         return 1
 
-    series_index = _load_series_index(args.series_config)
-    builder = NotebookPacketBuilder(series_index=series_index)
-    packet = builder.build(target_cluster, articles, packet_root=Path(args.packet_root))
+    packet = _build_packet_for_cluster(
+        db_path,
+        target_cluster,
+        articles,
+        args.series_config,
+        packet_root=Path(args.packet_root),
+    )
     if args.format_override:
         packet = replace(packet, format_hint=args.format_override)
 
@@ -548,8 +578,70 @@ def cmd_packet(args: argparse.Namespace) -> int:
     print(f"Packet built: {packet.id}")
     print(f"Export dir: {output_dir}")
     print(f"Format hint: {packet.format_hint}")
-    print(f"Primary sources: {len(packet.primary_sources)}  News sources: {len(packet.news_sources)}")
+    print(
+        f"Primary sources: {len(packet.primary_sources)}  "
+        f"News sources: {len(packet.news_sources)}  "
+        f"Critical views: {len(packet.critical_views)}"
+    )
     return 0
+
+
+def _cmd_packet_add_critical(args: argparse.Namespace, db_path: Path) -> int:
+    found = _find_cluster(db_path, args.story)
+    if found is None:
+        print(f"Story cluster not found: {args.story}")
+        return 1
+    cluster, _ = found
+
+    if args.article_id:
+        matches = list_articles_by_ids(db_path, [args.article_id])
+        if not matches:
+            print(f"Article not found: {args.article_id}")
+            return 1
+        article = matches[0]
+    else:
+        if not args.title or not args.source_name:
+            print("--title and --source-name are required when adding a manual --url source")
+            return 2
+        article = Article.create(
+            url=args.url,
+            title=args.title,
+            source_name=args.source_name,
+            source_type=args.source_type,
+            published_at=args.published_at,
+            fetched_at=datetime.now(UTC).isoformat(),
+            tags=["manual", "critical_view"],
+            license_hint=args.license_hint,
+        )
+        upsert_article(db_path, article)
+
+    add_story_critical_source(
+        db_path,
+        cluster_id=cluster.id,
+        article_id=article.id,
+        note=args.note,
+    )
+    print(f"Critical-view source recorded for {cluster.id}: {article.id}")
+    print(f"Title: {article.title}")
+    print("Rebuild the packet to carry this source into downstream artifacts.")
+    return 0
+
+
+def _build_packet_for_cluster(
+    db_path: Path,
+    cluster: StoryCluster,
+    articles: list[Article],
+    series_config: str,
+    packet_root: Path | str = DEFAULT_PACKET_ROOT,
+) -> NotebookPacket:
+    series_index = _load_series_index(series_config)
+    critical_articles = list_story_critical_source_articles(db_path, cluster.id)
+    return NotebookPacketBuilder(series_index=series_index).build(
+        cluster,
+        articles,
+        packet_root=packet_root,
+        critical_articles=critical_articles,
+    )
 
 
 def _format_to_ir_name(short_name: str) -> str:
@@ -603,8 +695,7 @@ def _cmd_script_draft(args: argparse.Namespace, db_path: Path) -> int:
         return 1
 
     series_index = _load_series_index(args.series_config)
-    packet_builder = NotebookPacketBuilder(series_index=series_index)
-    packet = packet_builder.build(cluster, articles)
+    packet = _build_packet_for_cluster(db_path, cluster, articles, args.series_config)
 
     series = _series_for_cluster(series_index, cluster)
     plan = EpisodePlanner().plan(cluster, packet, series=series)
@@ -643,8 +734,12 @@ def _cmd_script_critique(args: argparse.Namespace, db_path: Path) -> int:
         return 1
     cluster, _ = found
     articles = _articles_for_cluster(db_path, cluster)
-    series_index = _load_series_index(str(DEFAULT_SERIES_CONFIG))
-    packet = NotebookPacketBuilder(series_index=series_index).build(cluster, articles)
+    packet = _build_packet_for_cluster(
+        db_path,
+        cluster,
+        articles,
+        str(DEFAULT_SERIES_CONFIG),
+    )
 
     findings = ScriptCritic().critique(script, plan, packet)
     output_dir = write_script_bundle(plan, script, findings, script_root=Path(args.script_root))
@@ -675,8 +770,12 @@ def _cmd_script_revise(args: argparse.Namespace, db_path: Path) -> int:
         return 1
     cluster, _ = found
     articles = _articles_for_cluster(db_path, cluster)
-    series_index = _load_series_index(str(DEFAULT_SERIES_CONFIG))
-    packet = NotebookPacketBuilder(series_index=series_index).build(cluster, articles)
+    packet = _build_packet_for_cluster(
+        db_path,
+        cluster,
+        articles,
+        str(DEFAULT_SERIES_CONFIG),
+    )
     findings = ScriptCritic().critique(updated, plan, packet)
     output_dir = write_script_bundle(plan, updated, findings, script_root=Path(args.script_root))
 
@@ -714,8 +813,7 @@ def cmd_asset(args: argparse.Namespace) -> int:
         print(f"No articles resolvable for cluster {cluster.id}")
         return 1
 
-    series_index = _load_series_index(args.series_config)
-    packet = NotebookPacketBuilder(series_index=series_index).build(cluster, articles)
+    packet = _build_packet_for_cluster(db_path, cluster, articles, args.series_config)
 
     visual_ir = load_visual_ir_for_script(db_path, script.id)
     if visual_ir is None:
@@ -761,8 +859,7 @@ def cmd_quote(args: argparse.Namespace) -> int:
         print(f"No articles resolvable for cluster {cluster.id}")
         return 1
 
-    series_index = _load_series_index(args.series_config)
-    packet = NotebookPacketBuilder(series_index=series_index).build(cluster, articles)
+    packet = _build_packet_for_cluster(db_path, cluster, articles, args.series_config)
 
     visual_ir = load_visual_ir_for_script(db_path, script.id)
     if visual_ir is None:
@@ -821,8 +918,7 @@ def cmd_visual(args: argparse.Namespace) -> int:
         print(f"No articles resolvable for cluster {cluster.id}")
         return 1
 
-    series_index = _load_series_index(args.series_config)
-    packet = NotebookPacketBuilder(series_index=series_index).build(cluster, articles)
+    packet = _build_packet_for_cluster(db_path, cluster, articles, args.series_config)
 
     visual_ir = VisualPlanner().plan(script, plan, packet)
     upsert_visual_ir(db_path, visual_ir)
@@ -886,8 +982,7 @@ def _cmd_export_ymm4(args: argparse.Namespace) -> int:
         print(f"No articles resolvable for cluster {cluster.id}")
         return 1
 
-    series_index = _load_series_index(args.series_config)
-    packet = NotebookPacketBuilder(series_index=series_index).build(cluster, articles)
+    packet = _build_packet_for_cluster(db_path, cluster, articles, args.series_config)
     findings = ScriptCritic().critique(script, plan, packet)
 
     visual_ir = load_visual_ir_for_script(db_path, script.id)

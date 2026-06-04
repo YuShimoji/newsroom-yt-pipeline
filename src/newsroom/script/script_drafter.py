@@ -34,7 +34,7 @@ class ScriptDrafter:
     placeholder. An operator (or a later Gear-1 LLM step) is expected to
     fill the spoken text. The drafter only enforces structure: speaker
     rotation for yukkuri, claim_type per chapter intent, source_refs
-    seeded from packet.primary_sources.
+    seeded from packet source categories.
     """
 
     def __init__(self, speaker_config: SpeakerConfig | None = None) -> None:
@@ -51,7 +51,8 @@ class ScriptDrafter:
 
         primary_refs = [ref.article_id for ref in packet.primary_sources]
         news_refs = [ref.article_id for ref in packet.news_sources]
-        all_refs = primary_refs + news_refs
+        critical_refs = [ref.article_id for ref in packet.critical_views]
+        all_refs = primary_refs + news_refs + critical_refs
 
         now = datetime.now(UTC).isoformat()
         script_id = _script_id(plan.id, format_name)
@@ -65,6 +66,7 @@ class ScriptDrafter:
                 start_index=index,
                 primary_refs=primary_refs,
                 news_refs=news_refs,
+                critical_refs=critical_refs,
                 all_refs=all_refs,
                 speaker_config=self.speaker_config,
             )
@@ -91,6 +93,7 @@ def _segments_for_chapter(
     start_index: int,
     primary_refs: list[str],
     news_refs: list[str],
+    critical_refs: list[str],
     all_refs: list[str],
     speaker_config: SpeakerConfig | None = None,
 ) -> list[ScriptSegment]:
@@ -105,7 +108,7 @@ def _segments_for_chapter(
     if chapter_key == "facts":
         source_pool = primary_refs or all_refs
     elif chapter_key == "conflict":
-        source_pool = news_refs or all_refs
+        source_pool = critical_refs or news_refs or all_refs
     else:
         source_pool = all_refs
 

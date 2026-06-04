@@ -46,6 +46,13 @@ def _render_packet_md(packet: NotebookPacket) -> str:
     else:
         lines.append("_None._")
     lines.append("")
+    lines.append("## Critical views")
+    if packet.critical_views:
+        for ref in packet.critical_views:
+            lines.append(f"- [{ref.title}]({ref.url}) - {ref.source_name} ({ref.published_at or 'date unknown'})")
+    else:
+        lines.append("_None recorded._")
+    lines.append("")
     lines.append("## Companion files")
     lines.append("- `sources.json` — machine-readable source list")
     lines.append("- `timeline.md` — chronological event list")
@@ -103,11 +110,15 @@ def _render_operator_md(packet: NotebookPacket) -> str:
     lines.append(f"- Format hint: `{packet.format_hint}` (override if the angle changes)")
     lines.append(f"- Primary source count: {len(packet.primary_sources)}")
     lines.append(f"- News source count: {len(packet.news_sources)}")
+    lines.append(f"- Critical-view source count: {len(packet.critical_views)}")
     lines.append("")
     lines.append("## Review checklist before NotebookLM upload")
     lines.append("- [ ] Confirm each source is reachable and quote-friendly.")
     lines.append("- [ ] Verify no primary source requires special licensing.")
-    lines.append("- [ ] Add at least one critical-view source manually if the cluster lacks one.")
+    if packet.critical_views:
+        lines.append("- [ ] Verify critical-view sources fairly represent the opposing or skeptical angle.")
+    else:
+        lines.append("- [ ] Add at least one critical-view source with `newsroom packet add-critical`.")
     lines.append("- [ ] Fill in glossary definitions for any unfamiliar term.")
     lines.append("- [ ] Adjust the questions if the editorial angle shifts.")
     lines.append("")

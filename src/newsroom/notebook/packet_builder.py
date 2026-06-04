@@ -38,6 +38,7 @@ class NotebookPacketBuilder:
         cluster: StoryCluster,
         articles: list[Article],
         packet_root: Path | str = DEFAULT_PACKET_ROOT,
+        critical_articles: list[Article] | None = None,
     ) -> NotebookPacket:
         if not articles:
             raise ValueError(f"Cluster {cluster.id!r} has no articles")
@@ -53,6 +54,10 @@ class NotebookPacketBuilder:
         news_sources = _select_sources(
             cluster, article_index, types={"news", "commentary"}
         )
+        critical_sources = _dedupe_refs(
+            _select_sources(cluster, article_index, types={"competitor"})
+            + [_to_source_ref(article) for article in (critical_articles or [])]
+        )
 
         timeline = _build_timeline(cluster, article_index)
         glossary = [GlossaryTerm(term=entity) for entity in cluster.entities]
@@ -67,7 +72,7 @@ class NotebookPacketBuilder:
             story_cluster_id=cluster.id,
             primary_sources=primary_sources,
             news_sources=news_sources,
-            critical_views=[],
+            critical_views=critical_sources,
             timeline=timeline,
             glossary=glossary,
             questions=questions,
@@ -95,6 +100,17 @@ def _select_sources(
             continue
         refs.append(_to_source_ref(article))
     return refs
+
+
+def _dedupe_refs(refs: list[SourceRef]) -> list[SourceRef]:
+    seen: set[str] = set()
+    deduped: list[SourceRef] = []
+    for ref in refs:
+        if ref.article_id in seen:
+            continue
+        seen.add(ref.article_id)
+        deduped.append(ref)
+    return deduped
 
 
 def _to_source_ref(article: Article) -> SourceRef:

@@ -38,7 +38,11 @@ def _cluster() -> StoryCluster:
     )
 
 
-def _packet(primary_article_id: str, news_article_id: str | None = None) -> NotebookPacket:
+def _packet(
+    primary_article_id: str,
+    news_article_id: str | None = None,
+    critical_article_id: str | None = None,
+) -> NotebookPacket:
     primary = [
         SourceRef(
             article_id=primary_article_id,
@@ -61,12 +65,24 @@ def _packet(primary_article_id: str, news_article_id: str | None = None) -> Note
                 published_at="2026-05-18T03:00:00+00:00",
             )
         )
+    critical = []
+    if critical_article_id:
+        critical.append(
+            SourceRef(
+                article_id=critical_article_id,
+                url=f"https://example.com/{critical_article_id}",
+                title=f"Critical view {critical_article_id}",
+                source_name=f"Critical {critical_article_id}",
+                source_type="commentary",
+                published_at="2026-05-18T04:00:00+00:00",
+            )
+        )
     return NotebookPacket(
         id="packet_test",
         story_cluster_id="story_20260518_test",
         primary_sources=primary,
         news_sources=news,
-        critical_views=[],
+        critical_views=critical,
         timeline=[],
         glossary=[],
         questions=[],
@@ -92,8 +108,28 @@ def test_drafter_produces_chapter_aware_segments():
     assert facts_segment.claim_type == "fact"
     assert facts_segment.source_refs  # facts chapter must carry source_refs
 
+    conflict_segment = next(seg for seg in script.segments if seg.chapter_id.endswith("__conflict"))
+    assert conflict_segment.source_refs == [articles[1].id]
+
     speakers = {segment.speaker for segment in script.segments if segment.chapter_id.endswith("__intro")}
     assert speakers.issubset({"霊夢", "魔理沙"})
+
+
+def test_drafter_prefers_critical_views_for_conflict_chapter():
+    articles = [
+        _article("a", source_type="official"),
+        _article("b", source_type="news"),
+        _article("c", source_type="commentary"),
+    ]
+    cluster = _cluster()
+    cluster_with_ids = cluster.__class__(**{**cluster.__dict__, "article_ids": [a.id for a in articles]})
+    packet = _packet(articles[0].id, articles[1].id, articles[2].id)
+
+    plan = EpisodePlanner().plan(cluster_with_ids, packet)
+    script = ScriptDrafter().draft(plan, packet, "anchor_narration")
+
+    conflict_segment = next(seg for seg in script.segments if seg.chapter_id.endswith("__conflict"))
+    assert conflict_segment.source_refs == [articles[2].id]
 
 
 def test_critic_flags_missing_sources_on_fact_segments():
