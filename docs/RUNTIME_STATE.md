@@ -1,6 +1,6 @@
 # Runtime State
 
-Last updated: 2026-06-04
+Last updated: 2026-06-05
 
 ## Sync Point
 
@@ -20,6 +20,7 @@ Last updated: 2026-06-04
 - Handoff refresh on 2026-06-03: fast-forwarded from `4b83531` to `8c3bc27`, `HEAD...origin/main` was `0 0`, `.venv\Scripts\python.exe -m pytest -q` passed with 48 tests, `git diff --check` passed, and `newsroom export inspect --help` was available.
 - YMM4 GUI proof handoff on 2026-06-03: fast-forwarded to `20cfd7a`, fetched real RSS into `data\ymm4_import_proof.sqlite`, generated `data\exports\episode_756343df9853`, wrote a git-ignored proof draft at `data\proofs\ymm4_import\episode_756343df9853\proof.yml`, and confirmed `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings. YMM4 GUI import itself is still operator-pending.
 - Meta-review / P0-B slice on 2026-06-04: pulled `origin/main` to `36c1988`, confirmed `HEAD...origin/main` was `0 0`, reran `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings, implemented DB-backed critical-view source entry, ran `.venv\Scripts\python.exe -m pytest -q` -> 53 passed, and `git diff --check` -> passed.
+- Active C1/NIST source application on 2026-06-05: started clean from `13246b5`, `HEAD...origin/main` was `0 0`, recorded C1/NIST with `newsroom packet add-critical`, rebuilt packet/script/visual/asset/quote/export for `story_20260603_503c39418f15862d` / `episode_756343df9853`, fixed export rebuilds to prefer refreshed asset/quote roots over stale export-bundle copies, and confirmed `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with no `critical_view` warning. Remaining warnings are `speculation_vs_fact`, 6 segments `needs_human_review`, 1 asset `human_required`, 11 quotes `human_required`, and 1 visual unit `human_required`. Validation: `.venv\Scripts\python.exe -m pytest -q` -> 54 passed; `git diff --check` -> passed.
 
 ## Implemented Milestones
 
@@ -39,7 +40,7 @@ Last updated: 2026-06-04
 - Upgraded YMM4 export manifest to `schema_version: 2`.
 - `newsroom export ymm4` now writes `visual_plan.md`, `visual_ir.json`, `asset_manifest.yml`, and `quote_manifest.yml` into the episode export directory.
 - Export reuses an existing DB VisualIR when available; otherwise it generates VisualIR during export and persists it.
-- Export reuses existing `asset_manifest.yml` / `quote_manifest.yml` from the export bundle or default artifact roots when available; otherwise it generates conservative manifests without downloading or auto-approving external assets.
+- Export reuses existing `asset_manifest.yml` / `quote_manifest.yml` from the default artifact roots first, then falls back to export-bundle copies when no refreshed root manifest exists; otherwise it generates conservative manifests without downloading or auto-approving external assets.
 - `export_manifest.json` now references visual / asset / quote artifact ids or paths and lists all bundle files in `artifacts`.
 - M6 visual / asset / quote artifacts are no longer listed in `deferred_artifacts` when generated.
 - `ymm4_notes.md` now explains how to read visual / asset / quote artifacts and states that any remaining `human_required` item requires operator review before publishing.
@@ -71,19 +72,31 @@ Last updated: 2026-06-04
 - Added `newsroom packet add-critical --story <story_id> --url <url> --title <title> --source-name <name>` for a manual runtime source. Runtime DB rows are local artifacts, not tracked repo content.
 - Packet rebuilds now include critical sources in `NotebookPacket.critical_views`, `sources.json`, `packet.md`, and operator notes.
 - Script drafting now prefers critical-view source refs for conflict chapters. Visual, asset, quote, and YMM4 export commands rebuild packets through the same helper, so the critical view remains available downstream.
-- Important boundary: the existing active proof bundle `data\exports\episode_756343df9853` was not editorially changed in this slice. It still reports the `critical_view` warning until a real critical source is selected for `story_20260603_503c39418f15862d` and the downstream artifacts are rebuilt.
+- Superseded by 2026-06-05 active-source application: the active proof bundle was editorially rebuilt with C1/NIST after this generic capability slice.
+
+## Current Active Critical Source Application
+
+- Selected source: C1 / NIST, `Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile`.
+- Runtime source row: `article_bfba4cd5131daa71` in `data\ymm4_import_proof.sqlite`. This is git-ignored runtime state and is not committed.
+- Rebuilt packet: `packet_20260603_2de578dcd4b0`; `sources.json` and `packet.md` include NIST under `critical_views`.
+- Rebuilt script: `script_d2a46430e084` was reused deterministically; `script_review.md` reports `[ok] critical_view`.
+- Rebuilt VisualIR: `visual_eca67c6bd375`; conflict visual unit references `article_bfba4cd5131daa71`.
+- Rebuilt review manifests: `data\assets\plan_20260603_faca8ebcbc45` and `data\quotes\plan_20260603_faca8ebcbc45`; quote rows include NIST.
+- Rebuilt export bundle: `data\exports\episode_756343df9853`; `source_list.md`, `script_ir.json`, `visual_ir.json`, and `quote_manifest.yml` include the NIST critical source.
+- Export inspect result: PASS. `critical_view` warning is gone. Remaining warnings are publication/operator review gates, not machine failures.
+- YMM4 GUI proof status: still untested. Rebuilding the bundle did not prove YMM4 import.
 
 ## Handoff Snapshot
 
-- Assistant status: YMM4 manual import proof preparation is implemented and still operator-pending; P0-B critical-view source entry capability is implemented and tested as a generic DB-backed CLI path.
+- Assistant status: YMM4 manual import proof preparation is implemented and still operator-pending; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts.
 - User action: manually import `data\exports\episode_756343df9853\script.csv` into YMM4 and update `data\proofs\ymm4_import\episode_756343df9853\proof.yml`. If those git-ignored artifacts are absent in a different checkout, regenerate an equivalent bundle from `docs/HANDOFF.md`.
-- Assistant next after restart: either help record the YMM4 GUI result after the operator proof is returned, or apply the new critical-source path to a chosen real source for the active story and rebuild affected artifacts.
-- What counts as progress next: a completed proof YAML with YMM4 version / import result / evidence, or a real critical source recorded for the active story and visible in rebuilt packet/script/visual/asset/quote/export artifacts.
+- Assistant next after restart: help record the YMM4 GUI result after the operator proof is returned, or regenerate/reinspect the active bundle if ignored runtime artifacts are missing.
+- What counts as progress next: a completed proof YAML with YMM4 version / import result / evidence, or a targeted code/docs fix tied to a failed machine check.
 - What does not count as progress next: NotebookLM API automation, Inoreader OAuth, GUI/dashboard work, `.ymmp` generation, YouTube upload, or NLMYTGen subprocess/path integration.
 
 ## Not Complete Or Not Proven
 
-- The active proof bundle still has no selected critical view; the source-entry path exists, but the editorial source choice and rebuild have not been applied to `episode_756343df9853`.
+- The active proof bundle has a selected C1/NIST critical view in this local runtime checkout, but the runtime DB/export artifacts are git-ignored and may need regeneration in a different checkout.
 - Packet persistence is artifact-only; packet records are not stored as first-class DB rows.
 - QuoteManifest persistence is artifact-only; quote records are not stored as first-class DB rows.
 - QuoteManifest rows are conservative candidates, not legal decisions; all start as `human_required`.
@@ -103,9 +116,9 @@ Last updated: 2026-06-04
    Purpose: manually confirm the generated `script.csv` and `ymm4_notes.md` are usable in the actual editor.
    Effect: M5/M6 can be described as YMM4-import proven rather than package-only.
 
-2. P0 follow-up: Apply critical-view source path to the active story.
-   Purpose: select a real critical source for `story_20260603_503c39418f15862d` and rebuild the packet/script/visual/asset/quote/export artifacts.
-   Effect: removes the active bundle's permanent `critical_views` warning through an auditable source row, not by suppressing the guard.
+2. P0 support: Preserve or regenerate the active C1/NIST source application if runtime artifacts are missing.
+   Purpose: keep `story_20260603_503c39418f15862d` from regressing to a permanent `critical_views` warning in local runtime state.
+   Effect: keeps the active export auditable without treating ignored DB/export artifacts as tracked source.
 
 3. P1: QuoteManifest tightening.
    Purpose: reduce noisy quote rows by distinguishing citation-only source_refs from direct quote or screenshot intent.

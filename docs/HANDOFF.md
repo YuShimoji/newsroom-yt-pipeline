@@ -1,6 +1,6 @@
 # Handoff
 
-Last updated: 2026-06-04
+Last updated: 2026-06-05
 
 ## Restart Order
 
@@ -37,7 +37,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 
 - Branch: `main`
 - Remote: `origin/main`
-- Last pulled upstream before this handoff refresh: `36c1988 docs: refresh YMM4 proof handoff after local target prep`
+- Last pulled upstream before this active-source refresh: `13246b5 feat: add critical-view source entry path`
 - Local validation on 2026-06-03 before this handoff refresh:
   - `.venv\Scripts\python.exe -m pytest -q` -> 48 passed
   - `git diff --check` -> passed
@@ -46,6 +46,13 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - `.venv\Scripts\python.exe -m pytest -q` -> 53 passed.
   - `.venv\Scripts\python.exe -m newsroom.cli.main export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings.
   - `git diff --check` -> passed.
+- Local validation on 2026-06-05 during the active C1/NIST source application:
+  - `newsroom packet add-critical` recorded C1/NIST for `story_20260603_503c39418f15862d` in `data\ymm4_import_proof.sqlite`.
+  - Rebuilt packet/script/visual/asset/quote/export for `script_d2a46430e084` / `episode_756343df9853`.
+  - `.venv\Scripts\python.exe -m newsroom.cli.main export inspect --episode-dir data\exports\episode_756343df9853` -> PASS; `critical_view` is no longer a warning.
+  - Remaining warnings are publication/operator gates: `speculation_vs_fact`, `needs_human_review`, and 13 `human_required` visual/asset/quote items.
+  - `.venv\Scripts\python.exe -m pytest -q` -> 54 passed.
+  - `git diff --check` -> passed.
 - Local YMM4 proof target prepared on 2026-06-03:
   - proof DB: `data\ymm4_import_proof.sqlite`
   - export bundle: `data\exports\episode_756343df9853`
@@ -53,7 +60,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - proof draft: `data\proofs\ymm4_import\episode_756343df9853\proof.yml`
   - inspector result: `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings.
 - Runtime proof artifacts under `data\proofs\` are intentionally git-ignored.
-- Implementation frontier: M1 through M6.4 are implemented; a YMM4 GUI import proof target exists locally but operator GUI proof is not completed; P0-B critical-view source entry now has a DB-backed CLI path.
+- Implementation frontier: M1 through M6.4 are implemented; a YMM4 GUI import proof target exists locally but operator GUI proof is not completed; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST.
 
 ## Immediate Resume Packet
 
@@ -71,9 +78,9 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - purpose: give operators a durable way to add or classify critical sources before packet/script review.
 - effect: turns the current `critical_views` warning into an actionable workflow instead of a permanent manual reminder.
 - requirements: use DB-backed source rows and `newsroom packet add-critical`; rebuild packet/script/visual/asset/quote/export artifacts after adding or classifying the source.
-- state: implemented as a narrow CLI/persistence path. `story_critical_sources` records story-to-article critical views. `packet build` writes them to `sources.json` and `packet.md`; script conflict chapters prefer critical source refs; visual/asset/quote/export rebuilds use the same packet helper.
+- state: implemented as a narrow CLI/persistence path. `story_critical_sources` records story-to-article critical views. `packet build` writes them to `sources.json` and `packet.md`; script conflict chapters prefer critical source refs; visual/asset/quote/export rebuilds use the same packet helper. The active runtime DB now records C1/NIST for `story_20260603_503c39418f15862d`; rebuilt `episode_756343df9853` no longer reports the `critical_view` warning.
 - owner: assistant.
-- next move: use `newsroom packet add-critical --story <story_id> --article <article_id>` for an existing article, or `newsroom packet add-critical --story <story_id> --url <url> --title <title> --source-name <name>` for a manual runtime source, then rebuild downstream artifacts. Do not commit runtime DB rows.
+- next move: do not reselect sources unless the git-ignored runtime DB/export artifacts are missing. If regeneration is needed, reapply C1/NIST with `newsroom packet add-critical`, then rebuild downstream artifacts. Do not commit runtime DB rows.
 
 ### P1: QuoteManifest tightening
 
@@ -120,6 +127,7 @@ The 2026-06-03 local target used real RSS input and selected the Microsoft Blog 
 .venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite cluster --days 120
 .venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite score --today
 .venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite shortlist --today --top 5
+.venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite packet add-critical --story story_20260603_503c39418f15862d --url "https://www.nist.gov/publications/artificial-intelligence-risk-management-framework-generative-artificial-intelligence" --title "Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile" --source-name "NIST" --source-type official --note "Public risk-management framing for Microsoft official enterprise AI system narrative; adds trustworthiness, evaluation, and lifecycle risk perspective."
 .venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite packet build --story story_20260603_503c39418f15862d
 .venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite script draft --story story_20260603_503c39418f15862d --format anchor
 .venv\Scripts\newsroom.exe --db data\ymm4_import_proof.sqlite visual plan --script script_d2a46430e084

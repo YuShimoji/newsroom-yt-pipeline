@@ -994,12 +994,12 @@ def _cmd_export_ymm4(args: argparse.Namespace) -> int:
     episode_id = export_episode_id(plan, script)
     export_dir = export_root / episode_id
     asset_manifest = (
-        load_asset_manifest(export_dir / "asset_manifest.yml")
-        or load_asset_manifest(Path(args.asset_root) / plan.id / "asset_manifest.yml")
+        load_asset_manifest(Path(args.asset_root) / plan.id / "asset_manifest.yml")
+        or load_asset_manifest(export_dir / "asset_manifest.yml")
     )
     quote_manifest = (
-        load_quote_manifest(export_dir / "quote_manifest.yml")
-        or load_quote_manifest(Path(args.quote_root) / plan.id / "quote_manifest.yml")
+        load_quote_manifest(Path(args.quote_root) / plan.id / "quote_manifest.yml")
+        or load_quote_manifest(export_dir / "quote_manifest.yml")
     )
 
     output_dir, manifest = build_ymm4_package(

@@ -1,6 +1,6 @@
 # Meta-Review Ledger
 
-Last updated: 2026-06-04
+Last updated: 2026-06-05
 
 This ledger preserves supervision decisions that should survive restarts. Keep it short; do not turn it into a runtime-state duplicate.
 
@@ -16,10 +16,22 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - next_allowed_work: use the new `newsroom packet add-critical` path only with a real chosen source, then rebuild downstream artifacts and inspect the resulting export.
 - prohibited_work: NLMYTGen subprocess/path integration, NotebookLM API automation, Inoreader OAuth, GUI/dashboard, full `.ymmp`, YouTube upload/publishing, destructive cleanup, raw article body or private data in repo.
 
+## 2026-06-05 Active Critical Source Gate
+
+- current_task: apply the user-selected C1/NIST critical source to `story_20260603_503c39418f15862d`, rebuild downstream artifacts, and inspect the active export.
+- decision: continue.
+- reason: the source choice was operator/editorial authority, and the remaining work was Codex-owned mechanical registration, rebuild, inspection, and a narrow export rebuild fix.
+- active_artifact: `data\exports\episode_756343df9853` remains the active YMM4 proof target. It now includes the NIST critical source and passes machine inspection, but it is still not YMM4 GUI-proven.
+- true_blockers: YMM4 GUI import, screen check, and proof YAML completion still require operator authority.
+- stale_or_false_blockers: the prior `critical_view` warning is superseded by C1/NIST runtime registration and rebuild; stale export-bundle asset/quote manifests were a machine-closeable implementation bug, not a human blocker.
+- evidence_boundary: runtime DB rows and export bundles are evidence/runtime artifacts; docs are restart authority; the new regression test is production code proof for the export rebuild behavior.
+- next_allowed_work: operator YMM4 import proof, or targeted fixes if the returned proof/inspect output shows a concrete failure.
+- prohibited_work: do not reselect additional critical sources, expand to NotebookLM/Inoreader/GUI/full `.ymmp`/YouTube, or move responsibilities into NLMYTGen shared implementation.
+
 ## Blocked Or Pending
 
 - YMM4 GUI import proof: request authority. Operator must import `data\exports\episode_756343df9853\script.csv` in YMM4 and fill `data\proofs\ymm4_import\episode_756343df9853\proof.yml`.
-- Active critical view: capability exists, but `episode_756343df9853` still needs a real critical source selection and rebuild.
+- Active critical view: applied locally with C1/NIST. If ignored runtime artifacts are missing in another checkout, reapply the same selected source and rebuild before treating `critical_view` as unresolved.
 - QuoteManifest human_required noise: P1. Do not let it consume P0 unless the active export path is already moving.
 - Packet persistence: P1. Current critical-source relation is durable DB input, but full NotebookPacket persistence remains separate.
 - VisualIR-to-final-look gap: keep evaluating whether VisualIR changes affect actual YMM4 composition, density, whitespace, and eye flow.
@@ -34,7 +46,7 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 
 ## Improvement Ideas
 
-- Apply `newsroom packet add-critical` to the active story once a real skeptical or opposing source is chosen, then rebuild packet/script/visual/asset/quote/export.
+- Generalize critical source entry only when more cases need it; do not turn this C1/NIST runtime evidence into a broader source-selection authority by itself.
 - Tighten QuoteManifest by separating citation-only references from direct quote and screenshot intent.
 - Persist NotebookPacket records when operator packet edits must survive rebuilds beyond source classification.
 - Reassess VisualIR by final visual effect, not manifest count: composition, density, whitespace, color hierarchy, and eye flow in YMM4.

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 
+import yaml
+
 from newsroom.cli.main import main
 from newsroom.store.db import (
     add_story_critical_source,
@@ -163,3 +165,126 @@ def test_story_critical_sources_schema_is_idempotent_for_existing_db(tmp_path):
 
     critical_sources = list_story_critical_source_articles(db_path, cluster.id)
     assert [source.id for source in critical_sources] == [article.id]
+
+
+def test_export_rebuild_prefers_refreshed_review_manifest_roots(tmp_path):
+    db_path = tmp_path / "newsroom.sqlite"
+    script_root = tmp_path / "scripts"
+    roots = {
+        "visual": tmp_path / "visuals",
+        "asset": tmp_path / "assets",
+        "quote": tmp_path / "quotes",
+        "export": tmp_path / "exports",
+    }
+    export_root = tmp_path / "exports"
+    primary = _article("primary", source_type="official")
+    cluster = _cluster(primary)
+    upsert_article(db_path, primary)
+    replace_clusters_for_date(db_path, cluster.cluster_date, [cluster])
+
+    _assert_main(
+        db_path,
+        "script",
+        "draft",
+        "--story",
+        cluster.id,
+        "--format",
+        "anchor",
+        "--script-root",
+        str(script_root),
+    )
+    script_id = next(script_root.iterdir()).name
+    _run_review_pipeline(db_path, script_id, roots)
+
+    add_exit = main(
+        [
+            "--db",
+            str(db_path),
+            "packet",
+            "add-critical",
+            "--story",
+            cluster.id,
+            "--url",
+            "https://example.com/nist",
+            "--title",
+            "NIST Generative AI Profile",
+            "--source-name",
+            "NIST",
+            "--source-type",
+            "official",
+            "--note",
+            "risk framing",
+        ]
+    )
+    assert add_exit == 0
+
+    _assert_main(
+        db_path,
+        "script",
+        "draft",
+        "--story",
+        cluster.id,
+        "--format",
+        "anchor",
+        "--script-root",
+        str(script_root),
+    )
+    _run_review_pipeline(db_path, script_id, roots)
+
+    episode_dir = next(export_root.iterdir())
+    exported_quote_manifest = yaml.safe_load(
+        (episode_dir / "quote_manifest.yml").read_text(encoding="utf-8")
+    )
+    attributions = [
+        quote["attribution"]
+        for quote in exported_quote_manifest["quotes"]
+        if isinstance(quote, dict)
+    ]
+    assert any("NIST" in attribution for attribution in attributions)
+
+
+def _run_review_pipeline(db_path, script_id: str, roots: dict[str, object]) -> None:
+    _assert_main(
+        db_path,
+        "visual",
+        "plan",
+        "--script",
+        script_id,
+        "--visual-root",
+        str(roots["visual"]),
+    )
+    _assert_main(
+        db_path,
+        "asset",
+        "suggest",
+        "--script",
+        script_id,
+        "--asset-root",
+        str(roots["asset"]),
+    )
+    _assert_main(
+        db_path,
+        "quote",
+        "suggest",
+        "--script",
+        script_id,
+        "--quote-root",
+        str(roots["quote"]),
+    )
+    _assert_main(
+        db_path,
+        "export",
+        "ymm4",
+        "--script",
+        script_id,
+        "--export-root",
+        str(roots["export"]),
+        "--asset-root",
+        str(roots["asset"]),
+        "--quote-root",
+        str(roots["quote"]),
+    )
+
+
+def _assert_main(db_path, *args: str) -> None:
+    assert main(["--db", str(db_path), *args]) == 0
