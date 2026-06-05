@@ -21,6 +21,8 @@ Last updated: 2026-06-05
 - YMM4 GUI proof handoff on 2026-06-03: fast-forwarded to `20cfd7a`, fetched real RSS into `data\ymm4_import_proof.sqlite`, generated `data\exports\episode_756343df9853`, wrote a git-ignored proof draft at `data\proofs\ymm4_import\episode_756343df9853\proof.yml`, and confirmed `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings. YMM4 GUI import itself is still operator-pending.
 - Meta-review / P0-B slice on 2026-06-04: pulled `origin/main` to `36c1988`, confirmed `HEAD...origin/main` was `0 0`, reran `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings, implemented DB-backed critical-view source entry, ran `.venv\Scripts\python.exe -m pytest -q` -> 53 passed, and `git diff --check` -> passed.
 - Active C1/NIST source application on 2026-06-05: started clean from `13246b5`, `HEAD...origin/main` was `0 0`, recorded C1/NIST with `newsroom packet add-critical`, rebuilt packet/script/visual/asset/quote/export for `story_20260603_503c39418f15862d` / `episode_756343df9853`, fixed export rebuilds to prefer refreshed asset/quote roots over stale export-bundle copies, and confirmed `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with no `critical_view` warning. Remaining warnings are `speculation_vs_fact`, 6 segments `needs_human_review`, 1 asset `human_required`, 11 quotes `human_required`, and 1 visual unit `human_required`. Validation: `.venv\Scripts\python.exe -m pytest -q` -> 54 passed; `git diff --check` -> passed.
+- YMM4 GUI proof attempt on 2026-06-05: opened YukkuriMovieMaker v4.52.0.8 and loaded `data\exports\episode_756343df9853\script.csv` into `台本編集 / script.csv`, but the proof stopped because YMM4 reported `キャラクターが見つかりませんでした。キャラクターを指定してください。` for exported speaker `ナレーター`. The visible YMM4 selector showed `ゆっくり霊夢`, so the local YMM4 character setup did not match `configs/speakers.yml`. The ignored proof YAML was updated locally to `import_result: failed` / `decision.status: needs_fix`; this is not a passed import proof.
+- Final sync validation on this PLANNER007 checkout: `.venv\Scripts\python.exe -m pytest -q` -> 54 passed and `git diff --check` -> passed. `export inspect` on the local git-ignored `data\exports\episode_756343df9853` still returned PASS but showed the older `critical_view` warning, so regenerate the active C1/NIST runtime artifacts if the next terminal needs the no-`critical_view` export state.
 
 ## Implemented Milestones
 
@@ -84,14 +86,24 @@ Last updated: 2026-06-05
 - Rebuilt review manifests: `data\assets\plan_20260603_faca8ebcbc45` and `data\quotes\plan_20260603_faca8ebcbc45`; quote rows include NIST.
 - Rebuilt export bundle: `data\exports\episode_756343df9853`; `source_list.md`, `script_ir.json`, `visual_ir.json`, and `quote_manifest.yml` include the NIST critical source.
 - Export inspect result: PASS. `critical_view` warning is gone. Remaining warnings are publication/operator review gates, not machine failures.
-- YMM4 GUI proof status: still untested. Rebuilding the bundle did not prove YMM4 import.
+- YMM4 GUI proof status: attempted after the bundle work, but not passed because the local YMM4 character setup did not contain `ナレーター`. Rebuilding the bundle did not prove import acceptance.
+
+## Current YMM4 GUI Proof Attempt
+
+- Target episode remained `episode_756343df9853`; target CSV was `data\exports\episode_756343df9853\script.csv`.
+- The CSV emits speaker `ナレーター` on the spoken rows and the repo speaker config expects `anchor_narration` to map to `ナレーター`.
+- YukkuriMovieMaker v4.52.0.8 opened the CSV in `台本編集 / script.csv`, but showed `キャラクターが見つかりませんでした。キャラクターを指定してください。`
+- The local YMM4 character selector showed `ゆっくり霊夢`, so the immediate blocker is YMM4 character setup, not CSV encoding.
+- Because the speaker mismatch blocked acceptance, chapter comment handling, comma text, multiline text, and Japanese preservation are still unproven in YMM4.
+- The local ignored proof record is `data\proofs\ymm4_import\episode_756343df9853\proof.yml`; it is set to `import_result: failed` / `decision.status: needs_fix`.
+- Subtitle placement, overlay safety, final YMM4 geometry, template positioning, and `.ymmp` patch details were not inspected and remain outside newsroom-side acceptance.
 
 ## Handoff Snapshot
 
-- Assistant status: YMM4 manual import proof preparation is implemented and still operator-pending; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts.
-- User action: manually import `data\exports\episode_756343df9853\script.csv` into YMM4 and update `data\proofs\ymm4_import\episode_756343df9853\proof.yml`. If those git-ignored artifacts are absent in a different checkout, regenerate an equivalent bundle from `docs/HANDOFF.md`.
-- Assistant next after restart: help record the YMM4 GUI result after the operator proof is returned, or regenerate/reinspect the active bundle if ignored runtime artifacts are missing.
-- What counts as progress next: a completed proof YAML with YMM4 version / import result / evidence, or a targeted code/docs fix tied to a failed machine check.
+- Assistant status: YMM4 manual import proof preparation is implemented; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts. The first real YMM4 GUI proof attempt failed on speaker/character mapping and is recorded as `needs_fix`, not passed.
+- User action: align the target YMM4 character setup with exported speaker `ナレーター`, or regenerate the export with a speaker name already present in the target YMM4 environment, then rerun the YMM4 GUI proof and update `data\proofs\ymm4_import\episode_756343df9853\proof.yml`. If those git-ignored artifacts are absent in a different checkout, regenerate an equivalent bundle from `docs/HANDOFF.md`.
+- Assistant next after restart: help record the YMM4 GUI result after the speaker mismatch is resolved, or regenerate/reinspect the active bundle if ignored runtime artifacts are missing.
+- What counts as progress next: a completed passed proof YAML after the speaker mismatch is resolved, or a targeted code/docs fix tied to a failed machine check.
 - What does not count as progress next: NotebookLM API automation, Inoreader OAuth, GUI/dashboard work, `.ymmp` generation, YouTube upload, or NLMYTGen subprocess/path integration.
 
 ## Not Complete Or Not Proven
@@ -101,7 +113,7 @@ Last updated: 2026-06-05
 - QuoteManifest persistence is artifact-only; quote records are not stored as first-class DB rows.
 - QuoteManifest rows are conservative candidates, not legal decisions; all start as `human_required`.
 - Additional visual cards from PROJECT_SPEC §14 (`version_diff`, `actor_map`, `risk_meter`, `context_stack`, `quote_screenshot`, `neutral_background`) are not implemented.
-- YMM4 GUI import proof is prepared but has not been performed by the operator.
+- YMM4 GUI import proof has been attempted but has not passed. The current blocker is YMM4 character mapping for speaker `ナレーター`.
 - YMM4 GUI automation has not been performed and remains out of scope.
 - NotebookLM API automation is out of scope.
 - Full `.ymmp` generation is out of scope.

@@ -53,6 +53,16 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - Remaining warnings are publication/operator gates: `speculation_vs_fact`, `needs_human_review`, and 13 `human_required` visual/asset/quote items.
   - `.venv\Scripts\python.exe -m pytest -q` -> 54 passed.
   - `git diff --check` -> passed.
+- YMM4 GUI proof attempt on 2026-06-05:
+  - YMM4 version: `4.52.0.8`.
+  - target CSV: `data\exports\episode_756343df9853\script.csv`.
+  - result: not passed. YMM4 opened `台本編集 / script.csv`, then showed `キャラクターが見つかりませんでした。キャラクターを指定してください。`
+  - cause to resolve: exported speaker is `ナレーター`, but the local YMM4 character setup did not contain a matching `ナレーター` character and showed `ゆっくり霊夢` instead.
+  - ignored proof record: `data\proofs\ymm4_import\episode_756343df9853\proof.yml` was updated locally with `import_result: failed` / `decision.status: needs_fix`.
+- Local validation before this handoff push:
+  - `.venv\Scripts\python.exe -m pytest -q` -> 54 passed.
+  - `git diff --check` -> passed.
+  - `.venv\Scripts\python.exe -m newsroom.cli.main export inspect --episode-dir data\exports\episode_756343df9853` -> PASS in this checkout, but the git-ignored export bundle still showed the older `critical_view` warning. If this matters for the next run, regenerate the active C1/NIST runtime artifacts with the commands below.
 - Local YMM4 proof target prepared on 2026-06-03:
   - proof DB: `data\ymm4_import_proof.sqlite`
   - export bundle: `data\exports\episode_756343df9853`
@@ -60,7 +70,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - proof draft: `data\proofs\ymm4_import\episode_756343df9853\proof.yml`
   - inspector result: `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings.
 - Runtime proof artifacts under `data\proofs\` are intentionally git-ignored.
-- Implementation frontier: M1 through M6.4 are implemented; a YMM4 GUI import proof target exists locally but operator GUI proof is not completed; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST.
+- Implementation frontier: M1 through M6.4 are implemented; a YMM4 GUI import proof target exists locally but GUI acceptance is not proven because the first real YMM4 attempt failed on speaker/character mapping; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST.
 
 ## Immediate Resume Packet
 
@@ -69,9 +79,9 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - purpose: prove that the generated `script.csv` is accepted by real YMM4, not just by local machine checks.
 - effect: upgrades the M5/M6 handoff from package-ready to YMM4-import-proven.
 - requirements: an episode export bundle, `newsroom export inspect --episode-dir <episode_dir>` output, YMM4 manual import, and a filled proof YAML based on `docs/templates/ymm4_import_proof_template.yml`.
-- state: local bundle generated and inspected; not operator-proven.
-- owner: operator performs GUI import and records proof; assistant can inspect failures, tighten bundle checks, and update docs after proof is returned.
-- next move: import `data\exports\episode_756343df9853\script.csv` in YMM4, then update `data\proofs\ymm4_import\episode_756343df9853\proof.yml` with YMM4 version, import result, checks, evidence, and decision. If this local artifact is missing, regenerate a bundle with the CLI flow below.
+- state: attempted in YMM4 v4.52.0.8 and failed before acceptance because speaker `ナレーター` was not recognized as an existing YMM4 character. The proof YAML is updated locally as `needs_fix`; do not mark this passed until the speaker warning is gone and the text/readability checks are observed.
+- owner: operator aligns the target YMM4 character setup or chooses a compatible exported speaker name; assistant can inspect failures, tighten bundle checks, and update docs after proof is returned.
+- next move: add or rename a YMM4 character to `ナレーター`, or regenerate the export with a speaker name already present in the target YMM4 environment, then rerun the GUI proof. Only set `decision.status: passed` after CSV import acceptance, speaker recognition, chapter comment handling, comma/multiline text preservation, Japanese display, and handoff-file readability are confirmed.
 
 ### P0-B: Critical-view source entry
 
