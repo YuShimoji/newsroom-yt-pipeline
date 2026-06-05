@@ -63,6 +63,10 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - `.venv\Scripts\python.exe -m pytest -q` -> 54 passed.
   - `git diff --check` -> passed.
   - `.venv\Scripts\python.exe -m newsroom.cli.main export inspect --episode-dir data\exports\episode_756343df9853` -> PASS in this checkout, but the git-ignored export bundle still showed the older `critical_view` warning. If this matters for the next run, regenerate the active C1/NIST runtime artifacts with the commands below.
+- P0-A context reflection:
+  - Subtitle placement authority remains downstream in NLMYTGen/YMM4-side tooling.
+  - The newsroom-side YMM4 proof scope is CSV import acceptance and handoff-file readability only.
+  - Git-ignored runtime export/proof state is checkout-sensitive. A refreshed active C1/NIST bundle should inspect PASS with no `critical_view` warning; if a checkout still shows the older warning, regenerate the active C1/NIST runtime artifacts with the commands below.
 - Local YMM4 proof target prepared on 2026-06-03:
   - proof DB: `data\ymm4_import_proof.sqlite`
   - export bundle: `data\exports\episode_756343df9853`
@@ -80,6 +84,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - effect: upgrades the M5/M6 handoff from package-ready to YMM4-import-proven.
 - requirements: an episode export bundle, `newsroom export inspect --episode-dir <episode_dir>` output, YMM4 manual import, and a filled proof YAML based on `docs/templates/ymm4_import_proof_template.yml`.
 - state: attempted in YMM4 v4.52.0.8 and failed before acceptance because speaker `ナレーター` was not recognized as an existing YMM4 character. The proof YAML is updated locally as `needs_fix`; do not mark this passed until the speaker warning is gone and the text/readability checks are observed.
+- scope: CSV import acceptance and handoff-file readability only. This is not subtitle layout, subtitle position, overlay safety, or final YMM4 geometry proof.
 - owner: operator aligns the target YMM4 character setup or chooses a compatible exported speaker name; assistant can inspect failures, tighten bundle checks, and update docs after proof is returned.
 - next move: add or rename a YMM4 character to `ナレーター`, or regenerate the export with a speaker name already present in the target YMM4 environment, then rerun the GUI proof. Only set `decision.status: passed` after CSV import acceptance, speaker recognition, chapter comment handling, comma/multiline text preservation, Japanese display, and handoff-file readability are confirmed.
 
@@ -114,6 +119,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 
 - NotebookLM remains a manual packet bridge; no NotebookLM API automation.
 - YMM4 GUI operation is operator-owned; this repo prepares files and proof templates.
+- Newsroom YMM4 proof is limited to CSV import acceptance and handoff-file readability; subtitle placement authority, YMM4 item geometry, template positioning, subtitle band decisions, `.ymmp` patch details, and overlay proof belong downstream.
 - Full `.ymmp` generation is out of scope.
 - YouTube upload and publishing are out of scope.
 - Inoreader OAuth/token flow is deferred.

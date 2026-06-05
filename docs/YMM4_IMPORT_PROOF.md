@@ -6,6 +6,12 @@
 
 この手順は YMM4 GUI automation ではありません。YMM4 の操作、画面確認、スクリーンショット取得、proof 記入は operator が手動で行います。
 
+## Proof Scope Boundary
+
+この proof が確認するのは、YMM4 GUI が `script.csv` を受理することと、bundle 内の handoff files が operator の確認資料として読めることです。
+
+この proof は subtitle layout、subtitle position、overlay safety、final YMM4 geometry、template positioning、subtitle band decision、`.ymmp` patch details を証明しません。それらは downstream NLMYTGen / YMM4-side tooling の authority です。
+
 ## 前提
 
 - repo: this checkout root, written below as `<repo_root>`.

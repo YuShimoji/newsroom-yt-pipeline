@@ -39,9 +39,21 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - next_allowed_work: update schema notes or handoff docs if a future artifact needs to carry no-occlusion intent as data.
 - prohibited_work: do not add subtitle coordinates, YMM4 item geometry, template placement rules, overlay proof, NLMYTGen subprocess/path dependency, shared implementation, GUI/dashboard, full `.ymmp`, or publishing automation to newsroom.
 
+## 2026-06-05 P0-A Restart Context Reflection Gate
+
+- current_task: reflect the latest P0-A restart context into project docs and push without promoting runtime artifacts.
+- decision: docs-only.
+- reason: machine inspection, boundary readback, and the returned YMM4 GUI attempt changed the restart context, but no code path changed and runtime proof artifacts remain local.
+- active_artifact: `data\exports\episode_756343df9853` remains the active YMM4 proof target. A refreshed C1/NIST bundle passes machine inspection with no `critical_view` warning, but ignored runtime exports are checkout-sensitive.
+- true_blockers: the first YMM4 GUI attempt failed in YukkuriMovieMaker v4.52.0.8 because exported speaker `ナレーター` was not present in the local YMM4 character setup. Speaker mapping must be aligned and the GUI proof rerun before `decision.status: passed`.
+- stale_or_false_blockers: `speculation_vs_fact`, `needs_human_review`, and `human_required` are publication/operator gates, not `export inspect` failure.
+- evidence_boundary: tracked docs record restart state; `data\proofs\ymm4_import\episode_756343df9853\proof.yml` is local operator evidence and remains git-ignored.
+- next_allowed_work: align YMM4 character setup or regenerate the export with a compatible speaker name, then rerun the GUI proof; assistant handles a targeted fix if proof/inspect returns a concrete machine failure.
+- prohibited_work: do not commit runtime DB/export/proof/screenshots, reselect C2+ sources, add subtitle geometry, move overlay proof into newsroom, or expand into GUI/dashboard/full `.ymmp`/publishing automation.
+
 ## Blocked Or Pending
 
-- YMM4 GUI import proof: request authority. Operator must import `data\exports\episode_756343df9853\script.csv` in YMM4 and fill `data\proofs\ymm4_import\episode_756343df9853\proof.yml`.
+- YMM4 GUI import proof: attempted but not passed. Operator must resolve the speaker `ナレーター` / YMM4 character mapping mismatch, rerun import for `data\exports\episode_756343df9853\script.csv`, and update `data\proofs\ymm4_import\episode_756343df9853\proof.yml`.
 - Active critical view: applied locally with C1/NIST. If ignored runtime artifacts are missing in another checkout, reapply the same selected source and rebuild before treating `critical_view` as unresolved.
 - QuoteManifest human_required noise: P1. Do not let it consume P0 unless the active export path is already moving.
 - Packet persistence: P1. Current critical-source relation is durable DB input, but full NotebookPacket persistence remains separate.
@@ -53,7 +65,7 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - Keep NLMYTGen as schema handoff only: CSV, JSON, Markdown.
 - Keep subtitle placement authority downstream: newsroom can carry subtitle-safe intent, but NLMYTGen/YMM4-side tooling owns final subtitle geometry and overlay proof.
 - Separate operator creative/GUI authority from machine-verifiable tasks.
-- Do not keep expanding docs around an unperformed YMM4 import proof.
+- Do not keep expanding docs around the failed YMM4 import proof unless the artifact state changes.
 - Case-specific runtime evidence can inform generic capability, but it is not the generic capability's authority by itself.
 
 ## Improvement Ideas
