@@ -28,6 +28,17 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - next_allowed_work: operator YMM4 import proof, or targeted fixes if the returned proof/inspect output shows a concrete failure.
 - prohibited_work: do not reselect additional critical sources, expand to NotebookLM/Inoreader/GUI/full `.ymmp`/YouTube, or move responsibilities into NLMYTGen shared implementation.
 
+## 2026-06-05 Subtitle Placement Boundary Gate
+
+- current_task: re-audit newsroom / NLMYTGen responsibility boundaries before any subtitle placement or overlay-proof work.
+- decision: retire from newsroom active work; keep as downstream authority.
+- reason: newsroom may express subtitle-safe intent and no-occlusion requirements, but final YMM4 subtitle placement is a downstream conversion/editor authority.
+- newsroom_owns: script text, speaker mapping, source planning, VisualIR/AssetManifest/QuoteManifest planning, `script.csv`, `ymm4_notes.md`, and subtitle-safe / no-occlusion intent.
+- nlmytgen_owns: subtitle placement authority, YMM4 item geometry, template positioning, subtitle band decisions, `.ymmp` patch details, and overlay proof.
+- ymm4_gui_proof_boundary: newsroom YMM4 GUI proof means CSV import acceptance and handoff-file readability only; it does not prove subtitle layout, subtitle position, overlay safety, or final YMM4 geometry.
+- next_allowed_work: update schema notes or handoff docs if a future artifact needs to carry no-occlusion intent as data.
+- prohibited_work: do not add subtitle coordinates, YMM4 item geometry, template placement rules, overlay proof, NLMYTGen subprocess/path dependency, shared implementation, GUI/dashboard, full `.ymmp`, or publishing automation to newsroom.
+
 ## Blocked Or Pending
 
 - YMM4 GUI import proof: request authority. Operator must import `data\exports\episode_756343df9853\script.csv` in YMM4 and fill `data\proofs\ymm4_import\episode_756343df9853\proof.yml`.
@@ -40,6 +51,7 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 
 - Do not count proof/docs/readback growth as production value.
 - Keep NLMYTGen as schema handoff only: CSV, JSON, Markdown.
+- Keep subtitle placement authority downstream: newsroom can carry subtitle-safe intent, but NLMYTGen/YMM4-side tooling owns final subtitle geometry and overlay proof.
 - Separate operator creative/GUI authority from machine-verifiable tasks.
 - Do not keep expanding docs around an unperformed YMM4 import proof.
 - Case-specific runtime evidence can inform generic capability, but it is not the generic capability's authority by itself.
