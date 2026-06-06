@@ -171,16 +171,16 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - state: complete for the active script. Operator approved all 6 suggestion rows, `docs\approved_materializations\script_d2a46430e084.materialization.yml` is the tracked sanitized narration authority, the record was applied to DB ScriptIR and the refreshed script bundle, and the active export was rebuilt. `export inspect --episode-dir data\exports\episode_756343df9853` passes with `script_todo_skeleton` absent and `critical_view` absent.
 - authority: durable approved narration authority is `docs\approved_materializations\script_d2a46430e084.materialization.yml`. Runtime draft, DB rows, export bundle, and proof files remain checkout-local runtime evidence and are not committed.
 - owner: assistant for tooling/rebuilds and operator for editorial approval of final narration.
-- next move: continue to P1 QuoteManifest tightening or another publication/operator gate. Do not treat this as YMM4 subtitle placement, overlay safety, final geometry, `.ymmp`, or publishing proof.
+- next move: continue with the remaining publication/operator gates. Do not treat this as YMM4 subtitle placement, overlay safety, final geometry, `.ymmp`, or publishing proof.
 
 ### P1: QuoteManifest tightening
 
 - purpose: reduce noisy `human_required` quote rows.
 - effect: review focuses on direct quote / screenshot / data-use intent instead of every source-backed segment.
 - requirements: distinguish citation-only `source_refs` from direct quote or screenshot intent.
-- state: not implemented.
+- state: implemented for the active path. Citation-only text rows now carry `review_level: citation_only` / `approval_state: citation_only`; direct quote, screenshot, and data-use intent remain `human_required`. Active `quote_manifest.yml` now has 11 rows: 10 citation-only text rows and 1 screenshot row requiring human review. The 5 C1/NIST rows remain present as `source_role: critical_view`.
 - owner: assistant.
-- next move: after P0.5 materializes the active script, add intent flags or builder heuristics, then extend `tests/test_quote_manifest.py`.
+- next move: review the remaining screenshot/asset/visual human_required items, or continue to Packet persistence. Do not use QuoteManifest tightening to clear `speculation_vs_fact` or broad `needs_human_review`.
 
 ### P1: Packet persistence
 

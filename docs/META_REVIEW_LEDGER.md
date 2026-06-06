@@ -143,8 +143,20 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - true_blockers: none for clearing the active script TODO skeleton. Publication/operator review gates remain: `speculation_vs_fact`, `needs_human_review`, and `human_required` asset/quote/visual items.
 - stale_or_false_blockers: `script_todo_skeleton` is no longer active after the approved record apply and export rebuild.
 - evidence_boundary: approved materialization is text authority only. Runtime DB/export/proof artifacts remain local evidence and are not committed.
-- next_allowed_work: P1 QuoteManifest tightening or another concrete publication/operator gate on the materialized script.
+- next_allowed_work: P1 QuoteManifest tightening or another concrete publication/operator gate on the materialized script. Superseded by the P1 QuoteManifest Tightening Gate below for quote-related rows.
 - prohibited_work: do not treat this as subtitle placement, overlay safety, final YMM4 geometry, full `.ymmp`, or publishing proof; do not commit runtime DB/export/proof/screenshots.
+
+## 2026-06-07 P1 QuoteManifest Tightening Gate
+
+- current_task: reduce quote-related `human_required` noise without clearing unrelated publication gates.
+- decision: implement narrow intent classification.
+- reason: active script narration is materialized, and the QuoteManifest builder was treating citation-only `source_refs` as if every segment planned direct quotation. Citation-only evidence rows can be separated from direct quote, screenshot, and data-use intent without adding raw source text.
+- active_artifact: `data\exports\episode_756343df9853\quote_manifest.yml` in local runtime state; generated from code and not committed.
+- true_blockers: direct quote, screenshot, and data-use rows still require operator review when present.
+- stale_or_false_blockers: citation-only text rows are not direct quotes and should not remain `human_required`.
+- evidence_boundary: QuoteManifest classification is a review triage aid, not legal approval, source quote authority, subtitle placement proof, YMM4 geometry proof, or publishing readiness.
+- next_allowed_work: review remaining screenshot/asset/visual `human_required` items, address broad script review gates with operator authority, or continue to Packet persistence.
+- prohibited_work: do not suppress `speculation_vs_fact` or broad `needs_human_review`, do not add raw article body/private/copyright-unclear text, and do not expand into `.ymmp`, overlay proof, YMM4 geometry, or publishing.
 
 ## Blocked Or Pending
 
@@ -152,7 +164,7 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - Active critical view: applied locally with C1/NIST. If ignored runtime artifacts are missing in another checkout, reapply the same selected source and rebuild before treating `critical_view` as unresolved.
 - Active script materialization: approved record generated and applied for `script_d2a46430e084`; active export inspect is PASS with `script_todo_skeleton` absent.
 - Approved narration authority: `docs\approved_materializations\script_d2a46430e084.materialization.yml` is the tracked sanitized authority. Runtime DB/export artifacts remain checkout-local and may need reapply/rebuild elsewhere.
-- QuoteManifest human_required noise: P1. This is now a valid active next path because the spoken script is materialized.
+- QuoteManifest human_required noise: citation-only source refs are tightened; active quote rows are 10 citation-only and 1 screenshot human_required.
 - Packet persistence: P1. Current critical-source relation is durable DB input, but full NotebookPacket persistence remains separate.
 - VisualIR-to-final-look gap: keep evaluating whether VisualIR changes affect actual YMM4 composition, density, whitespace, and eye flow.
 
@@ -168,6 +180,6 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 ## Improvement Ideas
 
 - Generalize critical source entry only when more cases need it; do not turn this C1/NIST runtime evidence into a broader source-selection authority by itself.
-- Tighten QuoteManifest by separating citation-only references from direct quote and screenshot intent.
+- Tighten remaining review surfaces by separating concrete visual/source-card use from broad publication concerns.
 - Persist NotebookPacket records when operator packet edits must survive rebuilds beyond source classification.
 - Reassess VisualIR by final visual effect, not manifest count: composition, density, whitespace, color hierarchy, and eye flow in YMM4.

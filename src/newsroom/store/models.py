@@ -199,6 +199,8 @@ class QuoteEntry:
     attribution: str
     risk_level: str = "medium"
     approval_state: str = "human_required"
+    review_level: str = "direct_quote"
+    source_role: str = "source"
 
 
 @dataclass(frozen=True)
