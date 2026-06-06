@@ -88,6 +88,16 @@ newsroom export inspect --episode-dir <episode_dir>
 | bundle 内のファイルが足りない | `<episode_dir>\export_manifest.json` / `newsroom export inspect` の出力 | `newsroom export ymm4 --script <script_id>` を再実行する |
 | `human_required` が多い | `<episode_dir>\asset_manifest.yml` / `<episode_dir>\quote_manifest.yml` | 公開前確認として承認、却下、差し替えを proof に残す |
 
+## Speaker Registry Mismatch の扱い
+
+YMM4 が `キャラクターが見つかりませんでした。キャラクターを指定してください。` を出し、`script.csv` の speaker が `<repo_root>\configs\speakers.yml` と一致している場合、まず YMM4 側の character registry mismatch と扱います。
+
+- `import_result` は `failed`、`decision.status` は `needs_fix` または `blocked` のままにします。
+- proof には YMM4 version、missing speaker、YMM4 側で見えた候補 character、該当 CSV 行を記録します。
+- operator は YMM4 UI で missing speaker と同名の character を作るか、明示的な編集判断として export speaker name を既存 YMM4 character に合わせます。
+- 1 つの local YMM4 環境に `ゆっくり霊夢` しか見えないことだけを理由に、repo の speaker mapping を `ゆっくり霊夢` へ変更しません。
+- filesystem 上の YMM4 設定ファイルを schema 未確認のまま直接編集しません。
+
 ## 証跡の残し方
 
 1. `<repo_root>\docs\templates\ymm4_import_proof_template.yml` を proof の出発点にします。

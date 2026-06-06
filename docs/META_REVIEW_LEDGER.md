@@ -1,6 +1,6 @@
 # Meta-Review Ledger
 
-Last updated: 2026-06-05
+Last updated: 2026-06-06
 
 This ledger preserves supervision decisions that should survive restarts. Keep it short; do not turn it into a runtime-state duplicate.
 
@@ -45,11 +45,23 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - decision: docs-only.
 - reason: machine inspection, boundary readback, and the returned YMM4 GUI attempt changed the restart context, but no code path changed and runtime proof artifacts remain local.
 - active_artifact: `data\exports\episode_756343df9853` remains the active YMM4 proof target. A refreshed C1/NIST bundle passes machine inspection with no `critical_view` warning, but ignored runtime exports are checkout-sensitive.
-- true_blockers: the first YMM4 GUI attempt failed in YukkuriMovieMaker v4.52.0.8 because exported speaker `ナレーター` was not present in the local YMM4 character setup. Speaker mapping must be aligned and the GUI proof rerun before `decision.status: passed`.
+- true_blockers: the first YMM4 GUI attempt failed in YukkuriMovieMaker v4.43.1.0 because exported speaker `ナレーター` was not present in the local YMM4 character setup. Speaker mapping must be aligned and the GUI proof rerun before `decision.status: passed`.
 - stale_or_false_blockers: `speculation_vs_fact`, `needs_human_review`, and `human_required` are publication/operator gates, not `export inspect` failure.
 - evidence_boundary: tracked docs record restart state; `data\proofs\ymm4_import\episode_756343df9853\proof.yml` is local operator evidence and remains git-ignored.
 - next_allowed_work: align YMM4 character setup or regenerate the export with a compatible speaker name, then rerun the GUI proof; assistant handles a targeted fix if proof/inspect returns a concrete machine failure.
 - prohibited_work: do not commit runtime DB/export/proof/screenshots, reselect C2+ sources, add subtitle geometry, move overlay proof into newsroom, or expand into GUI/dashboard/full `.ymmp`/publishing automation.
+
+## 2026-06-06 P0-A Validity Check
+
+- current_task: assess the pasted P0-A rerun request and advance the project without overstepping newsroom authority.
+- decision: valid but external-environment gated.
+- reason: repo/export state is coherent, `configs\speakers.yml` and `script.csv` both use `ナレーター`, and `export inspect` passes with `critical_view` absent. The remaining blocker is the local YMM4 character registry, not encoding, stale export state, or newsroom code.
+- active_artifact: `data\exports\episode_756343df9853` remains the active proof target; `data\proofs\ymm4_import\episode_756343df9853\proof.yml` remains local evidence and is not tracked.
+- true_blockers: YMM4 must contain a character named `ナレーター`, or there must be an explicit editorial decision to export a speaker name already present in the target YMM4 environment.
+- stale_or_false_blockers: the local YMM4 selector showing `ゆっくり霊夢` is not a reason to silently remap newsroom speaker config to `ゆっくり霊夢`.
+- evidence_boundary: filesystem inspection found `C:\Users\thank\AppData\Local\YukkuriMovieMaker\v4` but only `temp` content; no safe editable character-registry file was identified in this run.
+- next_allowed_work: operator creates/renames a YMM4 character to `ナレーター` through YMM4 UI, then reruns import and updates proof YAML; assistant can update docs after returned proof or implement a targeted export/config option only if explicitly chosen.
+- prohibited_work: do not mark proof passed, do not edit unknown YMM4 config files by guesswork, do not change newsroom speaker mapping to `ゆっくり霊夢` just to match one local environment, and do not expand proof scope into subtitle layout or overlay safety.
 
 ## Blocked Or Pending
 

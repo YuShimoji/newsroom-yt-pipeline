@@ -1,6 +1,6 @@
 # Handoff
 
-Last updated: 2026-06-05
+Last updated: 2026-06-06
 
 ## Restart Order
 
@@ -54,7 +54,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - `.venv\Scripts\python.exe -m pytest -q` -> 54 passed.
   - `git diff --check` -> passed.
 - YMM4 GUI proof attempt on 2026-06-05:
-  - YMM4 version: `4.52.0.8`.
+  - YMM4 version: `4.43.1.0`.
   - target CSV: `data\exports\episode_756343df9853\script.csv`.
   - result: not passed. YMM4 opened `台本編集 / script.csv`, then showed `キャラクターが見つかりませんでした。キャラクターを指定してください。`
   - cause to resolve: exported speaker is `ナレーター`, but the local YMM4 character setup did not contain a matching `ナレーター` character and showed `ゆっくり霊夢` instead.
@@ -67,6 +67,11 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - Subtitle placement authority remains downstream in NLMYTGen/YMM4-side tooling.
   - The newsroom-side YMM4 proof scope is CSV import acceptance and handoff-file readability only.
   - Git-ignored runtime export/proof state is checkout-sensitive. A refreshed active C1/NIST bundle should inspect PASS with no `critical_view` warning; if a checkout still shows the older warning, regenerate the active C1/NIST runtime artifacts with the commands below.
+- P0-A request validity check on 2026-06-06:
+  - The request is valid as an operator-environment follow-up, not as a newsroom code or speaker-mapping change.
+  - The local proof record reports YMM4 `4.43.1.0` and `needs_fix` because speaker `ナレーター` was missing from the YMM4 character registry.
+  - A filesystem read under `C:\Users\thank\AppData\Local\YukkuriMovieMaker\v4` found only `temp` content, so there is no identified safe file-backed registry to edit directly from this repo run.
+  - Do not change `configs\speakers.yml` to `ゆっくり霊夢` merely to satisfy the local GUI. Prepare a `ナレーター` character in YMM4, or make an explicit editorial decision to export a different speaker name, then rerun the proof.
 - Local YMM4 proof target prepared on 2026-06-03:
   - proof DB: `data\ymm4_import_proof.sqlite`
   - export bundle: `data\exports\episode_756343df9853`
@@ -83,7 +88,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - purpose: prove that the generated `script.csv` is accepted by real YMM4, not just by local machine checks.
 - effect: upgrades the M5/M6 handoff from package-ready to YMM4-import-proven.
 - requirements: an episode export bundle, `newsroom export inspect --episode-dir <episode_dir>` output, YMM4 manual import, and a filled proof YAML based on `docs/templates/ymm4_import_proof_template.yml`.
-- state: attempted in YMM4 v4.52.0.8 and failed before acceptance because speaker `ナレーター` was not recognized as an existing YMM4 character. The proof YAML is updated locally as `needs_fix`; do not mark this passed until the speaker warning is gone and the text/readability checks are observed.
+- state: attempted in YMM4 v4.43.1.0 and failed before acceptance because speaker `ナレーター` was not recognized as an existing YMM4 character. The proof YAML is updated locally as `needs_fix`; do not mark this passed until the speaker warning is gone and the text/readability checks are observed.
 - scope: CSV import acceptance and handoff-file readability only. This is not subtitle layout, subtitle position, overlay safety, or final YMM4 geometry proof.
 - owner: operator aligns the target YMM4 character setup or chooses a compatible exported speaker name; assistant can inspect failures, tighten bundle checks, and update docs after proof is returned.
 - next move: add or rename a YMM4 character to `ナレーター`, or regenerate the export with a speaker name already present in the target YMM4 environment, then rerun the GUI proof. Only set `decision.status: passed` after CSV import acceptance, speaker recognition, chapter comment handling, comma/multiline text preservation, Japanese display, and handoff-file readability are confirmed.
