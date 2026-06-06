@@ -1,6 +1,6 @@
 # Handoff
 
-Last updated: 2026-06-06
+Last updated: 2026-06-07
 
 ## Restart Order
 
@@ -72,6 +72,12 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - The local proof record reports YMM4 `4.43.1.0` and `needs_fix` because speaker `ナレーター` was missing from the YMM4 character registry.
   - A filesystem read under `C:\Users\thank\AppData\Local\YukkuriMovieMaker\v4` found only `temp` content, so there is no identified safe file-backed registry to edit directly from this repo run.
   - Do not change `configs\speakers.yml` to `ゆっくり霊夢` merely to satisfy the local GUI. Prepare a `ナレーター` character in YMM4, or make an explicit editorial decision to export a different speaker name, then rerun the proof.
+- P0-A YMM4 GUI proof pass on 2026-06-07:
+  - Operator created a YMM4 character named `ナレーター` as an emergency speaker binding fix.
+  - YMM4 recognized and imported `data\exports\episode_756343df9853\script.csv` normally.
+  - `TODO[...]` tokens were pronounced because they are literal skeleton script text, not an import failure.
+  - Local proof record `data\proofs\ymm4_import\episode_756343df9853\proof.yml` was updated to `import_result: pass` / `decision.status: passed`.
+  - This proves CSV import acceptance and handoff-file readability only; subtitle placement, overlay safety, and final YMM4 geometry remain downstream scope.
 - Local YMM4 proof target prepared on 2026-06-03:
   - proof DB: `data\ymm4_import_proof.sqlite`
   - export bundle: `data\exports\episode_756343df9853`
@@ -79,7 +85,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - proof draft: `data\proofs\ymm4_import\episode_756343df9853\proof.yml`
   - inspector result: `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings.
 - Runtime proof artifacts under `data\proofs\` are intentionally git-ignored.
-- Implementation frontier: M1 through M6.4 are implemented; a YMM4 GUI import proof target exists locally but GUI acceptance is not proven because the first real YMM4 attempt failed on speaker/character mapping; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST.
+- Implementation frontier: M1 through M6.4 are implemented; P0-A CSV import acceptance is proven for the active YMM4 export after adding the `ナレーター` character in the target YMM4 environment; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST.
 
 ## Immediate Resume Packet
 
@@ -88,10 +94,10 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - purpose: prove that the generated `script.csv` is accepted by real YMM4, not just by local machine checks.
 - effect: upgrades the M5/M6 handoff from package-ready to YMM4-import-proven.
 - requirements: an episode export bundle, `newsroom export inspect --episode-dir <episode_dir>` output, YMM4 manual import, and a filled proof YAML based on `docs/templates/ymm4_import_proof_template.yml`.
-- state: attempted in YMM4 v4.43.1.0 and failed before acceptance because speaker `ナレーター` was not recognized as an existing YMM4 character. The proof YAML is updated locally as `needs_fix`; do not mark this passed until the speaker warning is gone and the text/readability checks are observed.
+- state: passed on 2026-06-07 after the operator created a YMM4 character named `ナレーター`; `script.csv` was recognized and imported normally.
 - scope: CSV import acceptance and handoff-file readability only. This is not subtitle layout, subtitle position, overlay safety, or final YMM4 geometry proof.
-- owner: operator aligns the target YMM4 character setup or chooses a compatible exported speaker name; assistant can inspect failures, tighten bundle checks, and update docs after proof is returned.
-- next move: add or rename a YMM4 character to `ナレーター`, or regenerate the export with a speaker name already present in the target YMM4 environment, then rerun the GUI proof. Only set `decision.status: passed` after CSV import acceptance, speaker recognition, chapter comment handling, comma/multiline text preservation, Japanese display, and handoff-file readability are confirmed.
+- owner: operator owns any further YMM4 GUI review; assistant owns tracked docs/code updates when returned proof changes repo state.
+- next move: continue with publication/operator review gates and the next assistant-owned backlog item. Do not treat this as subtitle layout, overlay safety, or final geometry proof.
 
 ### P0-B: Critical-view source entry
 

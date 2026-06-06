@@ -1,6 +1,6 @@
 # Meta-Review Ledger
 
-Last updated: 2026-06-06
+Last updated: 2026-06-07
 
 This ledger preserves supervision decisions that should survive restarts. Keep it short; do not turn it into a runtime-state duplicate.
 
@@ -63,9 +63,21 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - next_allowed_work: operator creates/renames a YMM4 character to `ナレーター` through YMM4 UI, then reruns import and updates proof YAML; assistant can update docs after returned proof or implement a targeted export/config option only if explicitly chosen.
 - prohibited_work: do not mark proof passed, do not edit unknown YMM4 config files by guesswork, do not change newsroom speaker mapping to `ゆっくり霊夢` just to match one local environment, and do not expand proof scope into subtitle layout or overlay safety.
 
+## 2026-06-07 P0-A Import Acceptance Pass
+
+- current_task: record the returned YMM4 GUI import proof after the target environment gained a `ナレーター` character.
+- decision: pass within scope.
+- reason: operator created a YMM4 character named `ナレーター`, reran import for `data\exports\episode_756343df9853\script.csv`, and reported that YMM4 recognized the CSV and imported it normally.
+- active_artifact: `data\exports\episode_756343df9853` remains the active proof target; `data\proofs\ymm4_import\episode_756343df9853\proof.yml` is updated locally to `import_result: pass` / `decision.status: passed` and remains git-ignored.
+- true_blockers: none for newsroom-side CSV import acceptance on this active export.
+- stale_or_false_blockers: `TODO[...]` text being pronounced is not an import failure; it is literal TODO skeleton script content.
+- evidence_boundary: this pass proves CSV import acceptance and handoff-file readability only. It does not prove subtitle placement, overlay safety, final YMM4 geometry, template positioning, or `.ymmp` patch behavior.
+- next_allowed_work: continue publication/operator review gates, P1 QuoteManifest tightening, Packet persistence, or targeted fixes tied to concrete returned failures.
+- prohibited_work: do not relabel this as final YMM4 composition proof, and do not commit runtime proof/screenshots.
+
 ## Blocked Or Pending
 
-- YMM4 GUI import proof: attempted but not passed. Operator must resolve the speaker `ナレーター` / YMM4 character mapping mismatch, rerun import for `data\exports\episode_756343df9853\script.csv`, and update `data\proofs\ymm4_import\episode_756343df9853\proof.yml`.
+- YMM4 GUI import proof: passed for CSV import acceptance and handoff-file readability on `episode_756343df9853`; downstream subtitle/overlay/final geometry proof remains out of newsroom scope.
 - Active critical view: applied locally with C1/NIST. If ignored runtime artifacts are missing in another checkout, reapply the same selected source and rebuild before treating `critical_view` as unresolved.
 - QuoteManifest human_required noise: P1. Do not let it consume P0 unless the active export path is already moving.
 - Packet persistence: P1. Current critical-source relation is durable DB input, but full NotebookPacket persistence remains separate.

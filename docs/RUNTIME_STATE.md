@@ -1,6 +1,6 @@
 # Runtime State
 
-Last updated: 2026-06-06
+Last updated: 2026-06-07
 
 ## Sync Point
 
@@ -25,6 +25,7 @@ Last updated: 2026-06-06
 - Final sync validation on this PLANNER007 checkout: `.venv\Scripts\python.exe -m pytest -q` -> 54 passed and `git diff --check` -> passed. `export inspect` on the local git-ignored `data\exports\episode_756343df9853` still returned PASS but showed the older `critical_view` warning, so regenerate the active C1/NIST runtime artifacts if the next terminal needs the no-`critical_view` export state.
 - P0-A restart context reflection on 2026-06-05: reread the restart docs and subtitle boundary gate after the GUI attempt, kept the GUI proof status as `needs_fix`, and reflected that newsroom-side proof covers CSV import acceptance and handoff-file readability only. Git-ignored runtime exports and proof YAMLs remain checkout-sensitive and must not be committed.
 - P0-A request validity check on 2026-06-06: pulled `origin/main` at `2b459a2`, confirmed `HEAD...origin/main` was `0 0`, reread the P0-A prompt, proof YAML, and authority docs, and reran `export inspect` -> PASS with no `critical_view` warning. The request is valid only as an external YMM4 character-registry fix plus proof rerun. Repo-side `configs\speakers.yml` and `script.csv` already agree on `ナレーター`; no code change or speaker remap to `ゆっくり霊夢` is justified. A safe file-backed YMM4 character registry was not identified under `C:\Users\thank\AppData\Local\YukkuriMovieMaker\v4`, which contained only `temp` content in this run.
+- P0-A YMM4 GUI proof pass on 2026-06-07: operator created a YMM4 character named `ナレーター`, reran import for `data\exports\episode_756343df9853\script.csv`, and reported that YMM4 recognized the CSV and imported it normally. The local proof YAML was updated to `import_result: pass` / `decision.status: passed`. `TODO[...]` tokens were pronounced because they are literal TODO skeleton script text, not an import failure. This proves CSV import acceptance and handoff-file readability only; subtitle placement, overlay safety, and final YMM4 geometry remain outside newsroom-side proof.
 
 ## Implemented Milestones
 
@@ -88,7 +89,7 @@ Last updated: 2026-06-06
 - Rebuilt review manifests: `data\assets\plan_20260603_faca8ebcbc45` and `data\quotes\plan_20260603_faca8ebcbc45`; quote rows include NIST.
 - Rebuilt export bundle: `data\exports\episode_756343df9853`; `source_list.md`, `script_ir.json`, `visual_ir.json`, and `quote_manifest.yml` include the NIST critical source.
 - Export inspect result: PASS. `critical_view` warning is gone. Remaining warnings are publication/operator review gates, not machine failures.
-- YMM4 GUI proof status: attempted after the bundle work, but not passed because the local YMM4 character setup did not contain `ナレーター`. Rebuilding the bundle did not prove import acceptance.
+- YMM4 GUI proof status: passed for CSV import acceptance after the operator added a `ナレーター` character in the target YMM4 environment. This does not prove subtitle placement, overlay safety, or final YMM4 geometry.
 
 ## Current YMM4 GUI Proof Attempt
 
@@ -96,8 +97,10 @@ Last updated: 2026-06-06
 - The CSV emits speaker `ナレーター` on the spoken rows and the repo speaker config expects `anchor_narration` to map to `ナレーター`.
 - YukkuriMovieMaker v4.43.1.0 opened the CSV in `台本編集 / script.csv`, but showed `キャラクターが見つかりませんでした。キャラクターを指定してください。`
 - The local YMM4 character selector showed `ゆっくり霊夢`, so the immediate blocker is YMM4 character setup, not CSV encoding.
-- Because the speaker mismatch blocked acceptance, chapter comment handling, comma text, multiline text, and Japanese preservation are still unproven in YMM4.
-- The local ignored proof record is `data\proofs\ymm4_import\episode_756343df9853\proof.yml`; it is set to `import_result: failed` / `decision.status: needs_fix`.
+- Before the speaker fix, the mismatch blocked acceptance and prevented the remaining checks from being observed.
+- The operator then created a YMM4 character named `ナレーター`, reran import, and reported that YMM4 recognized and imported the CSV normally.
+- The local ignored proof record is `data\proofs\ymm4_import\episode_756343df9853\proof.yml`; it is now set to `import_result: pass` / `decision.status: passed`.
+- `TODO[...]` tokens were pronounced because the active CSV contains TODO skeleton script text. That is a script-content state, not an import failure.
 - Subtitle placement, overlay safety, final YMM4 geometry, template positioning, and `.ymmp` patch details were not inspected and remain outside newsroom-side acceptance.
 
 ## Current P0-A Restart Context Reflection
@@ -106,17 +109,17 @@ Last updated: 2026-06-06
 - Active script CSV: `data\exports\episode_756343df9853\script.csv`.
 - Proof record path: `data\proofs\ymm4_import\episode_756343df9853\proof.yml`, intentionally git-ignored under `data/proofs/`.
 - Machine inspect after active C1/NIST rebuild: PASS with `critical_view` absent. Because runtime exports are git-ignored, another checkout can still show older warning state until the active C1/NIST artifacts are regenerated.
-- Proof status: the latest returned GUI proof attempt is not passed. `data\proofs\ymm4_import\episode_756343df9853\proof.yml` is local evidence and should be `import_result: failed` / `decision.status: needs_fix` until the speaker mapping issue is resolved and the proof is rerun.
+- Proof status: passed for CSV import acceptance and handoff-file readability. `data\proofs\ymm4_import\episode_756343df9853\proof.yml` is local evidence and is git-ignored.
 - Boundary: newsroom YMM4 GUI proof is CSV import acceptance and handoff-file readability only. Subtitle placement, YMM4 item geometry, template positioning, subtitle band decisions, `.ymmp` patch details, and overlay proof remain downstream NLMYTGen/YMM4-side authority.
 - Runtime artifact rule: do not commit `data\ymm4_import_proof.sqlite`, `data\exports\episode_756343df9853`, `data\proofs\...`, or screenshots.
-- Valid next action: create or rename a YMM4 character to `ナレーター` in the YMM4 UI, or make an explicit editorial decision to export a different speaker name, then rerun the GUI import proof.
+- Valid next action: continue publication/operator review gates and later downstream subtitle/overlay proof outside newsroom scope.
 
 ## Handoff Snapshot
 
-- Assistant status: YMM4 manual import proof preparation is implemented; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts. The first real YMM4 GUI proof attempt failed on speaker/character mapping and is recorded as `needs_fix`, not passed.
-- User action: align the target YMM4 character setup with exported speaker `ナレーター`, or regenerate the export with a speaker name already present in the target YMM4 environment, then rerun the YMM4 GUI proof and update `data\proofs\ymm4_import\episode_756343df9853\proof.yml`. If those git-ignored artifacts are absent in a different checkout, regenerate an equivalent bundle from `docs/HANDOFF.md`.
-- Assistant next after restart: help record the YMM4 GUI result after the speaker mismatch is resolved, or regenerate/reinspect the active bundle if ignored runtime artifacts are missing.
-- What counts as progress next: a completed passed proof YAML after the speaker mismatch is resolved, or a targeted code/docs fix tied to a failed machine check.
+- Assistant status: YMM4 manual import proof preparation is implemented and P0-A CSV import acceptance is passed for the active export; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts.
+- User action: continue publication/operator review gates, or pass a new proof/result if downstream YMM4 subtitle/overlay work exposes a concrete failure. If git-ignored artifacts are absent in a different checkout, regenerate an equivalent bundle from `docs/HANDOFF.md`.
+- Assistant next after restart: prefer P1 QuoteManifest tightening or a targeted fix tied to a returned concrete failure.
+- What counts as progress next: reducing noisy quote rows, persisting packet records, or handling a concrete failed check. Repeating P0-A CSV import proof does not add value unless the target export changes.
 - What does not count as progress next: NotebookLM API automation, Inoreader OAuth, GUI/dashboard work, `.ymmp` generation, YouTube upload, NLMYTGen subprocess/path integration, or treating subtitle layout/overlay safety as newsroom-side proof.
 
 ## Not Complete Or Not Proven
@@ -126,7 +129,7 @@ Last updated: 2026-06-06
 - QuoteManifest persistence is artifact-only; quote records are not stored as first-class DB rows.
 - QuoteManifest rows are conservative candidates, not legal decisions; all start as `human_required`.
 - Additional visual cards from PROJECT_SPEC §14 (`version_diff`, `actor_map`, `risk_meter`, `context_stack`, `quote_screenshot`, `neutral_background`) are not implemented.
-- YMM4 GUI import proof has been attempted but has not passed. The current blocker is YMM4 character mapping for speaker `ナレーター`.
+- YMM4 GUI import proof has passed for CSV import acceptance and handoff-file readability only.
 - Subtitle placement and overlay safety are not proven by newsroom's YMM4 import proof.
 - YMM4 GUI automation has not been performed and remains out of scope.
 - NotebookLM API automation is out of scope.
@@ -138,27 +141,23 @@ Last updated: 2026-06-06
 
 ## Next Recommended Work
 
-1. P0: Operator-run YMM4 GUI import proof.
-   Purpose: manually confirm the generated `script.csv` and `ymm4_notes.md` are usable in the actual editor.
-   Effect: M5/M6 can be described as YMM4-import proven rather than package-only.
+1. P1: QuoteManifest tightening.
+   Purpose: reduce noisy quote rows by distinguishing citation-only source_refs from direct quote or screenshot intent.
+   Effect: human_required review stays focused on actual publish risk instead of every sourced segment.
 
 2. P0 support: Preserve or regenerate the active C1/NIST source application if runtime artifacts are missing.
    Purpose: keep `story_20260603_503c39418f15862d` from regressing to a permanent `critical_views` warning in local runtime state.
    Effect: keeps the active export auditable without treating ignored DB/export artifacts as tracked source.
 
-3. P1: QuoteManifest tightening.
-   Purpose: reduce noisy quote rows by distinguishing citation-only source_refs from direct quote or screenshot intent.
-   Effect: human_required review stays focused on actual publish risk instead of every sourced segment.
-
-4. P1: Packet persistence.
+3. P1: Packet persistence.
    Purpose: store packet records as first-class DB rows instead of rebuilding them from cluster/articles at each downstream step.
    Effect: operator edits and critical-view additions can survive across later workflow stages.
 
-5. P2: Source expansion.
+4. P2: Source expansion.
    Purpose: add more deliberate source pools without implementing broad crawling or Inoreader OAuth.
    Effect: shortlist quality improves while RSS-first and manual approval boundaries remain intact.
 
-6. P2: M7 series / channel memory.
+5. P2: M7 series / channel memory.
    Purpose: connect daily production to series history, past claims, and next-episode planning.
    Effect: editorial continuity can be scored and reused across weekly planning.
 
