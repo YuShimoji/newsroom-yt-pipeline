@@ -91,6 +91,10 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - The command rejects empty `operator_fill`, `replacement_status` other than `approved`, stale `current_text`, speaker mismatches, and source/critical ref mismatches.
   - Successful apply updates the DB ScriptIR text and refreshed `data\scripts\<script_id>\` bundle only; export bundles are not rebuilt automatically.
   - Active `data\scripts\script_d2a46430e084\script_materialization.yml` is still unfilled/unapproved, so active replacement was not executed.
+- Approved narration authority decision on 2026-06-07:
+  - `script_materialization.yml`, DB ScriptIR rows, and export bundles are runtime artifacts and are not portable production authority across checkouts.
+  - This lane may use local runtime replacement as proof only after operator-approved text exists, but durable approved narration authority is deferred to Script/Packet persistence.
+  - Do not commit the ignored runtime draft/export as the canonical script, and do not treat runtime-only replacement as reproducible project state.
 - Local validation after the P0.5-B replacement intake slice:
   - `.venv\Scripts\python.exe -m pytest tests\test_script_materialization.py tests\test_export_inspector.py -q` -> 16 passed.
   - `.venv\Scripts\python.exe -m pytest -q` -> 64 passed.
@@ -143,8 +147,9 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - effect: moves the active export from YMM4-importable skeleton to production-reviewable script content.
 - requirements: preserve speaker `ナレーター`, CSV import shape, existing `source_refs`, C1/NIST critical-view coverage, and human-review flags unless the reviewer explicitly clears them.
 - state: draft path and reject-first apply path implemented. `newsroom script materialize --script script_d2a46430e084` writes `data\scripts\script_d2a46430e084\script_materialization.yml`; `newsroom script apply-materialization --script script_d2a46430e084 --draft data\scripts\script_d2a46430e084\script_materialization.yml --require-approved` rejects the active draft because all 6 `operator_fill` values are empty and all rows remain `operator_pending`. Active `script.csv` / `script_ir.json` still have 6 / 6 TODO skeleton spoken rows, and `export inspect` reports `script_todo_skeleton` as a warning.
+- authority: approved narration is not durable yet. A local apply can prove replacement mechanics, but another checkout cannot reproduce approved narration from ignored runtime DB/export/draft artifacts until Script/Packet persistence defines the canonical storage path.
 - owner: assistant for tooling/rebuilds and operator for editorial approval of final narration.
-- next move: operator fills and approves `operator_fill` values, then rerun apply, rebuild the active export, and rerun `export inspect`. Do not proceed to QuoteManifest tightening as the active path while the script is still TODO skeleton.
+- next move: operator fills and approves `operator_fill` values. Then either run a clearly labeled runtime-only apply/export proof, or implement durable Script/Packet persistence before treating the approved narration as portable project authority. Do not proceed to QuoteManifest tightening as the active path while the script is still TODO skeleton.
 
 ### P1: QuoteManifest tightening
 

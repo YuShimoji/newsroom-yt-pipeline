@@ -111,11 +111,23 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - next_allowed_work: after operator fills and approves the draft, run the apply command, rebuild the active export, and confirm `script_todo_skeleton` is absent.
 - prohibited_work: do not bypass approval, synthesize narration, commit runtime draft/export/proof artifacts, or move to QuoteManifest tightening while the active export still speaks TODO text.
 
+## 2026-06-07 Approved Narration Authority Gate
+
+- current_task: decide where operator-approved narration becomes durable authority after P0.5-B.
+- decision: runtime-only replacement proof for this active lane; defer durable approved narration authority to Script/Packet persistence.
+- reason: `script_materialization.yml`, DB rows, and export bundles are runtime artifacts and are not committed. Committing ad hoc approved narration now would create a new tracked content authority before script persistence, review status, and copyright/source boundaries are designed.
+- active_artifact: `data\scripts\script_d2a46430e084\script_materialization.yml` remains local input. It is not a production authority and is currently unfilled/unapproved.
+- true_blockers: a durable authority path must define where approved text lives, how review state is represented, how source refs are retained, and how another checkout reproduces the approved ScriptIR without committing runtime DB/export/proof artifacts.
+- stale_or_false_blockers: local runtime application, if later performed, proves the apply path and can update the active export locally, but it does not by itself make the approved narration portable across checkouts.
+- next_allowed_work: after operator-approved text exists, either run a local replacement/export proof explicitly marked runtime-only, or implement P1 Script/Packet persistence before treating approved narration as durable project authority.
+- prohibited_work: do not commit raw runtime drafts or exports as the canonical script, and do not treat ignored DB state as portable production authority.
+
 ## Blocked Or Pending
 
 - YMM4 GUI import proof: passed for CSV import acceptance and handoff-file readability on `episode_756343df9853`; downstream subtitle/overlay/final geometry proof remains out of newsroom scope.
 - Active critical view: applied locally with C1/NIST. If ignored runtime artifacts are missing in another checkout, reapply the same selected source and rebuild before treating `critical_view` as unresolved.
 - Active script materialization: P0.5-B replacement intake implemented. Active draft is still unfilled/unapproved, so operator-approved replacement is still needed before treating QuoteManifest tightening as the active next path.
+- Approved narration authority: not durable yet. Runtime-only replacement proof is acceptable if explicitly labeled local; portable authority is deferred to Script/Packet persistence.
 - QuoteManifest human_required noise: P1. Do not let it consume P0.5 while the active spoken script is still TODO skeleton.
 - Packet persistence: P1. Current critical-source relation is durable DB input, but full NotebookPacket persistence remains separate.
 - VisualIR-to-final-look gap: keep evaluating whether VisualIR changes affect actual YMM4 composition, density, whitespace, and eye flow.

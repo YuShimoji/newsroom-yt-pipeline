@@ -108,7 +108,8 @@ Last updated: 2026-06-07
 - The active artifact includes 6 segments, empty `operator_fill` fields, speaker `ナレーター`, source refs, C1/NIST critical refs where applicable, current TODO text, and human-review flags.
 - Active readiness: not ready. The active draft has 0 / 6 non-empty `operator_fill` values, 0 / 6 `approved` statuses, and 6 / 6 `operator_pending` statuses.
 - The apply command is implemented but reject-first. It does not generate narration and does not apply unfilled or unapproved drafts.
-- Next state to clear the active TODO warning: operator fills and approves the materialization draft, apply updates `ScriptIR`, rebuild `data\exports\episode_756343df9853`, and rerun `export inspect`.
+- Approved narration authority: not durable yet. `script_materialization.yml`, DB rows, and export bundles are runtime artifacts and must not be committed as the canonical script. A later local apply/export can prove replacement mechanics, but it is not portable production authority across checkouts unless Script/Packet persistence defines and stores the approved text.
+- Next state to clear the active TODO warning: operator fills and approves the materialization draft, then either run a runtime-only apply/export proof with that limitation stated, or implement durable Script/Packet persistence before treating the approved narration as reproducible project state.
 
 ## Current YMM4 GUI Proof Attempt
 
@@ -137,8 +138,8 @@ Last updated: 2026-06-07
 
 - Assistant status: YMM4 manual import proof preparation is implemented and P0-A CSV import acceptance is passed for the active export; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts.
 - User action: fill and approve `data\scripts\script_d2a46430e084\script_materialization.yml`, setting each `operator_fill` and `replacement_status: approved`, or pass a new proof/result if downstream YMM4 subtitle/overlay work exposes a concrete failure. If git-ignored artifacts are absent in a different checkout, regenerate an equivalent bundle from `docs/HANDOFF.md`.
-- Assistant next after restart: rerun `newsroom script apply-materialization` only after the filled/approved runtime draft is available, then rebuild export and inspect.
-- What counts as progress next: applying operator-approved narration to replace literal TODO spoken rows while preserving source refs and speaker mapping, then rebuilding and inspecting the active export. Reducing noisy quote rows is useful after the active spoken script is materialized.
+- Assistant next after restart: rerun `newsroom script apply-materialization` only after the filled/approved runtime draft is available, then rebuild export and inspect. If the result needs to survive another checkout, implement Script/Packet persistence before calling it production authority.
+- What counts as progress next: applying operator-approved narration to replace literal TODO spoken rows while preserving source refs and speaker mapping, then rebuilding and inspecting the active export, or first defining a durable approved-narration persistence path. Reducing noisy quote rows is useful after the active spoken script is materialized.
 - What does not count as progress next: NotebookLM API automation, Inoreader OAuth, GUI/dashboard work, `.ymmp` generation, YouTube upload, NLMYTGen subprocess/path integration, or treating subtitle layout/overlay safety as newsroom-side proof.
 
 ## Not Complete Or Not Proven
@@ -146,6 +147,7 @@ Last updated: 2026-06-07
 - The active proof bundle has a selected C1/NIST critical view in this local runtime checkout, but the runtime DB/export artifacts are git-ignored and may need regeneration in a different checkout.
 - The active `script.csv` and `script_ir.json` are still 100% TODO skeleton narration: 6 / 6 spoken rows contain `TODO[...]`.
 - A materialization draft can be generated and apply validation exists, but the active draft is still unfilled/unapproved and no filled narration has been applied.
+- Approved narration does not yet have a durable tracked authority path. Runtime-only DB/export replacement would be checkout-sensitive until Script/Packet persistence is implemented.
 - Packet persistence is artifact-only; packet records are not stored as first-class DB rows.
 - QuoteManifest persistence is artifact-only; quote records are not stored as first-class DB rows.
 - QuoteManifest rows are conservative candidates, not legal decisions; all start as `human_required`.
@@ -165,6 +167,7 @@ Last updated: 2026-06-07
 1. P0.5-B: Operator-approved script replacement.
    Purpose: apply filled `operator_fill` values from `script_materialization.yml` to replace the active literal `TODO[...]` spoken rows while preserving `ナレーター`, CSV shape, source refs, C1/NIST coverage, and human-review flags.
    Effect: turns the YMM4-importable skeleton handoff into a production-reviewable spoken script. Until this is done, QuoteManifest tightening is premature.
+   Authority condition: local runtime replacement proof is acceptable only when explicitly labeled checkout-sensitive; durable approved narration authority requires Script/Packet persistence or an equivalent tracked, sanitized approved-materialization record.
 
 2. P1: QuoteManifest tightening.
    Purpose: reduce noisy quote rows by distinguishing citation-only source_refs from direct quote or screenshot intent.
