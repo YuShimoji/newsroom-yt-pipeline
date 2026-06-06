@@ -122,12 +122,24 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - next_allowed_work: after operator-approved text exists, either run a local replacement/export proof explicitly marked runtime-only, or implement P1 Script/Packet persistence before treating approved narration as durable project authority.
 - prohibited_work: do not commit raw runtime drafts or exports as the canonical script, and do not treat ignored DB state as portable production authority.
 
+## 2026-06-07 P0.5-C Approved Materialization Authority Gate
+
+- current_task: design the smallest portable authority for operator-approved narration without generating narration.
+- decision: implement a tracked sanitized approved-materialization record under `docs\approved_materializations\`.
+- reason: runtime-only `script_materialization.yml`, DB rows, and export bundles are checkout-sensitive. A small tracked record can carry operator-approved text and metadata without raw article bodies, private data, screenshots, runtime DB paths, or YMM4 geometry.
+- active_artifact: the active runtime draft `data\scripts\script_d2a46430e084\script_materialization.yml` is still unfilled/unapproved, so no active approved record or ScriptIR replacement was created.
+- true_blockers: operator-approved text is still required before `script_todo_skeleton` can be cleared.
+- stale_or_false_blockers: the absence of an approved record for the active script is not a code failure; it is a content authority gate.
+- evidence_boundary: approved records are text authority only. They do not prove subtitle placement, overlay safety, final YMM4 geometry, full `.ymmp`, or publishing readiness.
+- next_allowed_work: operator fills/approves the draft, generate `docs\approved_materializations\script_d2a46430e084.materialization.yml`, apply it, rebuild the active export, and inspect for `script_todo_skeleton` absence.
+- prohibited_work: do not write approved records from unapproved draft rows, do not include raw source data, do not synthesize narration, and do not move QuoteManifest tightening into the active path before the spoken script is materialized.
+
 ## Blocked Or Pending
 
 - YMM4 GUI import proof: passed for CSV import acceptance and handoff-file readability on `episode_756343df9853`; downstream subtitle/overlay/final geometry proof remains out of newsroom scope.
 - Active critical view: applied locally with C1/NIST. If ignored runtime artifacts are missing in another checkout, reapply the same selected source and rebuild before treating `critical_view` as unresolved.
 - Active script materialization: P0.5-B replacement intake implemented. Active draft is still unfilled/unapproved, so operator-approved replacement is still needed before treating QuoteManifest tightening as the active next path.
-- Approved narration authority: not durable yet. Runtime-only replacement proof is acceptable if explicitly labeled local; portable authority is deferred to Script/Packet persistence.
+- Approved narration authority: P0.5-C tracked sanitized record support is implemented under `docs\approved_materializations\`, but the active script has no approved record yet because no operator-approved text exists.
 - QuoteManifest human_required noise: P1. Do not let it consume P0.5 while the active spoken script is still TODO skeleton.
 - Packet persistence: P1. Current critical-source relation is durable DB input, but full NotebookPacket persistence remains separate.
 - VisualIR-to-final-look gap: keep evaluating whether VisualIR changes affect actual YMM4 composition, density, whitespace, and eye flow.

@@ -8,8 +8,11 @@ from newsroom.adapters.ymm4_export import build_ymm4_package
 from newsroom.cli.main import main
 from newsroom.script.materialization import (
     MaterializationValidationError,
+    apply_approved_materialization_record,
     apply_materialization_draft,
+    build_approved_materialization_record,
     build_materialization_payload,
+    write_approved_materialization_record,
     write_materialization_draft,
 )
 from newsroom.store.db import (
@@ -201,6 +204,126 @@ def test_export_todo_warning_disappears_only_after_approved_replacement(tmp_path
     assert not any(issue.code == "script_todo_skeleton" for issue in inspection.warnings)
 
 
+def test_approved_materialization_record_is_sanitized_and_portable(tmp_path):
+    draft_path = _write_draft_payload(
+        tmp_path,
+        fill_text="承認済みナレーション",
+        replacement_status="approved",
+    )
+
+    record = build_approved_materialization_record(
+        _script(),
+        draft_path,
+        story_cluster_id=_plan().story_cluster_id,
+        episode_id="episode_materialize_test",
+        approved_by="operator",
+        approved_at="2026-06-07T00:00:00+00:00",
+        approval_note="operator-approved narration only",
+    )
+    dumped = yaml.safe_dump(record, allow_unicode=True, sort_keys=False)
+
+    assert record["artifact_type"] == "approved_script_materialization"
+    assert record["status"] == "approved"
+    assert record["approval"]["approved_by"] == "operator"
+    assert record["segments"][0]["approved_text"] == "承認済みナレーション"
+    assert record["segments"][0]["source_refs"] == ["article_primary", "article_critical"]
+    assert record["segments"][0]["critical_refs"] == ["article_critical"]
+    assert record["segments"][0]["visual_refs"] == ["visual:intro"]
+    assert "source_catalog" not in dumped
+    assert "current_text" not in dumped
+    assert "operator_fill" not in dumped
+    assert "https://example.com" not in dumped
+
+
+def test_approved_materialization_record_rejects_unfilled_or_unapproved_draft(tmp_path):
+    unfilled = _write_draft_payload(
+        tmp_path,
+        fill_text="",
+        replacement_status="approved",
+    )
+    with pytest.raises(MaterializationValidationError, match="operator_fill is empty"):
+        write_approved_materialization_record(
+            _script(),
+            unfilled,
+            story_cluster_id=_plan().story_cluster_id,
+            episode_id=None,
+            approved_by="operator",
+            output_root=tmp_path / "approved",
+        )
+
+    unapproved = _write_draft_payload(
+        tmp_path,
+        fill_text="承認前の入力",
+        replacement_status="operator_pending",
+    )
+    with pytest.raises(MaterializationValidationError, match="replacement_status must be approved"):
+        write_approved_materialization_record(
+            _script(),
+            unapproved,
+            story_cluster_id=_plan().story_cluster_id,
+            episode_id=None,
+            approved_by="operator",
+            output_root=tmp_path / "approved",
+        )
+
+
+def test_apply_approved_materialization_record_replaces_only_text(tmp_path):
+    record_path = _write_approved_record_payload(tmp_path, fill_text="承認済みナレーション")
+
+    updated = apply_approved_materialization_record(_script(), record_path)
+    segment = updated.segments[0]
+
+    assert segment.text == "承認済みナレーション"
+    assert segment.speaker == "ナレーター"
+    assert segment.source_refs == ["article_primary", "article_critical"]
+    assert segment.visual_refs == ["visual:intro"]
+    assert segment.needs_human_review is True
+    assert segment.claim_type == "instruction"
+
+
+def test_approved_record_validation_rejects_raw_or_runtime_fields(tmp_path):
+    record_path = _write_approved_record_payload(tmp_path, fill_text="承認済みナレーション")
+    payload = yaml.safe_load(record_path.read_text(encoding="utf-8"))
+    payload["source_catalog"] = {"article_primary": {"body": "raw source body"}}
+    record_path.write_text(
+        yaml.safe_dump(payload, allow_unicode=True, sort_keys=False),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(MaterializationValidationError, match="source_catalog is not allowed"):
+        apply_approved_materialization_record(_script(), record_path)
+
+
+def test_approved_record_validation_rejects_unknown_segment(tmp_path):
+    record_path = _write_approved_record_payload(tmp_path, fill_text="承認済みナレーション")
+    payload = yaml.safe_load(record_path.read_text(encoding="utf-8"))
+    payload["segments"].append({**payload["segments"][0], "segment_id": "unknown_segment"})
+    record_path.write_text(
+        yaml.safe_dump(payload, allow_unicode=True, sort_keys=False),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(MaterializationValidationError, match="not present in ScriptIR"):
+        apply_approved_materialization_record(_script(), record_path)
+
+
+def test_export_todo_warning_disappears_after_approved_record_replacement(tmp_path):
+    record_path = _write_approved_record_payload(tmp_path, fill_text="承認済みナレーション")
+    updated = apply_approved_materialization_record(_script(), record_path)
+
+    export_dir, _ = build_ymm4_package(
+        _plan(),
+        updated,
+        _packet(),
+        [],
+        export_root=tmp_path / "exports",
+    )
+    inspection = inspect_episode_bundle(export_dir)
+
+    assert inspection.passed
+    assert not any(issue.code == "script_todo_skeleton" for issue in inspection.warnings)
+
+
 def test_script_materialize_cli_writes_draft_packet(tmp_path):
     db_path = tmp_path / "newsroom.sqlite"
     script_root = tmp_path / "scripts"
@@ -322,6 +445,104 @@ def test_script_apply_materialization_cli_applies_approved_draft(tmp_path):
     assert any(len(segment.source_refs) > 1 for segment in persisted.segments)
 
 
+def test_script_approve_materialization_cli_rejects_unfilled_draft(tmp_path):
+    db_path, script_root, script_id = _draft_cli_script(tmp_path)
+    draft_path = script_root / script_id / "script_materialization.yml"
+
+    exit_code = main(
+        [
+            "--db",
+            str(db_path),
+            "script",
+            "approve-materialization",
+            "--script",
+            script_id,
+            "--draft",
+            str(draft_path),
+            "--approved-by",
+            "operator",
+            "--output-root",
+            str(tmp_path / "approved"),
+        ]
+    )
+
+    assert exit_code == 1
+    assert not (tmp_path / "approved" / f"{script_id}.materialization.yml").exists()
+
+
+def test_script_approve_and_apply_approved_materialization_cli(tmp_path):
+    db_path, script_root, script_id = _draft_cli_script(tmp_path)
+    draft_path = script_root / script_id / "script_materialization.yml"
+    approved_root = tmp_path / "approved"
+    before = load_script_ir(db_path, script_id)
+    assert before is not None
+    source_refs_before = [segment.source_refs for segment in before.segments]
+    visual_refs_before = [segment.visual_refs for segment in before.segments]
+    payload = yaml.safe_load(draft_path.read_text(encoding="utf-8"))
+    for index, segment in enumerate(payload["segments"], start=1):
+        segment["operator_fill"] = f"承認済みナレーション {index}"
+        segment["replacement_status"] = "approved"
+    draft_path.write_text(
+        yaml.safe_dump(payload, allow_unicode=True, sort_keys=False),
+        encoding="utf-8",
+    )
+
+    approve_exit = main(
+        [
+            "--db",
+            str(db_path),
+            "script",
+            "approve-materialization",
+            "--script",
+            script_id,
+            "--draft",
+            str(draft_path),
+            "--episode-id",
+            "episode_materialize_cli",
+            "--approved-by",
+            "operator",
+            "--approved-at",
+            "2026-06-07T00:00:00+00:00",
+            "--approval-note",
+            "approved text only",
+            "--output-root",
+            str(approved_root),
+        ]
+    )
+    record_path = approved_root / f"{script_id}.materialization.yml"
+    record_text = record_path.read_text(encoding="utf-8")
+
+    assert approve_exit == 0
+    assert record_path.exists()
+    assert "source_catalog" not in record_text
+    assert "current_text" not in record_text
+    assert "operator_fill" not in record_text
+
+    apply_exit = main(
+        [
+            "--db",
+            str(db_path),
+            "script",
+            "apply-approved-materialization",
+            "--script",
+            script_id,
+            "--record",
+            str(record_path),
+            "--script-root",
+            str(script_root),
+        ]
+    )
+    persisted = load_script_ir(db_path, script_id)
+
+    assert apply_exit == 0
+    assert persisted is not None
+    assert not any(segment.text.startswith("TODO[") for segment in persisted.segments)
+    assert all(segment.speaker == "ナレーター" for segment in persisted.segments)
+    assert [segment.source_refs for segment in persisted.segments] == source_refs_before
+    assert [segment.visual_refs for segment in persisted.segments] == visual_refs_before
+    assert all(segment.needs_human_review for segment in persisted.segments)
+
+
 def _article(seed: str, source_type: str) -> Article:
     return Article.create(
         url=f"https://example.com/{seed}",
@@ -359,6 +580,23 @@ def _write_draft_payload(tmp_path, *, fill_text: str, replacement_status: str):
         encoding="utf-8",
     )
     return output_path
+
+
+def _write_approved_record_payload(tmp_path, *, fill_text: str):
+    draft_path = _write_draft_payload(
+        tmp_path,
+        fill_text=fill_text,
+        replacement_status="approved",
+    )
+    return write_approved_materialization_record(
+        _script(),
+        draft_path,
+        story_cluster_id=_plan().story_cluster_id,
+        episode_id="episode_materialize_test",
+        approved_by="operator",
+        approved_at="2026-06-07T00:00:00+00:00",
+        output_root=tmp_path / "approved",
+    )
 
 
 def _draft_cli_script(tmp_path):
