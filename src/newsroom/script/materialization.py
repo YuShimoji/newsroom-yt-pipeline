@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,10 @@ from newsroom.store.models import EpisodePlan, NotebookPacket, ScriptIR
 
 
 MATERIALIZATION_FILENAME = "script_materialization.yml"
+
+
+class MaterializationValidationError(ValueError):
+    pass
 
 
 def write_materialization_draft(
@@ -97,9 +102,116 @@ def build_materialization_payload(
             "Fill operator_fill for each segment, then use a separate "
             "operator-approved replacement step before rebuilding script.csv."
         ),
+        "approval_policy": {
+            "required_replacement_status": "approved",
+            "operator_fill_required": True,
+        },
         "source_catalog": source_catalog,
         "segments": segments,
     }
+
+
+def apply_materialization_draft(
+    script: ScriptIR,
+    draft_path: Path | str,
+    *,
+    require_approved: bool = True,
+) -> ScriptIR:
+    draft = _load_materialization_payload(Path(draft_path))
+    replacements = _validated_replacements(script, draft, require_approved=require_approved)
+    updated_segments = [
+        replace(segment, text=replacements[segment.id])
+        if segment.id in replacements
+        else segment
+        for segment in script.segments
+    ]
+    return replace(script, segments=updated_segments)
+
+
+def _load_materialization_payload(path: Path) -> dict[str, Any]:
+    try:
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError, UnicodeDecodeError) as exc:
+        raise MaterializationValidationError(f"Cannot read materialization draft: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise MaterializationValidationError("Materialization draft must be a mapping")
+    return payload
+
+
+def _validated_replacements(
+    script: ScriptIR,
+    draft: dict[str, Any],
+    *,
+    require_approved: bool,
+) -> dict[str, str]:
+    errors: list[str] = []
+    if draft.get("script_id") != script.id:
+        errors.append(f"draft script_id {draft.get('script_id')!r} does not match {script.id!r}")
+    if draft.get("artifact_type") != "script_materialization_draft":
+        errors.append("draft artifact_type must be script_materialization_draft")
+    raw_segments = draft.get("segments")
+    if not isinstance(raw_segments, list):
+        errors.append("draft segments must be a list")
+        raw_segments = []
+
+    draft_by_id: dict[str, dict[str, Any]] = {}
+    for raw_segment in raw_segments:
+        if not isinstance(raw_segment, dict):
+            errors.append("draft segment entries must be mappings")
+            continue
+        segment_id = str(raw_segment.get("segment_id") or "")
+        if not segment_id:
+            errors.append("draft segment missing segment_id")
+            continue
+        if segment_id in draft_by_id:
+            errors.append(f"duplicate draft segment_id {segment_id!r}")
+        draft_by_id[segment_id] = raw_segment
+
+    replacements: dict[str, str] = {}
+    for segment in script.segments:
+        if not segment.text.startswith("TODO["):
+            continue
+        draft_segment = draft_by_id.get(segment.id)
+        if draft_segment is None:
+            errors.append(f"missing draft segment for TODO segment {segment.id}")
+            continue
+        _validate_segment_metadata(segment, draft_segment, errors)
+        operator_fill = str(draft_segment.get("operator_fill") or "").strip()
+        if not operator_fill:
+            errors.append(f"segment {segment.id} operator_fill is empty")
+        elif operator_fill.startswith("TODO["):
+            errors.append(f"segment {segment.id} operator_fill still starts with TODO[")
+        else:
+            replacements[segment.id] = operator_fill
+        replacement_status = str(draft_segment.get("replacement_status") or "")
+        if require_approved and replacement_status != "approved":
+            errors.append(
+                f"segment {segment.id} replacement_status must be approved, got {replacement_status!r}"
+            )
+
+    if errors:
+        raise MaterializationValidationError("; ".join(errors))
+    return replacements
+
+
+def _validate_segment_metadata(
+    segment: Any,
+    draft_segment: dict[str, Any],
+    errors: list[str],
+) -> None:
+    if draft_segment.get("current_text") != segment.text:
+        errors.append(f"segment {segment.id} current_text does not match current ScriptIR text")
+    if draft_segment.get("speaker") != segment.speaker:
+        errors.append(f"segment {segment.id} speaker does not match current ScriptIR speaker")
+    draft_source_refs = list(draft_segment.get("source_refs") or [])
+    if draft_source_refs != segment.source_refs:
+        errors.append(f"segment {segment.id} source_refs do not match current ScriptIR source_refs")
+    critical_refs = list(draft_segment.get("critical_refs") or [])
+    outside_source_refs = [ref for ref in critical_refs if ref not in segment.source_refs]
+    if outside_source_refs:
+        errors.append(
+            f"segment {segment.id} critical_refs are not included in source_refs: {outside_source_refs}"
+        )
 
 
 def _source_catalog(packet: NotebookPacket) -> dict[str, dict[str, Any]]:

@@ -33,7 +33,11 @@ from newsroom.notebook.packet_builder import DEFAULT_PACKET_ROOT, NotebookPacket
 from newsroom.scoring.topic_scorer import TopicScorer
 from newsroom.script.episode_planner import EpisodePlanner
 from newsroom.script.exporters import DEFAULT_SCRIPT_ROOT, write_script_bundle
-from newsroom.script.materialization import write_materialization_draft
+from newsroom.script.materialization import (
+    MaterializationValidationError,
+    apply_materialization_draft,
+    write_materialization_draft,
+)
 from newsroom.script.script_critic import ScriptCritic
 from newsroom.script.script_drafter import ScriptDrafter
 from newsroom.store.db import (
@@ -182,6 +186,33 @@ def build_parser() -> argparse.ArgumentParser:
         help="Root directory for script materialization draft bundles",
     )
     script_materialize.add_argument(
+        "--series-config",
+        default=str(DEFAULT_SERIES_CONFIG),
+        help="series.yml path used when rebuilding the packet",
+    )
+
+    script_apply_materialization = script_sub.add_parser(
+        "apply-materialization",
+        help="Apply an operator-approved script materialization draft",
+    )
+    script_apply_materialization.add_argument("--script", required=True, help="Script id")
+    script_apply_materialization.add_argument(
+        "--draft",
+        required=True,
+        help="Path to script_materialization.yml with approved operator_fill values",
+    )
+    script_apply_materialization.add_argument(
+        "--require-approved",
+        action="store_true",
+        default=True,
+        help="Require replacement_status=approved for each replaced TODO segment",
+    )
+    script_apply_materialization.add_argument(
+        "--script-root",
+        default=str(DEFAULT_SCRIPT_ROOT),
+        help="Root directory for refreshed script bundles",
+    )
+    script_apply_materialization.add_argument(
         "--series-config",
         default=str(DEFAULT_SERIES_CONFIG),
         help="series.yml path used when rebuilding the packet",
@@ -697,6 +728,8 @@ def cmd_script(args: argparse.Namespace) -> int:
         return _cmd_script_revise(args, db_path)
     if args.script_command == "materialize":
         return _cmd_script_materialize(args, db_path)
+    if args.script_command == "apply-materialization":
+        return _cmd_script_apply_materialization(args, db_path)
     print(f"Unsupported script subcommand: {args.script_command}")
     return 2
 
@@ -844,6 +877,59 @@ def _cmd_script_materialize(args: argparse.Namespace, db_path: Path) -> int:
     print(f"Script: {script.id}  TODO segments: {todo_count} / {len(script.segments)}")
     print(f"Segments carrying critical_refs: {critical_ref_count}")
     print("No script text was replaced; export inspect TODO warnings remain until operator-approved replacement.")
+    return 0
+
+
+def _cmd_script_apply_materialization(args: argparse.Namespace, db_path: Path) -> int:
+    script = load_script_ir(db_path, args.script)
+    if script is None:
+        print(f"Script not found: {args.script}")
+        return 1
+    plan = load_episode_plan(db_path, script.episode_plan_id)
+    if plan is None:
+        print(f"Episode plan not found for script {args.script}: {script.episode_plan_id}")
+        return 1
+
+    try:
+        updated = apply_materialization_draft(
+            script,
+            args.draft,
+            require_approved=args.require_approved,
+        )
+    except MaterializationValidationError as exc:
+        print(f"Script materialization rejected: {exc}")
+        return 1
+
+    found = _find_cluster(db_path, plan.story_cluster_id)
+    if found is None:
+        print(f"Cluster not found for plan {plan.id}: {plan.story_cluster_id}")
+        return 1
+    cluster, _ = found
+    articles = _articles_for_cluster(db_path, cluster)
+    if not articles:
+        print(f"No articles resolvable for cluster {cluster.id}")
+        return 1
+
+    packet = _build_packet_for_cluster(db_path, cluster, articles, args.series_config)
+    upsert_script_ir(db_path, updated)
+    findings = ScriptCritic().critique(updated, plan, packet)
+    output_dir = write_script_bundle(
+        plan,
+        updated,
+        findings,
+        script_root=Path(args.script_root),
+    )
+
+    replaced = sum(
+        1
+        for before, after in zip(script.segments, updated.segments, strict=True)
+        if before.text != after.text
+    )
+    todo_remaining = sum(1 for segment in updated.segments if segment.text.startswith("TODO["))
+    print(f"Script materialization applied: {updated.id}")
+    print(f"Segments replaced: {replaced}  TODO remaining: {todo_remaining}")
+    print(f"Output dir: {output_dir}")
+    print("Export bundles were not rebuilt; rerun export after reviewing the refreshed script bundle.")
     return 0
 
 

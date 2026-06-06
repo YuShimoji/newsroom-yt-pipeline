@@ -99,11 +99,23 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - next_allowed_work: operator-approved replacement intake for a filled `script_materialization.yml`, followed by script/export rebuild and `export inspect`.
 - prohibited_work: do not auto-generate final narration, clear TODO warnings from draft existence alone, or proceed to QuoteManifest tightening as the active path before the spoken script text is materialized.
 
+## 2026-06-07 P0.5-B Replacement Intake Gate
+
+- current_task: add a narrow operator-approved replacement intake for filled materialization drafts.
+- decision: implement reject-first apply path; do not run active replacement.
+- reason: the active draft has 6 empty `operator_fill` values and 6 `replacement_status: operator_pending` rows. Applying it would silently replace TODO text without operator-approved narration.
+- active_artifact: `data\scripts\script_d2a46430e084\script_materialization.yml` remains the active ignored draft; `data\exports\episode_756343df9853\script.csv` and DB ScriptIR still have 6 TODO rows.
+- true_blockers: operator must fill all relevant `operator_fill` values and mark replacements approved before the active script can be updated.
+- stale_or_false_blockers: a rejected apply attempt is not a system failure; it is the intended safety gate for unfilled/unapproved runtime input.
+- evidence_boundary: `newsroom script apply-materialization` can update the DB ScriptIR and refreshed script bundle only after validation passes. It does not rebuild export bundles automatically and does not modify YMM4 proof artifacts.
+- next_allowed_work: after operator fills and approves the draft, run the apply command, rebuild the active export, and confirm `script_todo_skeleton` is absent.
+- prohibited_work: do not bypass approval, synthesize narration, commit runtime draft/export/proof artifacts, or move to QuoteManifest tightening while the active export still speaks TODO text.
+
 ## Blocked Or Pending
 
 - YMM4 GUI import proof: passed for CSV import acceptance and handoff-file readability on `episode_756343df9853`; downstream subtitle/overlay/final geometry proof remains out of newsroom scope.
 - Active critical view: applied locally with C1/NIST. If ignored runtime artifacts are missing in another checkout, reapply the same selected source and rebuild before treating `critical_view` as unresolved.
-- Active script materialization: P0.5 draft path implemented. Operator-approved replacement is still needed before treating QuoteManifest tightening as the active next path.
+- Active script materialization: P0.5-B replacement intake implemented. Active draft is still unfilled/unapproved, so operator-approved replacement is still needed before treating QuoteManifest tightening as the active next path.
 - QuoteManifest human_required noise: P1. Do not let it consume P0.5 while the active spoken script is still TODO skeleton.
 - Packet persistence: P1. Current critical-source relation is durable DB input, but full NotebookPacket persistence remains separate.
 - VisualIR-to-final-look gap: keep evaluating whether VisualIR changes affect actual YMM4 composition, density, whitespace, and eye flow.
