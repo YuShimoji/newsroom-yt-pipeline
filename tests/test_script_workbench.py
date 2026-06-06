@@ -166,3 +166,34 @@ def test_critic_warns_when_critical_view_missing():
 
     critical = next(f for f in findings if f.guard == "critical_view")
     assert critical.severity == "warn"
+
+
+def test_critic_keeps_speculation_warning_until_speculation_track_is_explicit():
+    articles = [_article("a"), _article("b"), _article("c", source_type="commentary")]
+    cluster = _cluster()
+    cluster_with_ids = cluster.__class__(**{**cluster.__dict__, "article_ids": [a.id for a in articles]})
+    packet = _packet(articles[0].id, articles[1].id, articles[2].id)
+
+    plan = EpisodePlanner().plan(cluster_with_ids, packet)
+    script = ScriptDrafter().draft(plan, packet, "anchor_narration")
+
+    findings = ScriptCritic().critique(script, plan, packet)
+
+    speculation = next(f for f in findings if f.guard == "speculation_vs_fact")
+    assert speculation.severity == "warn"
+    assert all(segment.needs_human_review for segment in script.segments)
+
+    explicit_segments = [
+        segment.__class__(**{**segment.__dict__, "claim_type": "speculation"})
+        if segment.chapter_id.endswith("__impact")
+        else segment
+        for segment in script.segments
+    ]
+    explicit_script = script.__class__(**{**script.__dict__, "segments": explicit_segments})
+
+    explicit_findings = ScriptCritic().critique(explicit_script, plan, packet)
+    explicit_speculation = next(
+        f for f in explicit_findings if f.guard == "speculation_vs_fact"
+    )
+    assert explicit_speculation.severity == "ok"
+    assert all(segment.needs_human_review for segment in explicit_script.segments)

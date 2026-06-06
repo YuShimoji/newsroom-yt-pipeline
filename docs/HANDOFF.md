@@ -113,6 +113,12 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - `source_card` still means explicit screenshot/source-display intent and remains `human_required`; citation-only facts now default to `claim_evidence_card`.
   - Rebuilt VisualIR/AssetManifest/QuoteManifest/export for `script_d2a46430e084`; the active export now has 0 visual/asset/quote `human_required` items while preserving source refs and C1/NIST citation rows.
   - `export inspect` now passes with `critical_view` absent, `script_todo_skeleton` absent, and only `speculation_vs_fact` plus 6 broad `needs_human_review` warnings.
+- P1 broad script review gate on 2026-06-07:
+  - Added tracked review handoff artifact: `docs\script_review_gates\script_d2a46430e084.review.yml`.
+  - Classification decision: no script text adjustment was made. All 6 segments remain `operator_approval_required`; interpretation rows also keep `speculation_vs_fact` / publication-review caution until operator approval or requested wording changes.
+  - The approved narration authority remains `docs\approved_materializations\script_d2a46430e084.materialization.yml`; the review gate artifact is not a replacement authority.
+  - Active export remains PASS with `critical_view`, `script_todo_skeleton`, and visual/asset/quote `human_required` absent.
+  - Remaining warnings intentionally stay: `speculation_vs_fact` and 6 broad `needs_human_review` segment warnings.
 - Local validation after the P0.5-D approved materialization apply:
   - `.venv\Scripts\python.exe -m pytest -q` -> 72 passed.
   - `git diff --check` -> passed.
@@ -120,6 +126,10 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - Local validation after the P1 remaining visual/asset/screenshot gate:
   - Targeted visual/asset/quote/export tests -> 33 passed.
   - `.venv\Scripts\python.exe -m pytest -q` -> 77 passed.
+  - `git diff --check` -> passed.
+- Local validation after the P1 broad script review gate:
+  - Targeted script/export tests -> 23 passed.
+  - `.venv\Scripts\python.exe -m pytest -q` -> 78 passed.
   - `git diff --check` -> passed.
 - Local validation after the P0.5-C approved authority slice:
   - `.venv\Scripts\python.exe -m pytest tests\test_script_materialization.py -q` -> 17 passed.
@@ -199,7 +209,16 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - requirements: preserve source refs, C1/NIST coverage, `source_card` as an explicit human-required screenshot intent, and the downstream subtitle/YMM4 geometry boundary.
 - state: implemented for the active export. The facts visual unit now uses `claim_evidence_card` with Microsoft source refs preserved; AssetManifest uses local templates; QuoteManifest has 10 citation-only text rows and 0 screenshot rows. Active `export inspect` passes with only `speculation_vs_fact` and 6 broad `needs_human_review` warnings.
 - owner: assistant for generator behavior and rebuilds; operator for any future explicit external screenshot/source-card approval.
-- next move: address broad script review gates with operator/editorial authority, or continue to Packet persistence. Do not treat the absence of visual/asset/quote `human_required` as publishing approval.
+- next move: superseded by the broad script review gate below for the active export. Do not treat the absence of visual/asset/quote `human_required` as publishing approval.
+
+### P1: Broad script review gate
+
+- purpose: classify `speculation_vs_fact` and broad segment `needs_human_review` without clearing them by heuristic.
+- effect: operator can review the remaining publication gates from a tracked handoff artifact without changing approved narration authority.
+- requirements: preserve approved text, speaker `ナレーター`, source refs, C1/NIST critical refs, claim types, and visual/asset/quote cleared state.
+- state: handoff-only complete. `docs\script_review_gates\script_d2a46430e084.review.yml` classifies all 6 segments as `operator_approval_required`; no script text or review flags were changed. Active `export inspect` remains PASS with only `speculation_vs_fact` and 6 `needs_human_review` warnings.
+- owner: operator/editor for approval decisions; assistant for applying explicit returned approvals or requested text adjustments.
+- next move: operator reviews the handoff artifact and approved materialization text, then returns either explicit publication-review approval or concrete text/claim-type changes. Do not clear warnings without that authority.
 
 ### P1: Packet persistence
 
