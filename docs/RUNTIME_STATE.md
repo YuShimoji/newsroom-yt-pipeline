@@ -28,6 +28,8 @@ Last updated: 2026-06-07
 - P0-A YMM4 GUI proof pass on 2026-06-07: operator created a YMM4 character named `ナレーター`, reran import for `data\exports\episode_756343df9853\script.csv`, and reported that YMM4 recognized the CSV and imported it normally. The local proof YAML was updated to `import_result: pass` / `decision.status: passed`. `TODO[...]` tokens were pronounced because they are literal TODO skeleton script text, not an import failure. This proves CSV import acceptance and handoff-file readability only; subtitle placement, overlay safety, and final YMM4 geometry remain outside newsroom-side proof.
 - Post-proof TODO skeleton gate on 2026-06-07: re-read the active export and found all 6 spoken `script.csv` / `script_ir.json` rows still contain literal `TODO[...]` skeleton text. `export inspect` now reports this as `script_todo_skeleton` warning while still passing the bundle. This makes P0.5 Script materialization the next active artifact path before P1 QuoteManifest tightening.
 - Validation after the TODO skeleton inspector slice: `.venv\Scripts\python.exe -m pytest -q` -> 55 passed, `git diff --check` -> passed, and `.venv\Scripts\python.exe -m newsroom.cli.main export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with `script_todo_skeleton`, `speculation_vs_fact`, `needs_human_review`, and `human_required` warnings; `critical_view` warning remains absent.
+- P0.5 materialization draft path on 2026-06-07: added `newsroom script materialize --script <script_id>` to write `script_materialization.yml` under `data/scripts/<script_id>/`. The draft preserves segment ids, speaker, current TODO text, source refs, critical refs, suggested operator angles, empty `operator_fill`, and human-review flags. It does not modify the DB script row, `script_ir.json`, `script.csv`, or export bundles, so `script_todo_skeleton` remains until operator-approved replacement is applied.
+- Validation after the P0.5 materialization draft slice: `.venv\Scripts\python.exe -m pytest tests\test_script_materialization.py tests\test_export_inspector.py -q` -> 10 passed, `.venv\Scripts\python.exe -m pytest -q` -> 58 passed, `git diff --check` -> passed, active materialization draft generation succeeded for `script_d2a46430e084`, and active `export inspect` remained PASS with `script_todo_skeleton` present and `critical_view` absent.
 
 ## Implemented Milestones
 
@@ -36,6 +38,7 @@ Last updated: 2026-06-07
 - M2.1 multi-day window: `cluster --days N` and `cluster --from --to`, with the cluster date set to the window end.
 - M3 packet: NotebookLM manual-upload packet bundle; no NotebookLM API automation.
 - M4 script skeleton / critic: episode plan, TODO-shaped script skeleton, source refs, speaker assignment, editorial guard review.
+- P0.5 script materialization draft: operator-editable `script_materialization.yml` generation from an existing ScriptIR and rebuilt packet.
 - M5 YMM4 export package: `script.csv`, `script_ir.json`, `source_list.md`, `ymm4_notes.md`, and `export_manifest.json`.
 - M6.1 VisualIR skeleton: done. Narrow card set covering `source_card`, `claim_evidence_card`, `timeline_spine`, and `takeaway_row`.
 - M6.2 AssetManifest skeleton: done. VisualIR plus NotebookPacket produce asset candidates; external URL screenshots remain `human_required`, while `local_template` and `generated_diagram` remain `suggested`.
@@ -93,6 +96,15 @@ Last updated: 2026-06-07
 - Export inspect result: PASS. `critical_view` warning is gone. Remaining warnings are publication/operator review gates, including `script_todo_skeleton`, not machine failures.
 - YMM4 GUI proof status: passed for CSV import acceptance after the operator added a `ナレーター` character in the target YMM4 environment. This does not prove subtitle placement, overlay safety, or final YMM4 geometry.
 
+## Current P0.5 Materialization Draft Path
+
+- CLI: `newsroom script materialize --script <script_id>`.
+- Active command used locally: `.venv\Scripts\python.exe -m newsroom.cli.main --db data\ymm4_import_proof.sqlite script materialize --script script_d2a46430e084`.
+- Runtime artifact: `data\scripts\script_d2a46430e084\script_materialization.yml`, intentionally git-ignored under `data/scripts/`.
+- The active artifact includes 6 segments, empty `operator_fill` fields, speaker `ナレーター`, source refs, C1/NIST critical refs where applicable, current TODO text, and human-review flags.
+- The command is draft-only. It does not generate final narration, does not apply replacement, does not clear `script_todo_skeleton`, and does not rebuild export bundles.
+- Next state to clear the active TODO warning: operator fills and approves the materialization draft, then a separate replacement step updates `ScriptIR`, rebuilds `data\exports\episode_756343df9853`, and reruns `export inspect`.
+
 ## Current YMM4 GUI Proof Attempt
 
 - Target episode remained `episode_756343df9853`; target CSV was `data\exports\episode_756343df9853\script.csv`.
@@ -114,20 +126,21 @@ Last updated: 2026-06-07
 - Proof status: passed for CSV import acceptance and handoff-file readability. `data\proofs\ymm4_import\episode_756343df9853\proof.yml` is local evidence and is git-ignored.
 - Boundary: newsroom YMM4 GUI proof is CSV import acceptance and handoff-file readability only. Subtitle placement, YMM4 item geometry, template positioning, subtitle band decisions, `.ymmp` patch details, and overlay proof remain downstream NLMYTGen/YMM4-side authority.
 - Runtime artifact rule: do not commit `data\ymm4_import_proof.sqlite`, `data\exports\episode_756343df9853`, `data\proofs\...`, or screenshots.
-- Valid next action: P0.5 Script materialization / TODO skeleton replacement for the active `script.csv`; later downstream subtitle/overlay proof stays outside newsroom scope.
+- Valid next action: operator-approved replacement from the filled P0.5 materialization draft; later downstream subtitle/overlay proof stays outside newsroom scope.
 
 ## Handoff Snapshot
 
 - Assistant status: YMM4 manual import proof preparation is implemented and P0-A CSV import acceptance is passed for the active export; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts.
-- User action: provide operator/editorial guidance for replacing the active TODO skeleton narration, or pass a new proof/result if downstream YMM4 subtitle/overlay work exposes a concrete failure. If git-ignored artifacts are absent in a different checkout, regenerate an equivalent bundle from `docs/HANDOFF.md`.
-- Assistant next after restart: prefer P0.5 Script materialization / TODO skeleton replacement over P1 QuoteManifest tightening.
-- What counts as progress next: replacing literal TODO spoken rows while preserving source refs and speaker mapping, then rebuilding and inspecting the active export. Reducing noisy quote rows is useful after the active spoken script is materialized.
+- User action: fill and approve `data\scripts\script_d2a46430e084\script_materialization.yml`, or pass a new proof/result if downstream YMM4 subtitle/overlay work exposes a concrete failure. If git-ignored artifacts are absent in a different checkout, regenerate an equivalent bundle from `docs/HANDOFF.md`.
+- Assistant next after restart: prefer operator-approved replacement from the filled materialization draft over P1 QuoteManifest tightening.
+- What counts as progress next: applying operator-approved narration to replace literal TODO spoken rows while preserving source refs and speaker mapping, then rebuilding and inspecting the active export. Reducing noisy quote rows is useful after the active spoken script is materialized.
 - What does not count as progress next: NotebookLM API automation, Inoreader OAuth, GUI/dashboard work, `.ymmp` generation, YouTube upload, NLMYTGen subprocess/path integration, or treating subtitle layout/overlay safety as newsroom-side proof.
 
 ## Not Complete Or Not Proven
 
 - The active proof bundle has a selected C1/NIST critical view in this local runtime checkout, but the runtime DB/export artifacts are git-ignored and may need regeneration in a different checkout.
 - The active `script.csv` and `script_ir.json` are still 100% TODO skeleton narration: 6 / 6 spoken rows contain `TODO[...]`.
+- A materialization draft can be generated, but operator-approved replacement is not implemented and no filled narration has been applied.
 - Packet persistence is artifact-only; packet records are not stored as first-class DB rows.
 - QuoteManifest persistence is artifact-only; quote records are not stored as first-class DB rows.
 - QuoteManifest rows are conservative candidates, not legal decisions; all start as `human_required`.
@@ -144,9 +157,9 @@ Last updated: 2026-06-07
 
 ## Next Recommended Work
 
-1. P0.5: Script materialization / TODO skeleton replacement.
-   Purpose: replace the active literal `TODO[...]` spoken rows with reviewable narration while preserving `ナレーター`, CSV shape, source refs, C1/NIST coverage, and human-review flags.
-   Effect: turns the YMM4-importable handoff into a production-reviewable spoken script. Until this is done, QuoteManifest tightening is premature.
+1. P0.5-B: Operator-approved script replacement.
+   Purpose: apply filled `operator_fill` values from `script_materialization.yml` to replace the active literal `TODO[...]` spoken rows while preserving `ナレーター`, CSV shape, source refs, C1/NIST coverage, and human-review flags.
+   Effect: turns the YMM4-importable skeleton handoff into a production-reviewable spoken script. Until this is done, QuoteManifest tightening is premature.
 
 2. P1: QuoteManifest tightening.
    Purpose: reduce noisy quote rows by distinguishing citation-only source_refs from direct quote or screenshot intent.

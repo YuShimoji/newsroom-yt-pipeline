@@ -82,6 +82,16 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - Active `script.csv` / `script_ir.json` still contain literal `TODO[...]` text in all 6 spoken rows.
   - `export inspect` now reports this as `script_todo_skeleton` warning while keeping the bundle PASS.
   - P0.5 Script materialization / TODO skeleton replacement should run before P1 QuoteManifest tightening.
+- P0.5 materialization draft path on 2026-06-07:
+  - Added `newsroom script materialize --script <script_id>`.
+  - The command writes `data\scripts\<script_id>\script_materialization.yml` with segment ids, speaker, current TODO text, source refs, critical refs, suggested operator angle, empty `operator_fill`, and human-review state.
+  - It does not replace `script_ir.json`, `script.csv`, DB rows, or export bundles. `script_todo_skeleton` remains until operator-approved replacement updates the spoken text.
+- Local validation after the P0.5 materialization draft slice:
+  - `.venv\Scripts\python.exe -m pytest tests\test_script_materialization.py tests\test_export_inspector.py -q` -> 10 passed.
+  - `.venv\Scripts\python.exe -m pytest -q` -> 58 passed.
+  - `git diff --check` -> passed.
+  - `.venv\Scripts\python.exe -m newsroom.cli.main --db data\ymm4_import_proof.sqlite script materialize --script script_d2a46430e084` -> wrote ignored `data\scripts\script_d2a46430e084\script_materialization.yml`.
+  - `.venv\Scripts\python.exe -m newsroom.cli.main export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with `script_todo_skeleton` still present and `critical_view` absent.
 - Local validation after the TODO skeleton inspector slice:
   - `.venv\Scripts\python.exe -m pytest -q` -> 55 passed.
   - `git diff --check` -> passed.
@@ -93,7 +103,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - proof draft: `data\proofs\ymm4_import\episode_756343df9853\proof.yml`
   - inspector result: `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings.
 - Runtime proof artifacts under `data\proofs\` are intentionally git-ignored.
-- Implementation frontier: M1 through M6.4 are implemented; P0-A CSV import acceptance is proven for the active YMM4 export after adding the `ナレーター` character in the target YMM4 environment; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST; P0.5 script materialization is now the next active artifact path.
+- Implementation frontier: M1 through M6.4 are implemented; P0-A CSV import acceptance is proven for the active YMM4 export after adding the `ナレーター` character in the target YMM4 environment; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST; P0.5 operator-editable materialization draft path is implemented, but operator-approved replacement is still needed to clear TODO spoken rows.
 
 ## Immediate Resume Packet
 
@@ -121,9 +131,9 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - purpose: replace literal `TODO[...]` spoken rows with reviewable narration for the active script.
 - effect: moves the active export from YMM4-importable skeleton to production-reviewable script content.
 - requirements: preserve speaker `ナレーター`, CSV import shape, existing `source_refs`, C1/NIST critical-view coverage, and human-review flags unless the reviewer explicitly clears them.
-- state: not implemented. Active `script.csv` / `script_ir.json` still have 6 / 6 TODO skeleton spoken rows, and `export inspect` reports `script_todo_skeleton` as a warning.
+- state: draft path implemented. `newsroom script materialize --script script_d2a46430e084` writes `data\scripts\script_d2a46430e084\script_materialization.yml`, including all 6 segments, `operator_fill` fields, `source_refs`, `critical_refs`, speaker `ナレーター`, and human-review flags. Active `script.csv` / `script_ir.json` still have 6 / 6 TODO skeleton spoken rows, and `export inspect` reports `script_todo_skeleton` as a warning.
 - owner: assistant for tooling/rebuilds and operator for editorial approval of final narration.
-- next move: add a narrow materialization path or operator-edit workflow, rebuild packet/script/visual/asset/quote/export as needed, then rerun `export inspect`. Do not proceed to QuoteManifest tightening as the active path while the script is still TODO skeleton.
+- next move: operator fills and approves `operator_fill` values, then add/apply a narrow replacement step that updates `ScriptIR`, rebuilds the export, and reruns `export inspect`. Do not proceed to QuoteManifest tightening as the active path while the script is still TODO skeleton.
 
 ### P1: QuoteManifest tightening
 

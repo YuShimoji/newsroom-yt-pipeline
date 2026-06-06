@@ -33,6 +33,7 @@ from newsroom.notebook.packet_builder import DEFAULT_PACKET_ROOT, NotebookPacket
 from newsroom.scoring.topic_scorer import TopicScorer
 from newsroom.script.episode_planner import EpisodePlanner
 from newsroom.script.exporters import DEFAULT_SCRIPT_ROOT, write_script_bundle
+from newsroom.script.materialization import write_materialization_draft
 from newsroom.script.script_critic import ScriptCritic
 from newsroom.script.script_drafter import ScriptDrafter
 from newsroom.store.db import (
@@ -168,6 +169,22 @@ def build_parser() -> argparse.ArgumentParser:
         "--script-root",
         default=str(DEFAULT_SCRIPT_ROOT),
         help="Root directory for script bundles",
+    )
+
+    script_materialize = script_sub.add_parser(
+        "materialize",
+        help="Write an operator-editable script materialization draft",
+    )
+    script_materialize.add_argument("--script", required=True, help="Script id")
+    script_materialize.add_argument(
+        "--script-root",
+        default=str(DEFAULT_SCRIPT_ROOT),
+        help="Root directory for script materialization draft bundles",
+    )
+    script_materialize.add_argument(
+        "--series-config",
+        default=str(DEFAULT_SERIES_CONFIG),
+        help="series.yml path used when rebuilding the packet",
     )
 
     asset_parser = subparsers.add_parser("asset", help="Asset manifest operations")
@@ -678,6 +695,8 @@ def cmd_script(args: argparse.Namespace) -> int:
         return _cmd_script_critique(args, db_path)
     if args.script_command == "revise":
         return _cmd_script_revise(args, db_path)
+    if args.script_command == "materialize":
+        return _cmd_script_materialize(args, db_path)
     print(f"Unsupported script subcommand: {args.script_command}")
     return 2
 
@@ -783,6 +802,48 @@ def _cmd_script_revise(args: argparse.Namespace, db_path: Path) -> int:
     print(f"Output dir: {output_dir}")
     review_segments = sum(1 for seg in updated.segments if seg.needs_human_review)
     print(f"Segments flagged for human review: {review_segments} / {len(updated.segments)}")
+    return 0
+
+
+def _cmd_script_materialize(args: argparse.Namespace, db_path: Path) -> int:
+    script = load_script_ir(db_path, args.script)
+    if script is None:
+        print(f"Script not found: {args.script}")
+        return 1
+    plan = load_episode_plan(db_path, script.episode_plan_id)
+    if plan is None:
+        print(f"Episode plan not found for script {args.script}: {script.episode_plan_id}")
+        return 1
+
+    found = _find_cluster(db_path, plan.story_cluster_id)
+    if found is None:
+        print(f"Cluster not found for plan {plan.id}: {plan.story_cluster_id}")
+        return 1
+    cluster, _ = found
+    articles = _articles_for_cluster(db_path, cluster)
+    if not articles:
+        print(f"No articles resolvable for cluster {cluster.id}")
+        return 1
+
+    packet = _build_packet_for_cluster(db_path, cluster, articles, args.series_config)
+    output_path = write_materialization_draft(
+        plan,
+        script,
+        packet,
+        script_root=Path(args.script_root),
+    )
+
+    todo_count = sum(1 for segment in script.segments if segment.text.startswith("TODO["))
+    critical_ids = {ref.article_id for ref in packet.critical_views}
+    critical_ref_count = sum(
+        1
+        for segment in script.segments
+        if any(ref in critical_ids for ref in segment.source_refs)
+    )
+    print(f"Script materialization draft written: {output_path}")
+    print(f"Script: {script.id}  TODO segments: {todo_count} / {len(script.segments)}")
+    print(f"Segments carrying critical_refs: {critical_ref_count}")
+    print("No script text was replaced; export inspect TODO warnings remain until operator-approved replacement.")
     return 0
 
 
