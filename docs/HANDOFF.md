@@ -107,10 +107,20 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - Generated tracked sanitized authority record: `docs\approved_materializations\script_d2a46430e084.materialization.yml`.
   - Applied the approved record to DB ScriptIR and refreshed `data\scripts\script_d2a46430e084\` while preserving `ナレーター`, source refs, C1/NIST critical refs, visual refs, claim type, and human-review flags.
   - Rebuilt `data\exports\episode_756343df9853`; `export inspect` now passes with `script_todo_skeleton` absent and `critical_view` absent.
+- P1 remaining visual/asset/screenshot gate on 2026-06-07:
+  - The remaining 1 visual, 1 asset, and 1 quote `human_required` items were all traced to the facts chapter's default `source_card` screenshot intent.
+  - Classification decision: `replace_with_local_diagram` for the active export because the script uses citation-only source refs and does not require an external screenshot.
+  - `source_card` still means explicit screenshot/source-display intent and remains `human_required`; citation-only facts now default to `claim_evidence_card`.
+  - Rebuilt VisualIR/AssetManifest/QuoteManifest/export for `script_d2a46430e084`; the active export now has 0 visual/asset/quote `human_required` items while preserving source refs and C1/NIST citation rows.
+  - `export inspect` now passes with `critical_view` absent, `script_todo_skeleton` absent, and only `speculation_vs_fact` plus 6 broad `needs_human_review` warnings.
 - Local validation after the P0.5-D approved materialization apply:
   - `.venv\Scripts\python.exe -m pytest -q` -> 72 passed.
   - `git diff --check` -> passed.
   - `.venv\Scripts\python.exe -m newsroom.cli.main export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with `script_todo_skeleton` absent and `critical_view` absent.
+- Local validation after the P1 remaining visual/asset/screenshot gate:
+  - Targeted visual/asset/quote/export tests -> 33 passed.
+  - `.venv\Scripts\python.exe -m pytest -q` -> 77 passed.
+  - `git diff --check` -> passed.
 - Local validation after the P0.5-C approved authority slice:
   - `.venv\Scripts\python.exe -m pytest tests\test_script_materialization.py -q` -> 17 passed.
   - `.venv\Scripts\python.exe -m pytest -q` -> 72 passed.
@@ -178,9 +188,18 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - purpose: reduce noisy `human_required` quote rows.
 - effect: review focuses on direct quote / screenshot / data-use intent instead of every source-backed segment.
 - requirements: distinguish citation-only `source_refs` from direct quote or screenshot intent.
-- state: implemented for the active path. Citation-only text rows now carry `review_level: citation_only` / `approval_state: citation_only`; direct quote, screenshot, and data-use intent remain `human_required`. Active `quote_manifest.yml` now has 11 rows: 10 citation-only text rows and 1 screenshot row requiring human review. The 5 C1/NIST rows remain present as `source_role: critical_view`.
+- state: implemented for the active path. Citation-only text rows carry `review_level: citation_only` / `approval_state: citation_only`; direct quote, screenshot, and data-use intent remain `human_required`. This initially left 10 citation-only text rows and 1 screenshot row; the subsequent visual/asset/screenshot gate removed the active screenshot intent. The 5 C1/NIST rows remain present as `source_role: critical_view`.
 - owner: assistant.
-- next move: review the remaining screenshot/asset/visual human_required items, or continue to Packet persistence. Do not use QuoteManifest tightening to clear `speculation_vs_fact` or broad `needs_human_review`.
+- next move: superseded by the remaining visual/asset/screenshot gate below for the active export. Do not use QuoteManifest tightening to clear `speculation_vs_fact` or broad `needs_human_review`.
+
+### P1: Remaining visual/asset/screenshot review gate
+
+- purpose: classify concrete visual/source-card review items without suppressing unrelated publication warnings.
+- effect: citation-only source evidence no longer creates an external screenshot gate by default.
+- requirements: preserve source refs, C1/NIST coverage, `source_card` as an explicit human-required screenshot intent, and the downstream subtitle/YMM4 geometry boundary.
+- state: implemented for the active export. The facts visual unit now uses `claim_evidence_card` with Microsoft source refs preserved; AssetManifest uses local templates; QuoteManifest has 10 citation-only text rows and 0 screenshot rows. Active `export inspect` passes with only `speculation_vs_fact` and 6 broad `needs_human_review` warnings.
+- owner: assistant for generator behavior and rebuilds; operator for any future explicit external screenshot/source-card approval.
+- next move: address broad script review gates with operator/editorial authority, or continue to Packet persistence. Do not treat the absence of visual/asset/quote `human_required` as publishing approval.
 
 ### P1: Packet persistence
 

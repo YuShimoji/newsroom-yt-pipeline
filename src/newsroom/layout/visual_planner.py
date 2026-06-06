@@ -24,7 +24,7 @@ SUPPORTED_UNIT_TYPES: frozenset[str] = frozenset(
 
 CHAPTER_TO_UNIT_TYPE: dict[str, str] = {
     "intro": "takeaway_row",
-    "facts": "source_card",
+    "facts": "claim_evidence_card",
     "context": "claim_evidence_card",
     "conflict": "claim_evidence_card",
     "impact": "takeaway_row",
@@ -41,15 +41,35 @@ LAYOUT_TEMPLATES: dict[str, str] = {
 # §14: 8〜12 秒に 1 回意味のある視覚更新を入れる。中央値 10 秒で正規化する。
 DENSITY_TARGET_SECONDS_PER_UPDATE: float = 10.0
 
-# Only source_card surfaces external URLs / quoted content, so operator
-# approval stays required. The other three cards are derived from
-# internal structure (claims, timeline, takeaway sentences).
+# source_card surfaces external URLs / screenshot-like source material, so
+# operator approval stays required. It is used only when a script segment
+# explicitly asks for that visual intent; citation-only facts default to a
+# local claim/evidence card.
 APPROVAL_BY_UNIT_TYPE: dict[str, str] = {
     "source_card": "human_required",
     "claim_evidence_card": "auto_ok",
     "timeline_spine": "auto_ok",
     "takeaway_row": "auto_ok",
 }
+
+_SOURCE_CARD_INTENT_PREFIXES: tuple[str, ...] = (
+    "source_card:",
+    "screenshot:",
+    "quote_screenshot:",
+    "visual:source_card:",
+    "visual:screenshot:",
+    "visual:quote_screenshot:",
+)
+_SOURCE_CARD_INTENT_TOKENS: frozenset[str] = frozenset(
+    {
+        "source_card",
+        "screenshot",
+        "quote_screenshot",
+        "visual:source_card",
+        "visual:screenshot",
+        "visual:quote_screenshot",
+    }
+)
 
 
 class VisualPlanner:
@@ -75,7 +95,7 @@ class VisualPlanner:
         for index, chapter in enumerate(episode_plan.chapter_outline):
             segments = segments_by_chapter.get(chapter.id, [])
             chapter_key = chapter.id.rsplit("__", 1)[-1]
-            unit_type = CHAPTER_TO_UNIT_TYPE.get(chapter_key, "takeaway_row")
+            unit_type = _unit_type_for_chapter(chapter_key, segments)
             duration_sec = float(chapter.target_duration_sec)
             source_refs = _source_refs_for_chapter(
                 chapter_key=chapter_key,
@@ -133,6 +153,23 @@ def _group_segments_by_chapter(segments: list[ScriptSegment]) -> dict[str, list[
     for segment in segments:
         grouped.setdefault(segment.chapter_id, []).append(segment)
     return grouped
+
+
+def _unit_type_for_chapter(chapter_key: str, segments: list[ScriptSegment]) -> str:
+    if _has_source_card_intent(segments):
+        return "source_card"
+    return CHAPTER_TO_UNIT_TYPE.get(chapter_key, "takeaway_row")
+
+
+def _has_source_card_intent(segments: list[ScriptSegment]) -> bool:
+    for segment in segments:
+        for ref in segment.visual_refs:
+            normalized = ref.strip().lower()
+            if normalized in _SOURCE_CARD_INTENT_TOKENS:
+                return True
+            if normalized.startswith(_SOURCE_CARD_INTENT_PREFIXES):
+                return True
+    return False
 
 
 def _source_refs_for_chapter(

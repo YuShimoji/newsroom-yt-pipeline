@@ -158,13 +158,24 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - next_allowed_work: review remaining screenshot/asset/visual `human_required` items, address broad script review gates with operator authority, or continue to Packet persistence.
 - prohibited_work: do not suppress `speculation_vs_fact` or broad `needs_human_review`, do not add raw article body/private/copyright-unclear text, and do not expand into `.ymmp`, overlay proof, YMM4 geometry, or publishing.
 
+## 2026-06-07 P1 Visual/Asset/Screenshot Review Gate
+
+- current_task: classify the remaining visual, asset, and screenshot `human_required` items without clearing unrelated publication warnings.
+- decision: implement `replace_with_local_diagram` for the active citation-only facts visual, while preserving explicit source-card/screenshot intent as `human_required`.
+- reason: the remaining 3 items were one chain from the facts chapter's default `source_card`: a human-required visual unit, an external screenshot asset, and a screenshot QuoteManifest row. The approved narration cites Microsoft as evidence but does not require direct screenshot/source-card display.
+- active_artifact: `data\exports\episode_756343df9853` in local runtime state; regenerated VisualIR/AssetManifest/QuoteManifest/export now have 0 visual/asset/quote `human_required` items.
+- true_blockers: broad script `needs_human_review` and `speculation_vs_fact` remain operator/editorial gates.
+- stale_or_false_blockers: citation-only source refs are not screenshot intent and should not require external screenshot approval by default.
+- next_allowed_work: broad script review gate, Packet persistence, or targeted follow-up if an explicit source-card/screenshot use is requested.
+- prohibited_work: do not auto-approve external screenshots, do not suppress `speculation_vs_fact` or broad `needs_human_review`, do not add raw/private/copyright-unclear source material, and do not move subtitle/YMM4 geometry/overlay/publishing into newsroom.
+
 ## Blocked Or Pending
 
 - YMM4 GUI import proof: passed for CSV import acceptance and handoff-file readability on `episode_756343df9853`; downstream subtitle/overlay/final geometry proof remains out of newsroom scope.
 - Active critical view: applied locally with C1/NIST. If ignored runtime artifacts are missing in another checkout, reapply the same selected source and rebuild before treating `critical_view` as unresolved.
 - Active script materialization: approved record generated and applied for `script_d2a46430e084`; active export inspect is PASS with `script_todo_skeleton` absent.
 - Approved narration authority: `docs\approved_materializations\script_d2a46430e084.materialization.yml` is the tracked sanitized authority. Runtime DB/export artifacts remain checkout-local and may need reapply/rebuild elsewhere.
-- QuoteManifest human_required noise: citation-only source refs are tightened; active quote rows are 10 citation-only and 1 screenshot human_required.
+- QuoteManifest human_required noise: citation-only source refs are tightened; after the visual/asset/screenshot gate, active quote rows are 10 citation-only and 0 screenshot `human_required`.
 - Packet persistence: P1. Current critical-source relation is durable DB input, but full NotebookPacket persistence remains separate.
 - VisualIR-to-final-look gap: keep evaluating whether VisualIR changes affect actual YMM4 composition, density, whitespace, and eye flow.
 

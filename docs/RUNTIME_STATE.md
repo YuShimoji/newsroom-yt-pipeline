@@ -40,6 +40,9 @@ Last updated: 2026-06-07
 - P1 QuoteManifest tightening on 2026-06-07: citation-only source-ref rows now use `review_level: citation_only` / `approval_state: citation_only`, while direct quote, screenshot, and data-use intent remain `human_required`. Active `quote_manifest.yml` readback: 11 rows total, 10 citation-only rows, 1 screenshot human_required row, 5 C1/NIST rows retained as `source_role: critical_view`.
 - Active export inspect after P1 QuoteManifest tightening: PASS with `critical_view` absent and `script_todo_skeleton` absent. The M6 handoff warning dropped from 13 to 3 total human_required visual/asset/quote items: 1 asset, 1 quote screenshot, and 1 visual unit. `speculation_vs_fact` and 6 `needs_human_review` segment warnings remain as publication/operator gates.
 - Validation after P1 QuoteManifest tightening: targeted quote/export tests -> 21 passed; full `.venv\Scripts\python.exe -m pytest -q` -> 74 passed; `git diff --check` -> passed.
+- P1 remaining visual/asset/screenshot review gate on 2026-06-07: the remaining 3 `human_required` items were all source-card screenshot effects on the facts chapter. The active decision was `replace_with_local_diagram`: citation-only facts now use `claim_evidence_card`, while explicit `source_card` / `screenshot` / `quote_screenshot` intent still remains `human_required`.
+- Active export inspect after the P1 visual/asset/screenshot gate: PASS with `critical_view` absent and `script_todo_skeleton` absent. VisualIR has 6 units and 0 `human_required`; AssetManifest has 6 local-template candidates and 0 `human_required`; QuoteManifest has 10 citation-only text rows, 0 screenshot rows, and retains 5 C1/NIST critical-view rows. Remaining warnings are only `speculation_vs_fact` and 6 broad `needs_human_review` segment gates.
+- Validation after the P1 visual/asset/screenshot gate: targeted visual/asset/quote/export tests -> 33 passed; full `.venv\Scripts\python.exe -m pytest -q` -> 77 passed; `git diff --check` -> passed.
 
 ## Implemented Milestones
 
@@ -57,6 +60,7 @@ Last updated: 2026-06-07
 - M6.2 AssetManifest skeleton: done. VisualIR plus NotebookPacket produce asset candidates; external URL screenshots remain `human_required`, while `local_template` and `generated_diagram` remain `suggested`.
 - M6.3 QuoteManifest skeleton: done. ScriptIR plus VisualIR plus NotebookPacket produce citation-only source-ref rows, direct quote/data-use review rows when explicitly intended, and source-card screenshot review rows.
 - P1 QuoteManifest tightening: done for the active path. Citation-only rows no longer count as `human_required`; screenshot/direct quote/data-use intent remains operator-reviewed.
+- P1 visual/asset/screenshot gate: done for the active path. Citation-only facts default to local `claim_evidence_card`; explicit source-card/screenshot intent still remains operator-reviewed.
 - M6.4 export integration: done. `newsroom export ymm4` now bundles `visual_plan.md`, `visual_ir.json`, `asset_manifest.yml`, and `quote_manifest.yml` alongside the existing script/source/notes/manifest handoff files.
 
 ## M6.4 Completed In Previous Slice
@@ -107,7 +111,7 @@ Last updated: 2026-06-07
 - Rebuilt VisualIR: `visual_eca67c6bd375`; conflict visual unit references `article_bfba4cd5131daa71`.
 - Rebuilt review manifests: `data\assets\plan_20260603_faca8ebcbc45` and `data\quotes\plan_20260603_faca8ebcbc45`; quote rows include NIST.
 - Rebuilt export bundle: `data\exports\episode_756343df9853`; `source_list.md`, `script_ir.json`, `visual_ir.json`, and `quote_manifest.yml` include the NIST critical source.
-- Export inspect result after P1 QuoteManifest tightening: PASS. `critical_view` and `script_todo_skeleton` warnings are gone. Remaining warnings are publication/operator review gates, not machine failures.
+- Export inspect result after the P1 visual/asset/screenshot gate: PASS. `critical_view`, `script_todo_skeleton`, and visual/asset/quote `human_required` warnings are gone. Remaining warnings are `speculation_vs_fact` and 6 broad `needs_human_review` segment gates; these are publication/operator review gates, not machine failures.
 - YMM4 GUI proof status: passed for CSV import acceptance after the operator added a `ナレーター` character in the target YMM4 environment. This does not prove subtitle placement, overlay safety, or final YMM4 geometry.
 
 ## Current P0.5 Approved Materialization State
@@ -149,10 +153,10 @@ Last updated: 2026-06-07
 
 ## Handoff Snapshot
 
-- Assistant status: YMM4 manual import proof preparation is implemented and P0-A CSV import acceptance is passed for the active export; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts; P0.5-D approved narration was recorded, applied, and rebuilt for the active export; P1 QuoteManifest tightening reduced quote-related human_required noise.
-- User action: review publication/operator gates, or pass a new proof/result if downstream YMM4 subtitle/overlay work exposes a concrete failure. If git-ignored artifacts are absent in a different checkout, regenerate an equivalent bundle from `docs/HANDOFF.md` and apply `docs\approved_materializations\script_d2a46430e084.materialization.yml`.
-- Assistant next after restart: continue with remaining publication/operator gates or Packet persistence. If runtime artifacts are missing, reapply the tracked approved materialization record, rerun quote suggest, and rebuild export before inspecting.
-- What counts as progress next: reducing the remaining screenshot/asset/visual review items, addressing broad script review gates with operator authority, or adding Packet persistence.
+- Assistant status: YMM4 manual import proof preparation is implemented and P0-A CSV import acceptance is passed for the active export; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts; P0.5-D approved narration was recorded, applied, and rebuilt for the active export; P1 QuoteManifest tightening and the remaining visual/asset/screenshot gate are implemented for the active path.
+- User action: review broad script publication gates, or pass a new proof/result if downstream YMM4 subtitle/overlay work exposes a concrete failure. If git-ignored artifacts are absent in a different checkout, regenerate an equivalent bundle from `docs/HANDOFF.md` and apply `docs\approved_materializations\script_d2a46430e084.materialization.yml`.
+- Assistant next after restart: continue with broad script review gates or Packet persistence. If runtime artifacts are missing, reapply the tracked approved materialization record, rerun visual/asset/quote suggest, and rebuild export before inspecting.
+- What counts as progress next: addressing broad script review gates with operator authority, adding Packet persistence, or handling a concrete returned downstream failure.
 - What does not count as progress next: NotebookLM API automation, Inoreader OAuth, GUI/dashboard work, `.ymmp` generation, YouTube upload, NLMYTGen subprocess/path integration, or treating subtitle layout/overlay safety as newsroom-side proof.
 
 ## Not Complete Or Not Proven
@@ -161,7 +165,8 @@ Last updated: 2026-06-07
 - The active approved narration has a durable tracked authority record, but DB ScriptIR and export artifacts remain git-ignored runtime state and may need reapplication/rebuild in a different checkout.
 - Packet persistence is artifact-only; packet records are not stored as first-class DB rows.
 - QuoteManifest persistence is artifact-only; quote records are not stored as first-class DB rows.
-- QuoteManifest rows are conservative candidates, not legal decisions. Citation-only rows are no longer `human_required`; direct quote, screenshot, and data-use rows remain operator-review items.
+- QuoteManifest rows are conservative candidates, not legal decisions. Citation-only rows are no longer `human_required`; direct quote, explicit screenshot/source-card, and data-use rows remain operator-review items when present.
+- The active export currently has 0 visual/asset/quote `human_required` items, but this is not publishing approval and does not clear broad script `needs_human_review`.
 - Additional visual cards from PROJECT_SPEC §14 (`version_diff`, `actor_map`, `risk_meter`, `context_stack`, `quote_screenshot`, `neutral_background`) are not implemented.
 - YMM4 GUI import proof has passed for CSV import acceptance and handoff-file readability only.
 - Subtitle placement and overlay safety are not proven by newsroom's YMM4 import proof.
@@ -175,9 +180,9 @@ Last updated: 2026-06-07
 
 ## Next Recommended Work
 
-1. P1: Remaining visual/asset/screenshot review gate.
-   Purpose: review the 1 source-card screenshot quote row, 1 screenshot asset row, and 1 human_required visual unit that remain after QuoteManifest tightening.
-   Effect: publication review focuses on concrete visual/source-card use rather than citation-only text references.
+1. P1: Broad script review gate.
+   Purpose: decide whether the 6 materialized narration segments can clear `needs_human_review`, and whether the `speculation_vs_fact` warning needs script edits, explicit speculation marking, or operator acceptance.
+   Effect: separates editorial publication approval from already-cleared machine handoff and visual/asset/quote gates.
 
 2. P0 support: Preserve or regenerate the active C1/NIST source application, approved materialization, and tightened QuoteManifest if runtime artifacts are missing.
    Purpose: keep `story_20260603_503c39418f15862d` from regressing to a permanent `critical_views` warning in local runtime state.

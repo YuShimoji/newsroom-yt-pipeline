@@ -35,7 +35,8 @@ def _plan() -> EpisodePlan:
     )
 
 
-def _script() -> ScriptIR:
+def _script(*, source_card_intent: bool = False) -> ScriptIR:
+    fact_visual_refs = ["source_card:article_a"] if source_card_intent else ["visual:facts"]
     return ScriptIR(
         id="script_inspect_test",
         episode_plan_id="plan_inspect_test",
@@ -57,7 +58,7 @@ def _script() -> ScriptIR:
                 speaker="ナレーター",
                 text="事実関係",
                 source_refs=["article_a"],
-                visual_refs=["visual:facts"],
+                visual_refs=fact_visual_refs,
                 claim_type="fact",
                 needs_human_review=True,
             ),
@@ -91,10 +92,10 @@ def _packet() -> NotebookPacket:
     )
 
 
-def _valid_bundle(tmp_path):
+def _valid_bundle(tmp_path, *, source_card_intent: bool = False):
     output_dir, _ = build_ymm4_package(
         _plan(),
-        _script(),
+        _script(source_card_intent=source_card_intent),
         _packet(),
         [],
         export_root=tmp_path,
@@ -103,13 +104,22 @@ def _valid_bundle(tmp_path):
 
 
 def test_inspect_valid_bundle_passes_with_human_required_warnings(tmp_path):
-    output_dir = _valid_bundle(tmp_path)
+    output_dir = _valid_bundle(tmp_path, source_card_intent=True)
 
     inspection = inspect_episode_bundle(output_dir)
 
     assert inspection.passed
     assert not inspection.errors
     assert any(issue.code == "human_required" for issue in inspection.warnings)
+
+
+def test_inspect_internal_visuals_do_not_emit_human_required_warning(tmp_path):
+    output_dir = _valid_bundle(tmp_path)
+
+    inspection = inspect_episode_bundle(output_dir)
+
+    assert inspection.passed
+    assert all(issue.code != "human_required" for issue in inspection.warnings)
 
 
 def test_export_inspect_cli_returns_zero_for_valid_bundle(tmp_path, capsys):
@@ -176,7 +186,7 @@ def test_inspect_script_csv_todo_skeleton_is_warning(tmp_path):
 
 
 def test_inspect_human_required_is_warning_not_error(tmp_path):
-    output_dir = _valid_bundle(tmp_path)
+    output_dir = _valid_bundle(tmp_path, source_card_intent=True)
 
     inspection = inspect_episode_bundle(output_dir)
 

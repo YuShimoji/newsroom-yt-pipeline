@@ -51,7 +51,11 @@ def _plan_with_full_chapters() -> EpisodePlan:
     )
 
 
-def _script_with_one_segment_per_chapter(plan: EpisodePlan) -> ScriptIR:
+def _script_with_one_segment_per_chapter(
+    plan: EpisodePlan,
+    visual_refs_by_chapter: dict[str, list[str]] | None = None,
+) -> ScriptIR:
+    visual_refs_by_chapter = visual_refs_by_chapter or {}
     segments = [
         ScriptSegment(
             id=f"{chapter.id}__s0",
@@ -59,7 +63,10 @@ def _script_with_one_segment_per_chapter(plan: EpisodePlan) -> ScriptIR:
             speaker="ナレーター",
             text="TODO",
             source_refs=["article_a"],
-            visual_refs=[],
+            visual_refs=visual_refs_by_chapter.get(
+                chapter.id.rsplit("__", 1)[-1],
+                [],
+            ),
             claim_type="fact" if chapter.id.endswith("__facts") else "interpretation",
             needs_human_review=True,
         )
@@ -165,12 +172,31 @@ def test_density_score_matches_chapter_duration_over_target_window():
     assert facts_unit.density_score == expected
 
 
-def test_source_card_keeps_human_approval_other_cards_auto_ok():
+def test_citation_only_facts_use_local_card_without_human_required_visual_review():
     plan = _plan_with_full_chapters()
     script = _script_with_one_segment_per_chapter(plan)
     visual_ir = VisualPlanner().plan(script, plan, _packet())
 
-    by_type = {u.unit_type: u.approval_state for u in visual_ir.visual_units}
-    assert by_type["source_card"] == "human_required"
-    assert by_type["claim_evidence_card"] == "auto_ok"
-    assert by_type["takeaway_row"] == "auto_ok"
+    facts_unit = next(
+        u for u in visual_ir.visual_units
+        if any("__facts__" in ref for ref in u.segment_refs)
+    )
+    assert facts_unit.unit_type == "claim_evidence_card"
+    assert facts_unit.approval_state == "auto_ok"
+    assert all(u.approval_state != "human_required" for u in visual_ir.visual_units)
+
+
+def test_explicit_source_card_intent_keeps_human_approval():
+    plan = _plan_with_full_chapters()
+    script = _script_with_one_segment_per_chapter(
+        plan,
+        visual_refs_by_chapter={"facts": ["source_card:article_a"]},
+    )
+    visual_ir = VisualPlanner().plan(script, plan, _packet())
+
+    facts_unit = next(
+        u for u in visual_ir.visual_units
+        if any("__facts__" in ref for ref in u.segment_refs)
+    )
+    assert facts_unit.unit_type == "source_card"
+    assert facts_unit.approval_state == "human_required"

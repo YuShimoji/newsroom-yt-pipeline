@@ -41,7 +41,8 @@ def _plan() -> EpisodePlan:
     )
 
 
-def _script() -> ScriptIR:
+def _script(*, source_card_intent: bool = False) -> ScriptIR:
+    fact_visual_refs = ["source_card:article_a"] if source_card_intent else ["visual:facts"]
     return ScriptIR(
         id="script_test_001",
         episode_plan_id="plan_20260518_test",
@@ -63,7 +64,7 @@ def _script() -> ScriptIR:
                 speaker="魔理沙",
                 text="TODO[facts]: 事実関係",
                 source_refs=["article_a"],
-                visual_refs=["visual:facts"],
+                visual_refs=fact_visual_refs,
                 claim_type="fact",
                 needs_human_review=True,
             ),
@@ -240,7 +241,7 @@ def test_manifest_keeps_warnings_while_adding_m6_review_gate(tmp_path):
 
     _, manifest = build_ymm4_package(
         _plan(),
-        _script(),
+        _script(source_card_intent=True),
         _packet(critical_views_empty=True),
         findings,
         export_root=tmp_path,
@@ -249,6 +250,21 @@ def test_manifest_keeps_warnings_while_adding_m6_review_gate(tmp_path):
     joined = " | ".join(manifest["warnings"])
     assert "critical_view" in joined
     assert "human_required" in joined
+    assert "segments still flagged needs_human_review" in joined
+
+
+def test_manifest_omits_m6_review_gate_for_internal_visuals(tmp_path):
+    _, manifest = build_ymm4_package(
+        _plan(),
+        _script(),
+        _packet(critical_views_empty=False),
+        [],
+        export_root=tmp_path,
+    )
+
+    joined = " | ".join(manifest["warnings"])
+    assert "M6 handoff contains" not in joined
+    assert "human_required visual/asset/quote" not in joined
     assert "segments still flagged needs_human_review" in joined
 
 
