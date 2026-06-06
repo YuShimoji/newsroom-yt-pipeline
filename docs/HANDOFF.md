@@ -101,6 +101,16 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - Added `newsroom script apply-approved-materialization` to apply a tracked record to DB ScriptIR and the refreshed script bundle while preserving speaker, source refs, critical refs, visual refs, claim type, and review flags.
   - Approved records exclude source catalogs, raw article body, private data, runtime DB paths, screenshots, YMM4 geometry, subtitle coordinates, `.ymmp` details, and overlay proof.
   - Active `data\scripts\script_d2a46430e084\script_materialization.yml` is still unfilled/unapproved, so no active approved record was generated and no active replacement was executed.
+- P0.5-D approved materialization apply on 2026-06-07:
+  - Operator explicitly approved adopting all 6 `operator_fill_suggestion` values from `data\scripts\script_d2a46430e084\script_materialization.yml` as narration.
+  - The ignored runtime draft was filled locally with those exact suggestion values and all 6 segment `replacement_status` values were set to `approved`.
+  - Generated tracked sanitized authority record: `docs\approved_materializations\script_d2a46430e084.materialization.yml`.
+  - Applied the approved record to DB ScriptIR and refreshed `data\scripts\script_d2a46430e084\` while preserving `ナレーター`, source refs, C1/NIST critical refs, visual refs, claim type, and human-review flags.
+  - Rebuilt `data\exports\episode_756343df9853`; `export inspect` now passes with `script_todo_skeleton` absent and `critical_view` absent.
+- Local validation after the P0.5-D approved materialization apply:
+  - `.venv\Scripts\python.exe -m pytest -q` -> 72 passed.
+  - `git diff --check` -> passed.
+  - `.venv\Scripts\python.exe -m newsroom.cli.main export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with `script_todo_skeleton` absent and `critical_view` absent.
 - Local validation after the P0.5-C approved authority slice:
   - `.venv\Scripts\python.exe -m pytest tests\test_script_materialization.py -q` -> 17 passed.
   - `.venv\Scripts\python.exe -m pytest -q` -> 72 passed.
@@ -130,7 +140,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - proof draft: `data\proofs\ymm4_import\episode_756343df9853\proof.yml`
   - inspector result: `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings.
 - Runtime proof artifacts under `data\proofs\` are intentionally git-ignored.
-- Implementation frontier: M1 through M6.4 are implemented; P0-A CSV import acceptance is proven for the active YMM4 export after adding the `ナレーター` character in the target YMM4 environment; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST; P0.5 draft and reject-first apply paths are implemented, but the active draft still needs operator fill/approval before TODO spoken rows can be cleared.
+- Implementation frontier: M1 through M6.4 are implemented; P0-A CSV import acceptance is proven for the active YMM4 export after adding the `ナレーター` character in the target YMM4 environment; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST; P0.5 approved materialization authority is implemented and applied to the active script, so the active export no longer contains literal TODO spoken rows.
 
 ## Immediate Resume Packet
 
@@ -158,10 +168,10 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - purpose: replace literal `TODO[...]` spoken rows with reviewable narration for the active script.
 - effect: moves the active export from YMM4-importable skeleton to production-reviewable script content.
 - requirements: preserve speaker `ナレーター`, CSV import shape, existing `source_refs`, C1/NIST critical-view coverage, and human-review flags unless the reviewer explicitly clears them.
-- state: draft path, reject-first runtime apply path, and tracked approved-record path are implemented. `newsroom script materialize --script script_d2a46430e084` writes `data\scripts\script_d2a46430e084\script_materialization.yml`; `newsroom script apply-materialization --script script_d2a46430e084 --draft data\scripts\script_d2a46430e084\script_materialization.yml --require-approved` rejects the active draft because all 6 `operator_fill` values are empty and all rows remain `operator_pending`. `newsroom script approve-materialization` can write `docs\approved_materializations\script_d2a46430e084.materialization.yml` only after the draft is filled/approved. Active `script.csv` / `script_ir.json` still have 6 / 6 TODO skeleton spoken rows, and `export inspect` reports `script_todo_skeleton` as a warning.
-- authority: durable approved narration authority is now defined as a tracked sanitized approved-materialization record under `docs\approved_materializations\`. The active script does not have such a record yet because no operator-approved text exists.
+- state: complete for the active script. Operator approved all 6 suggestion rows, `docs\approved_materializations\script_d2a46430e084.materialization.yml` is the tracked sanitized narration authority, the record was applied to DB ScriptIR and the refreshed script bundle, and the active export was rebuilt. `export inspect --episode-dir data\exports\episode_756343df9853` passes with `script_todo_skeleton` absent and `critical_view` absent.
+- authority: durable approved narration authority is `docs\approved_materializations\script_d2a46430e084.materialization.yml`. Runtime draft, DB rows, export bundle, and proof files remain checkout-local runtime evidence and are not committed.
 - owner: assistant for tooling/rebuilds and operator for editorial approval of final narration.
-- next move: operator fills and approves `operator_fill` values, generate the tracked approved record, apply it, rebuild the active export, and rerun `export inspect`. Do not proceed to QuoteManifest tightening as the active path while the script is still TODO skeleton.
+- next move: continue to P1 QuoteManifest tightening or another publication/operator gate. Do not treat this as YMM4 subtitle placement, overlay safety, final geometry, `.ymmp`, or publishing proof.
 
 ### P1: QuoteManifest tightening
 

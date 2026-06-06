@@ -134,13 +134,25 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - next_allowed_work: operator fills/approves the draft, generate `docs\approved_materializations\script_d2a46430e084.materialization.yml`, apply it, rebuild the active export, and inspect for `script_todo_skeleton` absence.
 - prohibited_work: do not write approved records from unapproved draft rows, do not include raw source data, do not synthesize narration, and do not move QuoteManifest tightening into the active path before the spoken script is materialized.
 
+## 2026-06-07 P0.5-D Approved Materialization Apply Gate
+
+- current_task: apply operator-approved narration to the active ScriptIR and export.
+- decision: continue and complete within the approved materialization boundary.
+- reason: the operator explicitly approved adopting all 6 `operator_fill_suggestion` values as final narration for this slice, so the assistant could mechanically fill the ignored runtime draft, generate the tracked sanitized record, apply it, rebuild export, and inspect.
+- active_artifact: `docs\approved_materializations\script_d2a46430e084.materialization.yml` is now the tracked approved narration authority for `script_d2a46430e084`; `data\exports\episode_756343df9853` is rebuilt in local runtime state.
+- true_blockers: none for clearing the active script TODO skeleton. Publication/operator review gates remain: `speculation_vs_fact`, `needs_human_review`, and `human_required` asset/quote/visual items.
+- stale_or_false_blockers: `script_todo_skeleton` is no longer active after the approved record apply and export rebuild.
+- evidence_boundary: approved materialization is text authority only. Runtime DB/export/proof artifacts remain local evidence and are not committed.
+- next_allowed_work: P1 QuoteManifest tightening or another concrete publication/operator gate on the materialized script.
+- prohibited_work: do not treat this as subtitle placement, overlay safety, final YMM4 geometry, full `.ymmp`, or publishing proof; do not commit runtime DB/export/proof/screenshots.
+
 ## Blocked Or Pending
 
 - YMM4 GUI import proof: passed for CSV import acceptance and handoff-file readability on `episode_756343df9853`; downstream subtitle/overlay/final geometry proof remains out of newsroom scope.
 - Active critical view: applied locally with C1/NIST. If ignored runtime artifacts are missing in another checkout, reapply the same selected source and rebuild before treating `critical_view` as unresolved.
-- Active script materialization: P0.5-B replacement intake implemented. Active draft is still unfilled/unapproved, so operator-approved replacement is still needed before treating QuoteManifest tightening as the active next path.
-- Approved narration authority: P0.5-C tracked sanitized record support is implemented under `docs\approved_materializations\`, but the active script has no approved record yet because no operator-approved text exists.
-- QuoteManifest human_required noise: P1. Do not let it consume P0.5 while the active spoken script is still TODO skeleton.
+- Active script materialization: approved record generated and applied for `script_d2a46430e084`; active export inspect is PASS with `script_todo_skeleton` absent.
+- Approved narration authority: `docs\approved_materializations\script_d2a46430e084.materialization.yml` is the tracked sanitized authority. Runtime DB/export artifacts remain checkout-local and may need reapply/rebuild elsewhere.
+- QuoteManifest human_required noise: P1. This is now a valid active next path because the spoken script is materialized.
 - Packet persistence: P1. Current critical-source relation is durable DB input, but full NotebookPacket persistence remains separate.
 - VisualIR-to-final-look gap: keep evaluating whether VisualIR changes affect actual YMM4 composition, density, whitespace, and eye flow.
 

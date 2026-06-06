@@ -34,6 +34,9 @@ Last updated: 2026-06-07
 - Validation after the P0.5-B replacement intake slice: `.venv\Scripts\python.exe -m pytest tests\test_script_materialization.py tests\test_export_inspector.py -q` -> 16 passed, `.venv\Scripts\python.exe -m pytest -q` -> 64 passed, `git diff --check` -> passed, active apply rejected the unfilled/unapproved runtime draft as expected, and active `export inspect` remained PASS with `script_todo_skeleton` present and `critical_view` absent.
 - P0.5-C approved materialization authority on 2026-06-07: added `docs\approved_materializations\` as the tracked sanitized authority root, `newsroom script approve-materialization` to create a portable approved record from a filled/approved draft, and `newsroom script apply-approved-materialization` to apply that record while preserving speaker, source refs, critical refs, visual refs, claim type, and human-review flags. Active `script_materialization.yml` is still unfilled/unapproved, so no active approved record or active replacement was created.
 - Validation after the P0.5-C approved authority slice: `.venv\Scripts\python.exe -m pytest tests\test_script_materialization.py -q` -> 17 passed, `.venv\Scripts\python.exe -m pytest -q` -> 72 passed, `git diff --check` -> passed, active `approve-materialization` rejected the unfilled/unapproved runtime draft as expected, and active `export inspect` remained PASS with `script_todo_skeleton` present and `critical_view` absent.
+- P0.5-D approved materialization apply on 2026-06-07: operator explicitly approved adopting all 6 `operator_fill_suggestion` values from the runtime draft as narration. The ignored draft was filled locally, `docs\approved_materializations\script_d2a46430e084.materialization.yml` was generated as the tracked sanitized authority, the record was applied to DB ScriptIR and the refreshed script bundle, and `data\exports\episode_756343df9853` was rebuilt.
+- Active export inspect after P0.5-D: PASS with `script_todo_skeleton` absent and `critical_view` absent. Remaining warnings are publication/operator gates: `speculation_vs_fact`, 6 segments `needs_human_review`, 1 asset `human_required`, 11 quotes `human_required`, and 1 visual unit `human_required`.
+- Validation after the P0.5-D approved materialization apply: `.venv\Scripts\python.exe -m pytest -q` -> 72 passed, `git diff --check` -> passed, and active export `script_ir.json` has 0 TODO rows.
 
 ## Implemented Milestones
 
@@ -45,6 +48,7 @@ Last updated: 2026-06-07
 - P0.5 script materialization draft: operator-editable `script_materialization.yml` generation from an existing ScriptIR and rebuilt packet.
 - P0.5-B script materialization apply: reject-first operator-approved replacement intake that preserves ScriptIR metadata and updates only text when validation passes.
 - P0.5-C approved materialization authority: tracked sanitized approved-materialization records under `docs\approved_materializations\`, plus CLI validation and apply path.
+- P0.5-D active script materialization: active approved record generated and applied for `script_d2a46430e084`; active export rebuilt with no literal TODO spoken rows.
 - M5 YMM4 export package: `script.csv`, `script_ir.json`, `source_list.md`, `ymm4_notes.md`, and `export_manifest.json`.
 - M6.1 VisualIR skeleton: done. Narrow card set covering `source_card`, `claim_evidence_card`, `timeline_spine`, and `takeaway_row`.
 - M6.2 AssetManifest skeleton: done. VisualIR plus NotebookPacket produce asset candidates; external URL screenshots remain `human_required`, while `local_template` and `generated_diagram` remain `suggested`.
@@ -99,22 +103,22 @@ Last updated: 2026-06-07
 - Rebuilt VisualIR: `visual_eca67c6bd375`; conflict visual unit references `article_bfba4cd5131daa71`.
 - Rebuilt review manifests: `data\assets\plan_20260603_faca8ebcbc45` and `data\quotes\plan_20260603_faca8ebcbc45`; quote rows include NIST.
 - Rebuilt export bundle: `data\exports\episode_756343df9853`; `source_list.md`, `script_ir.json`, `visual_ir.json`, and `quote_manifest.yml` include the NIST critical source.
-- Export inspect result: PASS. `critical_view` warning is gone. Remaining warnings are publication/operator review gates, including `script_todo_skeleton`, not machine failures.
+- Export inspect result after P0.5-D: PASS. `critical_view` and `script_todo_skeleton` warnings are gone. Remaining warnings are publication/operator review gates, not machine failures.
 - YMM4 GUI proof status: passed for CSV import acceptance after the operator added a `ナレーター` character in the target YMM4 environment. This does not prove subtitle placement, overlay safety, or final YMM4 geometry.
 
-## Current P0.5 Materialization Draft Path
+## Current P0.5 Approved Materialization State
 
 - CLI: `newsroom script materialize --script <script_id>`.
 - Apply CLI: `newsroom script apply-materialization --script <script_id> --draft <path> --require-approved`.
 - Approved authority CLI: `newsroom script approve-materialization --script <script_id> --draft <path> --approved-by <operator> --output-root docs\approved_materializations`.
 - Approved record apply CLI: `newsroom script apply-approved-materialization --script <script_id> --record docs\approved_materializations\<script_id>.materialization.yml`.
-- Active command used locally: `.venv\Scripts\python.exe -m newsroom.cli.main --db data\ymm4_import_proof.sqlite script materialize --script script_d2a46430e084`.
+- Active commands used locally: filled the ignored draft from operator-approved suggestions, ran `script approve-materialization`, ran `script apply-approved-materialization`, then rebuilt `export ymm4 --script script_d2a46430e084`.
 - Runtime artifact: `data\scripts\script_d2a46430e084\script_materialization.yml`, intentionally git-ignored under `data/scripts/`.
-- The active artifact includes 6 segments, empty `operator_fill` fields, speaker `ナレーター`, source refs, C1/NIST critical refs where applicable, current TODO text, and human-review flags.
-- Active readiness: not ready. The active draft has 0 / 6 non-empty `operator_fill` values, 0 / 6 `approved` statuses, and 6 / 6 `operator_pending` statuses.
-- The apply command is implemented but reject-first. It does not generate narration and does not apply unfilled or unapproved drafts.
-- Approved narration authority: durable minimal authority is now a tracked sanitized record under `docs\approved_materializations\`. The active script has no approved record yet because the runtime draft is still unfilled/unapproved.
-- Next state to clear the active TODO warning: operator fills and approves the materialization draft, generate `docs\approved_materializations\script_d2a46430e084.materialization.yml`, apply that record to ScriptIR, rebuild `data\exports\episode_756343df9853`, and rerun `export inspect`.
+- The active draft now has 6 / 6 non-empty `operator_fill` values and 6 / 6 `approved` statuses because the operator explicitly approved adopting every `operator_fill_suggestion`.
+- Approved narration authority: `docs\approved_materializations\script_d2a46430e084.materialization.yml`. It contains approved text, speaker, source refs, critical refs, visual refs, claim type, and human-review flags, and excludes raw article body, private data, runtime DB paths, screenshots, YMM4 geometry, subtitle coordinates, `.ymmp`, and overlay proof.
+- Active ScriptIR / refreshed bundle: 0 TODO rows after applying the approved record.
+- Active export: `data\exports\episode_756343df9853` rebuilt; `export inspect` passes with `script_todo_skeleton` absent and `critical_view` absent.
+- Next state: continue with publication/operator review gates such as QuoteManifest tightening. Do not treat approved narration as subtitle placement, overlay safety, final YMM4 geometry, full `.ymmp`, or publishing proof.
 
 ## Current YMM4 GUI Proof Attempt
 
@@ -137,22 +141,20 @@ Last updated: 2026-06-07
 - Proof status: passed for CSV import acceptance and handoff-file readability. `data\proofs\ymm4_import\episode_756343df9853\proof.yml` is local evidence and is git-ignored.
 - Boundary: newsroom YMM4 GUI proof is CSV import acceptance and handoff-file readability only. Subtitle placement, YMM4 item geometry, template positioning, subtitle band decisions, `.ymmp` patch details, and overlay proof remain downstream NLMYTGen/YMM4-side authority.
 - Runtime artifact rule: do not commit `data\ymm4_import_proof.sqlite`, `data\exports\episode_756343df9853`, `data\proofs\...`, or screenshots.
-- Valid next action: operator-approved replacement from the filled P0.5 materialization draft; later downstream subtitle/overlay proof stays outside newsroom scope.
+- Valid next action: P1 QuoteManifest tightening or another publication/operator gate; later downstream subtitle/overlay proof stays outside newsroom scope.
 
 ## Handoff Snapshot
 
-- Assistant status: YMM4 manual import proof preparation is implemented and P0-A CSV import acceptance is passed for the active export; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts.
-- User action: fill and approve `data\scripts\script_d2a46430e084\script_materialization.yml`, setting each `operator_fill` and `replacement_status: approved`, or pass a new proof/result if downstream YMM4 subtitle/overlay work exposes a concrete failure. If git-ignored artifacts are absent in a different checkout, regenerate an equivalent bundle from `docs/HANDOFF.md`.
-- Assistant next after restart: after the filled/approved runtime draft is available, run `newsroom script approve-materialization`, review/commit the tracked approved record, run `newsroom script apply-approved-materialization`, rebuild export, and inspect.
-- What counts as progress next: creating and applying the tracked approved record to replace literal TODO spoken rows while preserving source refs and speaker mapping, then rebuilding and inspecting the active export. Reducing noisy quote rows is useful after the active spoken script is materialized.
+- Assistant status: YMM4 manual import proof preparation is implemented and P0-A CSV import acceptance is passed for the active export; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts; P0.5-D approved narration was recorded, applied, and rebuilt for the active export.
+- User action: review publication/operator gates, or pass a new proof/result if downstream YMM4 subtitle/overlay work exposes a concrete failure. If git-ignored artifacts are absent in a different checkout, regenerate an equivalent bundle from `docs/HANDOFF.md` and apply `docs\approved_materializations\script_d2a46430e084.materialization.yml`.
+- Assistant next after restart: continue with P1 QuoteManifest tightening or another requested publication/operator gate. If runtime artifacts are missing, reapply the tracked approved materialization record and rebuild export before inspecting.
+- What counts as progress next: reducing noisy quote rows or another concrete publication-review gate on the materialized active script.
 - What does not count as progress next: NotebookLM API automation, Inoreader OAuth, GUI/dashboard work, `.ymmp` generation, YouTube upload, NLMYTGen subprocess/path integration, or treating subtitle layout/overlay safety as newsroom-side proof.
 
 ## Not Complete Or Not Proven
 
 - The active proof bundle has a selected C1/NIST critical view in this local runtime checkout, but the runtime DB/export artifacts are git-ignored and may need regeneration in a different checkout.
-- The active `script.csv` and `script_ir.json` are still 100% TODO skeleton narration: 6 / 6 spoken rows contain `TODO[...]`.
-- A materialization draft can be generated and apply validation exists, but the active draft is still unfilled/unapproved and no filled narration has been applied.
-- Approved narration has a durable tracked authority path, but the active script has no approved record yet because no operator-approved text has been provided.
+- The active approved narration has a durable tracked authority record, but DB ScriptIR and export artifacts remain git-ignored runtime state and may need reapplication/rebuild in a different checkout.
 - Packet persistence is artifact-only; packet records are not stored as first-class DB rows.
 - QuoteManifest persistence is artifact-only; quote records are not stored as first-class DB rows.
 - QuoteManifest rows are conservative candidates, not legal decisions; all start as `human_required`.
@@ -169,28 +171,23 @@ Last updated: 2026-06-07
 
 ## Next Recommended Work
 
-1. P0.5-C: Operator-approved script replacement through tracked approved record.
-   Purpose: apply filled `operator_fill` values from `script_materialization.yml` to replace the active literal `TODO[...]` spoken rows while preserving `ナレーター`, CSV shape, source refs, C1/NIST coverage, and human-review flags.
-   Effect: turns the YMM4-importable skeleton handoff into a production-reviewable spoken script. Until this is done, QuoteManifest tightening is premature.
-   Authority condition: generate and commit `docs\approved_materializations\script_d2a46430e084.materialization.yml` from an operator-filled/approved draft before treating approved narration as portable project state.
-
-2. P1: QuoteManifest tightening.
+1. P1: QuoteManifest tightening.
    Purpose: reduce noisy quote rows by distinguishing citation-only source_refs from direct quote or screenshot intent.
    Effect: human_required review stays focused on actual publish risk instead of every sourced segment.
 
-3. P0 support: Preserve or regenerate the active C1/NIST source application if runtime artifacts are missing.
+2. P0 support: Preserve or regenerate the active C1/NIST source application and approved materialization if runtime artifacts are missing.
    Purpose: keep `story_20260603_503c39418f15862d` from regressing to a permanent `critical_views` warning in local runtime state.
    Effect: keeps the active export auditable without treating ignored DB/export artifacts as tracked source.
 
-4. P1: Packet persistence.
+3. P1: Packet persistence.
    Purpose: store packet records as first-class DB rows instead of rebuilding them from cluster/articles at each downstream step.
    Effect: operator edits and critical-view additions can survive across later workflow stages.
 
-5. P2: Source expansion.
+4. P2: Source expansion.
    Purpose: add more deliberate source pools without implementing broad crawling or Inoreader OAuth.
    Effect: shortlist quality improves while RSS-first and manual approval boundaries remain intact.
 
-6. P2: M7 series / channel memory.
+5. P2: M7 series / channel memory.
    Purpose: connect daily production to series history, past claims, and next-episode planning.
    Effect: editorial continuity can be scored and reused across weekly planning.
 

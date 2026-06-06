@@ -1,0 +1,103 @@
+schema_version: 1
+artifact_type: approved_script_materialization
+mode: operator_approved
+created_at: '2026-06-06T19:13:46.880658+00:00'
+script_id: script_d2a46430e084
+episode_plan_id: plan_20260603_faca8ebcbc45
+story_cluster_id: story_20260603_503c39418f15862d
+episode_id: episode_756343df9853
+format: anchor_narration
+status: approved
+approval:
+  approved_by: operator
+  approved_at: '2026-06-06T19:13:46.880658+00:00'
+  approval_note: null
+non_goals:
+- does_not_include_raw_article_body
+- does_not_include_private_data
+- does_not_include_runtime_db_path
+- does_not_include_screenshots
+- does_not_include_ymm4_geometry
+segments:
+- index: 1
+  segment_id: plan_20260603_faca8ebcbc45__intro__s0
+  speaker: ナレーター
+  approved_text: Microsoftは、企業AIの成果はモデルやデモだけでなく、構築、実行、統治、改善までをつなぐ仕組みに左右されると説明しています。一方、NISTの生成AIプロファイルは、AIの設計、開発、利用、評価に信頼性の視点を組み込むための枠組みです。今回の論点は、AI導入を便利なツール追加ではなく、運用とリスク管理を含む組織システムとして見られるかです。
+  source_refs:
+  - article_f4124bbb866ef6b0
+  - article_bfba4cd5131daa71
+  critical_refs:
+  - article_bfba4cd5131daa71
+  visual_refs:
+  - visual:plan_20260603_faca8ebcbc45__intro
+  claim_type: instruction
+  human_review_required: true
+  replacement_status: approved
+- index: 2
+  segment_id: plan_20260603_faca8ebcbc45__facts__s0
+  speaker: ナレーター
+  approved_text: Microsoftは2026年6月2日の公式ブログで、企業AIではチャットボットだけでなく、開発、サポート、財務、人事、運用などの業務で長く続く作業を担うエージェント群が重要になると説明しています。同社は、GitHubで構築し、Microsoft
+    IQで業務文脈につなぎ、Foundryで実行し、Agent 365で統治し、継続的に改善して、TeamsやMicrosoft 365など仕事の場に届ける流れを示しています。
+  source_refs:
+  - article_f4124bbb866ef6b0
+  critical_refs: []
+  visual_refs:
+  - visual:plan_20260603_faca8ebcbc45__facts
+  claim_type: fact
+  human_review_required: true
+  replacement_status: approved
+- index: 3
+  segment_id: plan_20260603_faca8ebcbc45__context__s0
+  speaker: ナレーター
+  approved_text: 背景にあるのは、モデル性能だけでは企業利用の信頼性が決まらないという問題です。Microsoftは、ID、業務データ、ポリシー、観測、フィードバックまで含む一体のシステムが必要だとしています。NISTの生成AIプロファイルも、設計から評価までのライフサイクルで信頼性を考慮する枠組みとして読めます。導入の焦点は、単体ツールの選定から、運用設計と改善サイクルへ移っています。
+  source_refs:
+  - article_f4124bbb866ef6b0
+  - article_bfba4cd5131daa71
+  critical_refs:
+  - article_bfba4cd5131daa71
+  visual_refs:
+  - visual:plan_20260603_faca8ebcbc45__context
+  claim_type: interpretation
+  human_review_required: true
+  replacement_status: approved
+- index: 4
+  segment_id: plan_20260603_faca8ebcbc45__conflict__s0
+  speaker: ナレーター
+  approved_text: 批判的に見ると、生成AIの導入は効果への期待だけでは判断できません。NISTの生成AIプロファイルは、AI RMF 1.0の補助資料として、組織がAI製品、サービス、システムの設計、開発、利用、評価に信頼性の考慮を取り込むことを目的にしています。つまり、組織は導入前後で、リスクをどう測り、誰が見直し、どこで止めるのかを具体化する必要があります。
+  source_refs:
+  - article_bfba4cd5131daa71
+  critical_refs:
+  - article_bfba4cd5131daa71
+  visual_refs:
+  - visual:plan_20260603_faca8ebcbc45__conflict
+  claim_type: interpretation
+  human_review_required: true
+  replacement_status: approved
+- index: 5
+  segment_id: plan_20260603_faca8ebcbc45__impact__s0
+  speaker: ナレーター
+  approved_text: 視聴者にとってのポイントは、自社でAIを使う時に、ツールの性能だけを比べても十分ではないという点です。Microsoftの説明では、企業内の文脈、実行環境、統治、観測、改善までつながる仕組みが成果を左右します。NISTの観点を重ねると、その仕組みには信頼性を評価し続ける手順も必要になります。導入判断では、便利になる業務と、管理すべきリスクの両方を見ることが課題になります。
+  source_refs:
+  - article_f4124bbb866ef6b0
+  - article_bfba4cd5131daa71
+  critical_refs:
+  - article_bfba4cd5131daa71
+  visual_refs:
+  - visual:plan_20260603_faca8ebcbc45__impact
+  claim_type: interpretation
+  human_review_required: true
+  replacement_status: approved
+- index: 6
+  segment_id: plan_20260603_faca8ebcbc45__takeaway__s0
+  speaker: ナレーター
+  approved_text: 今回の結論は、企業AIの主戦場が「AIを使うか」から「どう管理されたシステムとして運用するか」に移っている、ということです。Microsoftは統合されたエージェント基盤を前面に出し、NISTは生成AIを信頼性の観点で評価する枠組みを示しています。次に見るべき差分は、企業が実際にその統治、観測、改善をどこまで運用できるかです。
+  source_refs:
+  - article_f4124bbb866ef6b0
+  - article_bfba4cd5131daa71
+  critical_refs:
+  - article_bfba4cd5131daa71
+  visual_refs:
+  - visual:plan_20260603_faca8ebcbc45__takeaway
+  claim_type: instruction
+  human_review_required: true
+  replacement_status: approved
