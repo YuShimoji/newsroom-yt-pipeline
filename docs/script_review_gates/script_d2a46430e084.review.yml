@@ -4,48 +4,67 @@ script_id: script_d2a46430e084
 episode_id: episode_756343df9853
 story_cluster_id: story_20260603_503c39418f15862d
 approved_materialization_record: docs/approved_materializations/script_d2a46430e084.materialization.yml
-status: operator_review_required
+status: operator_review_applied
 created_at: '2026-06-07'
+updated_at: '2026-06-07'
 scope:
   - speculation_vs_fact
   - needs_human_review
 non_goals:
+  - publishing_approval
+  - legal_approval
   - visual_asset_quote_human_required
-  - script_text_rewrite_without_operator_approval
   - subtitle_placement
   - ymm4_geometry
   - overlay_proof
-  - publishing_approval
+  - full_ymmp
+operator_decision:
+  decision_source: user_operator_editorial_decision
+  approval_scope: Microsoft official narrative and NIST risk framing only
+  summary: >
+    The six script segments are approved as source-bounded narration after the
+    facts and takeaway minor edits are reflected in the approved materialization
+    authority. This clears broad needs_human_review and speculation_vs_fact for
+    this script slice only.
+  not_approval_for:
+    - publishing
+    - legal
+    - YMM4 visual approval
+    - subtitle placement
+    - overlay safety
 current_export_inspect:
   status: pass
   absent:
     - critical_view
     - script_todo_skeleton
     - visual_asset_quote_human_required
-  remaining_warnings:
     - speculation_vs_fact
-    - 6 / 6 segments still flagged needs_human_review
+    - needs_human_review
+  remaining_warnings: []
 classification_summary:
-  operator_approval_required:
+  operator_approved:
     - plan_20260603_faca8ebcbc45__intro__s0
     - plan_20260603_faca8ebcbc45__facts__s0
     - plan_20260603_faca8ebcbc45__context__s0
     - plan_20260603_faca8ebcbc45__conflict__s0
     - plan_20260603_faca8ebcbc45__impact__s0
     - plan_20260603_faca8ebcbc45__takeaway__s0
+  needs_human_review: cleared_by_operator
+  speculation_vs_fact: cleared_by_operator_decision
   script_text_adjustment_required: []
-  keep_warning:
-    - speculation_vs_fact
-    - needs_human_review
-  false_positive_candidate:
-    - speculation_vs_fact is heuristic-only for the fact segment, but the export-level
-      warning should stay until operator review.
-  defer_to_publication_review:
-    - all_segments
+approved_materialization_update:
+  facts: approve_with_minor_edit
+  takeaway: approve_with_minor_edit
+  intro: approve_as_is
+  context: approve_as_is
+  conflict: approve_as_is
+  impact: approve_as_is
+  human_review_required: false_for_all_approved_segments
 segments:
   - segment_id: plan_20260603_faca8ebcbc45__intro__s0
     chapter: intro
     speaker: ナレーター
+    decision: approve_as_is
     claim_type: instruction
     source_refs:
       - article_f4124bbb866ef6b0
@@ -53,29 +72,26 @@ segments:
     critical_refs:
       - article_bfba4cd5131daa71
     approved_text_ref: docs/approved_materializations/script_d2a46430e084.materialization.yml#segments[0].approved_text
-    export_text_matches_approved_record: true
-    classification:
-      - operator_approval_required
-      - defer_to_publication_review
-    speculation_vs_fact_reason: Thesis framing combines Microsoft and NIST framing; operator should confirm it is source-bounded analysis, not hidden speculation.
-    action: Keep needs_human_review until operator/editorial approval.
+    review_state: operator_approved
+    needs_human_review: cleared_by_operator
+    speculation_vs_fact: cleared_by_operator_decision
   - segment_id: plan_20260603_faca8ebcbc45__facts__s0
     chapter: facts
     speaker: ナレーター
+    decision: approve_with_minor_edit
+    edit_note: Compress the proper-noun list while preserving the Microsoft official narrative.
     claim_type: fact
     source_refs:
       - article_f4124bbb866ef6b0
     critical_refs: []
     approved_text_ref: docs/approved_materializations/script_d2a46430e084.materialization.yml#segments[1].approved_text
-    export_text_matches_approved_record: true
-    classification:
-      - operator_approval_required
-      - false_positive_candidate
-    speculation_vs_fact_reason: This is a source-backed fact row and is not itself interpretation/speculation; export-level speculation warning is triggered by the script mix, not this row alone.
-    action: Keep needs_human_review until operator verifies factual accuracy against the Microsoft source.
+    review_state: operator_approved
+    needs_human_review: cleared_by_operator
+    speculation_vs_fact: cleared_by_operator_decision
   - segment_id: plan_20260603_faca8ebcbc45__context__s0
     chapter: context
     speaker: ナレーター
+    decision: approve_as_is
     claim_type: interpretation
     source_refs:
       - article_f4124bbb866ef6b0
@@ -83,32 +99,26 @@ segments:
     critical_refs:
       - article_bfba4cd5131daa71
     approved_text_ref: docs/approved_materializations/script_d2a46430e084.materialization.yml#segments[2].approved_text
-    export_text_matches_approved_record: true
-    classification:
-      - operator_approval_required
-      - keep_warning
-      - defer_to_publication_review
-    speculation_vs_fact_reason: Interpretation links model performance, enterprise reliability, and lifecycle risk framing; operator should confirm the inference is adequately sourced.
-    action: Keep needs_human_review and speculation_vs_fact warning until operator approves or requests text adjustment.
+    review_state: operator_approved
+    needs_human_review: cleared_by_operator
+    speculation_vs_fact: cleared_by_operator_decision
   - segment_id: plan_20260603_faca8ebcbc45__conflict__s0
     chapter: conflict
     speaker: ナレーター
+    decision: approve_as_is
     claim_type: interpretation
     source_refs:
       - article_bfba4cd5131daa71
     critical_refs:
       - article_bfba4cd5131daa71
     approved_text_ref: docs/approved_materializations/script_d2a46430e084.materialization.yml#segments[3].approved_text
-    export_text_matches_approved_record: true
-    classification:
-      - operator_approval_required
-      - keep_warning
-      - defer_to_publication_review
-    speculation_vs_fact_reason: This row converts NIST risk framing into an editorial caution; operator should confirm the normative wording is appropriate.
-    action: Keep needs_human_review and speculation_vs_fact warning until operator approves or requests text adjustment.
+    review_state: operator_approved
+    needs_human_review: cleared_by_operator
+    speculation_vs_fact: cleared_by_operator_decision
   - segment_id: plan_20260603_faca8ebcbc45__impact__s0
     chapter: impact
     speaker: ナレーター
+    decision: approve_as_is
     claim_type: interpretation
     source_refs:
       - article_f4124bbb866ef6b0
@@ -116,16 +126,14 @@ segments:
     critical_refs:
       - article_bfba4cd5131daa71
     approved_text_ref: docs/approved_materializations/script_d2a46430e084.materialization.yml#segments[4].approved_text
-    export_text_matches_approved_record: true
-    classification:
-      - operator_approval_required
-      - keep_warning
-      - defer_to_publication_review
-    speculation_vs_fact_reason: Viewer impact framing is analytical and should be checked for source-boundedness and overstatement.
-    action: Keep needs_human_review and speculation_vs_fact warning until operator approves or requests text adjustment.
+    review_state: operator_approved
+    needs_human_review: cleared_by_operator
+    speculation_vs_fact: cleared_by_operator_decision
   - segment_id: plan_20260603_faca8ebcbc45__takeaway__s0
     chapter: takeaway
     speaker: ナレーター
+    decision: approve_with_minor_edit
+    edit_note: Replace "主戦場" with "焦点" and soften the closing wording.
     claim_type: instruction
     source_refs:
       - article_f4124bbb866ef6b0
@@ -133,13 +141,9 @@ segments:
     critical_refs:
       - article_bfba4cd5131daa71
     approved_text_ref: docs/approved_materializations/script_d2a46430e084.materialization.yml#segments[5].approved_text
-    export_text_matches_approved_record: true
-    classification:
-      - operator_approval_required
-      - defer_to_publication_review
-    speculation_vs_fact_reason: Closing conclusion and next-watch framing should be editorially approved before any review flag is cleared.
-    action: Keep needs_human_review until operator/editorial approval.
+    review_state: operator_approved
+    needs_human_review: cleared_by_operator
+    speculation_vs_fact: cleared_by_operator_decision
 operator_next_steps:
-  - Review each approved_text in the approved materialization record against the source refs listed here.
-  - Decide whether interpretation rows are acceptable as source-bounded analysis, need softer wording, or should be explicitly marked as speculation.
-  - Return an explicit approval or requested text adjustments before any ScriptIR review flags are cleared.
+  - Continue to Packet persistence or downstream YMM4 visual/subtitle proof only if that work is explicitly requested.
+  - Do not treat this script-review clearance as publishing, legal, YMM4 visual, subtitle, overlay, or final geometry approval.

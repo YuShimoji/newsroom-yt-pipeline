@@ -128,11 +128,19 @@ def _collect_warnings(
     for failing in fails:
         warnings.append(f"Critic guard failed: {failing.guard} — {failing.message}")
 
-    warns = [f for f in findings if f.severity == "warn"]
+    review_count = sum(1 for seg in script.segments if seg.needs_human_review)
+    warns = [
+        f
+        for f in findings
+        if f.severity == "warn"
+        and not (
+            f.guard == "speculation_vs_fact"
+            and review_count == 0
+        )
+    ]
     for warning in warns:
         warnings.append(f"Critic guard warning: {warning.guard} — {warning.message}")
 
-    review_count = sum(1 for seg in script.segments if seg.needs_human_review)
     if review_count:
         warnings.append(
             f"{review_count} / {len(script.segments)} segments still flagged needs_human_review."

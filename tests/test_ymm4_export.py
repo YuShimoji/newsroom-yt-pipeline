@@ -41,7 +41,11 @@ def _plan() -> EpisodePlan:
     )
 
 
-def _script(*, source_card_intent: bool = False) -> ScriptIR:
+def _script(
+    *,
+    source_card_intent: bool = False,
+    needs_human_review: bool = True,
+) -> ScriptIR:
     fact_visual_refs = ["source_card:article_a"] if source_card_intent else ["visual:facts"]
     return ScriptIR(
         id="script_test_001",
@@ -56,7 +60,7 @@ def _script(*, source_card_intent: bool = False) -> ScriptIR:
                 source_refs=[],
                 visual_refs=[],
                 claim_type="instruction",
-                needs_human_review=True,
+                needs_human_review=needs_human_review,
             ),
             ScriptSegment(
                 id="seg_2",
@@ -66,7 +70,7 @@ def _script(*, source_card_intent: bool = False) -> ScriptIR:
                 source_refs=["article_a"],
                 visual_refs=fact_visual_refs,
                 claim_type="fact",
-                needs_human_review=True,
+                needs_human_review=needs_human_review,
             ),
         ],
         created_at="2026-05-18T01:00:00+00:00",
@@ -266,6 +270,28 @@ def test_manifest_omits_m6_review_gate_for_internal_visuals(tmp_path):
     assert "M6 handoff contains" not in joined
     assert "human_required visual/asset/quote" not in joined
     assert "segments still flagged needs_human_review" in joined
+
+
+def test_manifest_omits_speculation_warning_after_operator_review_clearance(tmp_path):
+    findings = [
+        CritiqueFinding(
+            guard="speculation_vs_fact",
+            severity="warn",
+            message="No segments are explicitly marked speculation.",
+        )
+    ]
+
+    _, manifest = build_ymm4_package(
+        _plan(),
+        _script(needs_human_review=False),
+        _packet(critical_views_empty=False),
+        findings,
+        export_root=tmp_path,
+    )
+
+    joined = " | ".join(manifest["warnings"])
+    assert "speculation_vs_fact" not in joined
+    assert "segments still flagged needs_human_review" not in joined
 
 
 def test_export_reuses_supplied_asset_and_quote_manifests(tmp_path):

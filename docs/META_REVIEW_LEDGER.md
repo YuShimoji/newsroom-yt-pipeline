@@ -180,13 +180,25 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - next_allowed_work: operator script review decision apply path, Packet persistence, or targeted follow-up from a concrete downstream failure.
 - prohibited_work: do not bulk-clear `needs_human_review`, do not suppress `speculation_vs_fact`, do not alter approved narration authority without explicit operator approval, and do not add raw/private/copyright-unclear source text or downstream YMM4 geometry/publishing scope.
 
+## 2026-06-07 P1 Operator Script Review Decision Apply Gate
+
+- current_task: apply the returned operator/editorial review decision for the six active script segments.
+- decision: apply explicit operator authority and clear the broad script review warnings for this script slice.
+- reason: the operator approved the revised narration as source-bounded within the Microsoft official narrative and NIST risk framing, with exact minor edits for facts and takeaway. This is an explicit editorial decision, not assistant auto-approval.
+- active_artifact: `docs\approved_materializations\script_d2a46430e084.materialization.yml` is the tracked script text and review-flag authority; `docs\script_review_gates\script_d2a46430e084.review.yml` records the review clearance.
+- true_blockers: none for the active newsroom export inspect; `episode_756343df9853` now inspects PASS with no issues found.
+- stale_or_false_blockers: prior `speculation_vs_fact` and 6 broad `needs_human_review` warnings are superseded by the returned operator decision for this script slice.
+- evidence_boundary: this clearance is not publishing approval, legal approval, YMM4 visual approval, subtitle placement proof, overlay safety proof, or final YMM4 geometry proof.
+- next_allowed_work: Packet persistence, preserving/regenerating active runtime artifacts if needed, or targeted follow-up from a concrete downstream failure.
+- prohibited_work: do not treat this as permission to change source refs, claim types, subtitle/YMM4 geometry, overlay proof, full `.ymmp`, publishing, or unrelated story/source choices.
+
 ## Blocked Or Pending
 
 - YMM4 GUI import proof: passed for CSV import acceptance and handoff-file readability on `episode_756343df9853`; downstream subtitle/overlay/final geometry proof remains out of newsroom scope.
 - Active critical view: applied locally with C1/NIST. If ignored runtime artifacts are missing in another checkout, reapply the same selected source and rebuild before treating `critical_view` as unresolved.
 - Active script materialization: approved record generated and applied for `script_d2a46430e084`; active export inspect is PASS with `script_todo_skeleton` absent.
 - Approved narration authority: `docs\approved_materializations\script_d2a46430e084.materialization.yml` is the tracked sanitized authority. Runtime DB/export artifacts remain checkout-local and may need reapply/rebuild elsewhere.
-- Broad script review: classified in `docs\script_review_gates\script_d2a46430e084.review.yml`; warnings remain pending operator decision.
+- Broad script review: applied in `docs\script_review_gates\script_d2a46430e084.review.yml`; `needs_human_review` and `speculation_vs_fact` are cleared for this script slice only after explicit operator/editorial decision.
 - QuoteManifest human_required noise: citation-only source refs are tightened; after the visual/asset/screenshot gate, active quote rows are 10 citation-only and 0 screenshot `human_required`.
 - Packet persistence: P1. Current critical-source relation is durable DB input, but full NotebookPacket persistence remains separate.
 - VisualIR-to-final-look gap: keep evaluating whether VisualIR changes affect actual YMM4 composition, density, whitespace, and eye flow.

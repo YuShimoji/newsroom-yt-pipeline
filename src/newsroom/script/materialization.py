@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+from dataclasses import dataclass
 from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -33,6 +34,12 @@ APPROVED_RECORD_FORBIDDEN_KEYS = {
 
 class MaterializationValidationError(ValueError):
     pass
+
+
+@dataclass(frozen=True)
+class ApprovedSegmentReplacement:
+    approved_text: str
+    human_review_required: bool
 
 
 def write_materialization_draft(
@@ -254,12 +261,19 @@ def apply_approved_materialization_record(
 ) -> ScriptIR:
     record = _load_approved_materialization_record(Path(record_path))
     replacements = _validated_approved_record_replacements(script, record)
-    updated_segments = [
-        replace(segment, text=replacements[segment.id])
-        if segment.id in replacements
-        else segment
-        for segment in script.segments
-    ]
+    updated_segments = []
+    for segment in script.segments:
+        replacement = replacements.get(segment.id)
+        if replacement is None:
+            updated_segments.append(segment)
+            continue
+        updated_segments.append(
+            replace(
+                segment,
+                text=replacement.approved_text,
+                needs_human_review=replacement.human_review_required,
+            )
+        )
     return replace(script, segments=updated_segments)
 
 
@@ -333,7 +347,7 @@ def _validated_replacements(
 def _validated_approved_record_replacements(
     script: ScriptIR,
     record: dict[str, Any],
-) -> dict[str, str]:
+) -> dict[str, ApprovedSegmentReplacement]:
     errors: list[str] = []
     if record.get("script_id") != script.id:
         errors.append(f"record script_id {record.get('script_id')!r} does not match {script.id!r}")
@@ -354,13 +368,12 @@ def _validated_approved_record_replacements(
         if segment_id not in script_segment_ids:
             errors.append(f"record segment {segment_id!r} is not present in ScriptIR")
 
-    replacements: dict[str, str] = {}
+    replacements: dict[str, ApprovedSegmentReplacement] = {}
     for segment in script.segments:
-        if not segment.text.startswith("TODO["):
-            continue
         record_segment = record_by_id.get(segment.id)
         if record_segment is None:
-            errors.append(f"missing approved record segment for TODO segment {segment.id}")
+            if segment.text.startswith("TODO["):
+                errors.append(f"missing approved record segment for TODO segment {segment.id}")
             continue
         _validate_approved_segment_metadata(segment, record_segment, errors)
         approved_text = str(record_segment.get("approved_text") or "").strip()
@@ -369,7 +382,12 @@ def _validated_approved_record_replacements(
         elif approved_text.startswith("TODO["):
             errors.append(f"segment {segment.id} approved_text still starts with TODO[")
         else:
-            replacements[segment.id] = approved_text
+            human_review_required = record_segment.get("human_review_required")
+            if isinstance(human_review_required, bool):
+                replacements[segment.id] = ApprovedSegmentReplacement(
+                    approved_text=approved_text,
+                    human_review_required=human_review_required,
+                )
         replacement_status = str(record_segment.get("replacement_status") or "")
         if replacement_status != "approved":
             errors.append(
@@ -416,10 +434,8 @@ def _validate_approved_segment_metadata(
         errors.append(f"segment {segment.id} visual_refs do not match current ScriptIR visual_refs")
     if record_segment.get("claim_type") != segment.claim_type:
         errors.append(f"segment {segment.id} claim_type does not match current ScriptIR claim_type")
-    if record_segment.get("human_review_required") != segment.needs_human_review:
-        errors.append(
-            f"segment {segment.id} human_review_required does not match current ScriptIR flag"
-        )
+    if not isinstance(record_segment.get("human_review_required"), bool):
+        errors.append(f"segment {segment.id} human_review_required must be a boolean")
     critical_refs = list(record_segment.get("critical_refs") or [])
     outside_source_refs = [ref for ref in critical_refs if ref not in segment.source_refs]
     if outside_source_refs:

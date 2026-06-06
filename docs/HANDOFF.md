@@ -119,6 +119,13 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - The approved narration authority remains `docs\approved_materializations\script_d2a46430e084.materialization.yml`; the review gate artifact is not a replacement authority.
   - Active export remains PASS with `critical_view`, `script_todo_skeleton`, and visual/asset/quote `human_required` absent.
   - Remaining warnings intentionally stay: `speculation_vs_fact` and 6 broad `needs_human_review` segment warnings.
+- P1 operator script review decision apply path on 2026-06-07:
+  - Operator/editorial decision approved all 6 revised segments as source-bounded narration within the Microsoft official narrative and NIST risk framing.
+  - Updated `docs\approved_materializations\script_d2a46430e084.materialization.yml` with the approved facts/takeaway minor edits, the approved intro/context/conflict/impact text, and `human_review_required: false` for all 6 segments.
+  - Updated `docs\script_review_gates\script_d2a46430e084.review.yml` to `status: operator_review_applied`; `needs_human_review` is `cleared_by_operator` and `speculation_vs_fact` is `cleared_by_operator_decision`.
+  - `newsroom script apply-approved-materialization` now supports reapplying a tracked approved record to already-materialized ScriptIR rows and can apply the approved `human_review_required` flag while still validating speaker, source refs, critical refs, visual refs, and claim type.
+  - Reapplied the approved record, rebuilt VisualIR/AssetManifest/QuoteManifest/export for `script_d2a46430e084`, and confirmed `export inspect` -> PASS with no issues found.
+  - This is not publishing approval, legal approval, YMM4 visual approval, subtitle placement proof, overlay safety proof, or final YMM4 geometry proof.
 - Local validation after the P0.5-D approved materialization apply:
   - `.venv\Scripts\python.exe -m pytest -q` -> 72 passed.
   - `git diff --check` -> passed.
@@ -131,6 +138,11 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - Targeted script/export tests -> 23 passed.
   - `.venv\Scripts\python.exe -m pytest -q` -> 78 passed.
   - `git diff --check` -> passed.
+- Local validation after the P1 operator script review decision apply path:
+  - Targeted materialization/export/inspector tests -> 38 passed.
+  - `.venv\Scripts\python.exe -m pytest -q` -> 81 passed.
+  - `git diff --check` -> passed; Git reported a CRLF-to-LF normalization warning for the approved materialization YAML.
+  - `.venv\Scripts\python.exe -m newsroom.cli.main export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with no issues found.
 - Local validation after the P0.5-C approved authority slice:
   - `.venv\Scripts\python.exe -m pytest tests\test_script_materialization.py -q` -> 17 passed.
   - `.venv\Scripts\python.exe -m pytest -q` -> 72 passed.
@@ -160,7 +172,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - proof draft: `data\proofs\ymm4_import\episode_756343df9853\proof.yml`
   - inspector result: `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings.
 - Runtime proof artifacts under `data\proofs\` are intentionally git-ignored.
-- Implementation frontier: M1 through M6.4 are implemented; P0-A CSV import acceptance is proven for the active YMM4 export after adding the `ナレーター` character in the target YMM4 environment; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST; P0.5 approved materialization authority is implemented and applied to the active script, so the active export no longer contains literal TODO spoken rows.
+- Implementation frontier: M1 through M6.4 are implemented; P0-A CSV import acceptance is proven for the active YMM4 export after adding the `ナレーター` character in the target YMM4 environment; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST; P0.5 approved materialization authority is implemented and applied to the active script; P1 quote/visual/asset/script review gates are applied for the active export, so `export inspect` reports no issues for `episode_756343df9853`.
 
 ## Immediate Resume Packet
 
@@ -207,7 +219,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - purpose: classify concrete visual/source-card review items without suppressing unrelated publication warnings.
 - effect: citation-only source evidence no longer creates an external screenshot gate by default.
 - requirements: preserve source refs, C1/NIST coverage, `source_card` as an explicit human-required screenshot intent, and the downstream subtitle/YMM4 geometry boundary.
-- state: implemented for the active export. The facts visual unit now uses `claim_evidence_card` with Microsoft source refs preserved; AssetManifest uses local templates; QuoteManifest has 10 citation-only text rows and 0 screenshot rows. Active `export inspect` passes with only `speculation_vs_fact` and 6 broad `needs_human_review` warnings.
+- state: implemented for the active export. The facts visual unit now uses `claim_evidence_card` with Microsoft source refs preserved; AssetManifest uses local templates; QuoteManifest has 10 citation-only text rows and 0 screenshot rows. This gate was later superseded by the broad script review decision apply path, and active `export inspect` now passes with no issues found.
 - owner: assistant for generator behavior and rebuilds; operator for any future explicit external screenshot/source-card approval.
 - next move: superseded by the broad script review gate below for the active export. Do not treat the absence of visual/asset/quote `human_required` as publishing approval.
 
@@ -216,9 +228,9 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - purpose: classify `speculation_vs_fact` and broad segment `needs_human_review` without clearing them by heuristic.
 - effect: operator can review the remaining publication gates from a tracked handoff artifact without changing approved narration authority.
 - requirements: preserve approved text, speaker `ナレーター`, source refs, C1/NIST critical refs, claim types, and visual/asset/quote cleared state.
-- state: handoff-only complete. `docs\script_review_gates\script_d2a46430e084.review.yml` classifies all 6 segments as `operator_approval_required`; no script text or review flags were changed. Active `export inspect` remains PASS with only `speculation_vs_fact` and 6 `needs_human_review` warnings.
-- owner: operator/editor for approval decisions; assistant for applying explicit returned approvals or requested text adjustments.
-- next move: operator reviews the handoff artifact and approved materialization text, then returns either explicit publication-review approval or concrete text/claim-type changes. Do not clear warnings without that authority.
+- state: complete for the active script after explicit operator/editorial decision. `docs\approved_materializations\script_d2a46430e084.materialization.yml` now contains the final approved text for this slice and clears `human_review_required` for all 6 segments; `docs\script_review_gates\script_d2a46430e084.review.yml` records the operator-cleared `needs_human_review` and `speculation_vs_fact` decisions. Active `export inspect` passes with no issues found.
+- owner: operator/editor for approval authority; assistant for applying the tracked authority and rebuilds.
+- next move: continue to Packet persistence or a concrete downstream YMM4 visual/subtitle proof only if explicitly requested. Do not treat this script-review clearance as publishing/legal/YMM4 visual/subtitle/overlay/final-geometry approval.
 
 ### P1: Packet persistence
 

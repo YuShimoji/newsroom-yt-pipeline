@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 import yaml
 
@@ -68,7 +70,7 @@ def _plan() -> EpisodePlan:
     )
 
 
-def _script() -> ScriptIR:
+def _script(*, needs_human_review: bool = True) -> ScriptIR:
     return ScriptIR(
         id="script_materialize_test",
         episode_plan_id="plan_materialize_test",
@@ -82,7 +84,7 @@ def _script() -> ScriptIR:
                 source_refs=["article_primary", "article_critical"],
                 visual_refs=["visual:intro"],
                 claim_type="instruction",
-                needs_human_review=True,
+                needs_human_review=needs_human_review,
             )
         ],
         created_at="2026-06-01T00:01:00+00:00",
@@ -274,6 +276,50 @@ def test_apply_approved_materialization_record_replaces_only_text(tmp_path):
     segment = updated.segments[0]
 
     assert segment.text == "承認済みナレーション"
+    assert segment.speaker == "ナレーター"
+    assert segment.source_refs == ["article_primary", "article_critical"]
+    assert segment.visual_refs == ["visual:intro"]
+    assert segment.needs_human_review is True
+    assert segment.claim_type == "instruction"
+
+
+def test_apply_approved_materialization_record_can_clear_review_flag(tmp_path):
+    record_path = _write_approved_record_payload(tmp_path, fill_text="承認済みナレーション")
+    payload = yaml.safe_load(record_path.read_text(encoding="utf-8"))
+    payload["segments"][0]["human_review_required"] = False
+    record_path.write_text(
+        yaml.safe_dump(payload, allow_unicode=True, sort_keys=False),
+        encoding="utf-8",
+    )
+
+    updated = apply_approved_materialization_record(_script(), record_path)
+    segment = updated.segments[0]
+
+    assert segment.text == "承認済みナレーション"
+    assert segment.speaker == "ナレーター"
+    assert segment.source_refs == ["article_primary", "article_critical"]
+    assert segment.visual_refs == ["visual:intro"]
+    assert segment.needs_human_review is False
+    assert segment.claim_type == "instruction"
+
+
+def test_apply_approved_materialization_record_reapplies_to_materialized_script(tmp_path):
+    record_path = _write_approved_record_payload(tmp_path, fill_text="再承認済みナレーション")
+    materialized = replace(
+        _script(),
+        segments=[
+            replace(
+                _script().segments[0],
+                text="旧ナレーション",
+                needs_human_review=True,
+            )
+        ],
+    )
+
+    updated = apply_approved_materialization_record(materialized, record_path)
+    segment = updated.segments[0]
+
+    assert segment.text == "再承認済みナレーション"
     assert segment.speaker == "ナレーター"
     assert segment.source_refs == ["article_primary", "article_critical"]
     assert segment.visual_refs == ["visual:intro"]

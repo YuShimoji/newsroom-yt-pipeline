@@ -24,7 +24,7 @@ Each record must contain:
 - `approval.approved_by`
 - `approval.approved_at`
 - optional `approval.approval_note`
-- one `segments` row per approved TODO replacement, containing `segment_id`, `speaker`, `approved_text`, `source_refs`, `critical_refs`, `visual_refs`, `claim_type`, `human_review_required`, and `replacement_status: approved`
+- one `segments` row per approved replacement or re-approval, containing `segment_id`, `speaker`, `approved_text`, `source_refs`, `critical_refs`, `visual_refs`, `claim_type`, `human_review_required`, and `replacement_status: approved`
 
 ## Not Allowed
 
@@ -48,7 +48,10 @@ Do not put these in approved records:
 ```
 
 4. Review the generated YAML before committing it.
-5. Apply it to the active ScriptIR when ready:
+5. Apply it to the active ScriptIR when ready. Applying a record can update
+   approved text and the approved `human_review_required` flag. Speaker,
+   source refs, critical refs, visual refs, and claim type must still match the
+   active ScriptIR metadata.
 
 ```powershell
 .venv\Scripts\python.exe -m newsroom.cli.main --db data\ymm4_import_proof.sqlite script apply-approved-materialization --script <script_id> --record docs\approved_materializations\<script_id>.materialization.yml
