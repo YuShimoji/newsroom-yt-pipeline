@@ -151,15 +151,26 @@ def _inspect_script_csv(path: Path, issues: list[InspectionIssue]) -> None:
         issues.append(_error("script_csv_read", f"script.csv is not readable: {exc}"))
         return
 
+    todo_rows = 0
     for row_index, row in enumerate(rows, start=1):
         if len(row) == 1 and row[0].startswith("#"):
             continue
         if len(row) == 2:
+            if "TODO[" in row[1]:
+                todo_rows += 1
             continue
         issues.append(
             _error(
                 "script_csv_shape",
                 f"script.csv row {row_index} must be 2 columns or a # comment row",
+            )
+        )
+    if todo_rows:
+        issues.append(
+            _warning(
+                "script_todo_skeleton",
+                f"script.csv contains {todo_rows} TODO skeleton row(s); "
+                "YMM4 import can pass, but spoken script still requires materialization.",
             )
         )
 

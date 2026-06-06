@@ -26,6 +26,8 @@ Last updated: 2026-06-07
 - P0-A restart context reflection on 2026-06-05: reread the restart docs and subtitle boundary gate after the GUI attempt, kept the GUI proof status as `needs_fix`, and reflected that newsroom-side proof covers CSV import acceptance and handoff-file readability only. Git-ignored runtime exports and proof YAMLs remain checkout-sensitive and must not be committed.
 - P0-A request validity check on 2026-06-06: pulled `origin/main` at `2b459a2`, confirmed `HEAD...origin/main` was `0 0`, reread the P0-A prompt, proof YAML, and authority docs, and reran `export inspect` -> PASS with no `critical_view` warning. The request is valid only as an external YMM4 character-registry fix plus proof rerun. Repo-side `configs\speakers.yml` and `script.csv` already agree on `ナレーター`; no code change or speaker remap to `ゆっくり霊夢` is justified. A safe file-backed YMM4 character registry was not identified under `C:\Users\thank\AppData\Local\YukkuriMovieMaker\v4`, which contained only `temp` content in this run.
 - P0-A YMM4 GUI proof pass on 2026-06-07: operator created a YMM4 character named `ナレーター`, reran import for `data\exports\episode_756343df9853\script.csv`, and reported that YMM4 recognized the CSV and imported it normally. The local proof YAML was updated to `import_result: pass` / `decision.status: passed`. `TODO[...]` tokens were pronounced because they are literal TODO skeleton script text, not an import failure. This proves CSV import acceptance and handoff-file readability only; subtitle placement, overlay safety, and final YMM4 geometry remain outside newsroom-side proof.
+- Post-proof TODO skeleton gate on 2026-06-07: re-read the active export and found all 6 spoken `script.csv` / `script_ir.json` rows still contain literal `TODO[...]` skeleton text. `export inspect` now reports this as `script_todo_skeleton` warning while still passing the bundle. This makes P0.5 Script materialization the next active artifact path before P1 QuoteManifest tightening.
+- Validation after the TODO skeleton inspector slice: `.venv\Scripts\python.exe -m pytest -q` -> 55 passed, `git diff --check` -> passed, and `.venv\Scripts\python.exe -m newsroom.cli.main export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with `script_todo_skeleton`, `speculation_vs_fact`, `needs_human_review`, and `human_required` warnings; `critical_view` warning remains absent.
 
 ## Implemented Milestones
 
@@ -55,7 +57,7 @@ Last updated: 2026-06-07
 - Added `docs/YMM4_IMPORT_PROOF.md` as the operator hand-run procedure for YMM4 CSV import proof.
 - Added `docs/templates/ymm4_import_proof_template.yml` as the proof record template.
 - Added `newsroom export inspect --episode-dir <path>` as a pre-import self-check for M6.4 episode bundles.
-- The inspect command checks required bundle files, `export_manifest.json` schema v2, manifest artifact path consistency, `script.csv` CSV shape, readable asset / quote YAML, and `human_required` warning counts.
+- The inspect command checks required bundle files, `export_manifest.json` schema v2, manifest artifact path consistency, `script.csv` CSV shape, readable asset / quote YAML, TODO skeleton rows, and `human_required` warning counts.
 - YMM4 GUI import itself is still operator-pending. No YMM4 GUI automation was performed.
 
 ## Current YMM4 GUI Proof Handoff Completed In This Slice
@@ -88,7 +90,7 @@ Last updated: 2026-06-07
 - Rebuilt VisualIR: `visual_eca67c6bd375`; conflict visual unit references `article_bfba4cd5131daa71`.
 - Rebuilt review manifests: `data\assets\plan_20260603_faca8ebcbc45` and `data\quotes\plan_20260603_faca8ebcbc45`; quote rows include NIST.
 - Rebuilt export bundle: `data\exports\episode_756343df9853`; `source_list.md`, `script_ir.json`, `visual_ir.json`, and `quote_manifest.yml` include the NIST critical source.
-- Export inspect result: PASS. `critical_view` warning is gone. Remaining warnings are publication/operator review gates, not machine failures.
+- Export inspect result: PASS. `critical_view` warning is gone. Remaining warnings are publication/operator review gates, including `script_todo_skeleton`, not machine failures.
 - YMM4 GUI proof status: passed for CSV import acceptance after the operator added a `ナレーター` character in the target YMM4 environment. This does not prove subtitle placement, overlay safety, or final YMM4 geometry.
 
 ## Current YMM4 GUI Proof Attempt
@@ -112,19 +114,20 @@ Last updated: 2026-06-07
 - Proof status: passed for CSV import acceptance and handoff-file readability. `data\proofs\ymm4_import\episode_756343df9853\proof.yml` is local evidence and is git-ignored.
 - Boundary: newsroom YMM4 GUI proof is CSV import acceptance and handoff-file readability only. Subtitle placement, YMM4 item geometry, template positioning, subtitle band decisions, `.ymmp` patch details, and overlay proof remain downstream NLMYTGen/YMM4-side authority.
 - Runtime artifact rule: do not commit `data\ymm4_import_proof.sqlite`, `data\exports\episode_756343df9853`, `data\proofs\...`, or screenshots.
-- Valid next action: continue publication/operator review gates and later downstream subtitle/overlay proof outside newsroom scope.
+- Valid next action: P0.5 Script materialization / TODO skeleton replacement for the active `script.csv`; later downstream subtitle/overlay proof stays outside newsroom scope.
 
 ## Handoff Snapshot
 
 - Assistant status: YMM4 manual import proof preparation is implemented and P0-A CSV import acceptance is passed for the active export; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts.
-- User action: continue publication/operator review gates, or pass a new proof/result if downstream YMM4 subtitle/overlay work exposes a concrete failure. If git-ignored artifacts are absent in a different checkout, regenerate an equivalent bundle from `docs/HANDOFF.md`.
-- Assistant next after restart: prefer P1 QuoteManifest tightening or a targeted fix tied to a returned concrete failure.
-- What counts as progress next: reducing noisy quote rows, persisting packet records, or handling a concrete failed check. Repeating P0-A CSV import proof does not add value unless the target export changes.
+- User action: provide operator/editorial guidance for replacing the active TODO skeleton narration, or pass a new proof/result if downstream YMM4 subtitle/overlay work exposes a concrete failure. If git-ignored artifacts are absent in a different checkout, regenerate an equivalent bundle from `docs/HANDOFF.md`.
+- Assistant next after restart: prefer P0.5 Script materialization / TODO skeleton replacement over P1 QuoteManifest tightening.
+- What counts as progress next: replacing literal TODO spoken rows while preserving source refs and speaker mapping, then rebuilding and inspecting the active export. Reducing noisy quote rows is useful after the active spoken script is materialized.
 - What does not count as progress next: NotebookLM API automation, Inoreader OAuth, GUI/dashboard work, `.ymmp` generation, YouTube upload, NLMYTGen subprocess/path integration, or treating subtitle layout/overlay safety as newsroom-side proof.
 
 ## Not Complete Or Not Proven
 
 - The active proof bundle has a selected C1/NIST critical view in this local runtime checkout, but the runtime DB/export artifacts are git-ignored and may need regeneration in a different checkout.
+- The active `script.csv` and `script_ir.json` are still 100% TODO skeleton narration: 6 / 6 spoken rows contain `TODO[...]`.
 - Packet persistence is artifact-only; packet records are not stored as first-class DB rows.
 - QuoteManifest persistence is artifact-only; quote records are not stored as first-class DB rows.
 - QuoteManifest rows are conservative candidates, not legal decisions; all start as `human_required`.
@@ -141,23 +144,27 @@ Last updated: 2026-06-07
 
 ## Next Recommended Work
 
-1. P1: QuoteManifest tightening.
+1. P0.5: Script materialization / TODO skeleton replacement.
+   Purpose: replace the active literal `TODO[...]` spoken rows with reviewable narration while preserving `ナレーター`, CSV shape, source refs, C1/NIST coverage, and human-review flags.
+   Effect: turns the YMM4-importable handoff into a production-reviewable spoken script. Until this is done, QuoteManifest tightening is premature.
+
+2. P1: QuoteManifest tightening.
    Purpose: reduce noisy quote rows by distinguishing citation-only source_refs from direct quote or screenshot intent.
    Effect: human_required review stays focused on actual publish risk instead of every sourced segment.
 
-2. P0 support: Preserve or regenerate the active C1/NIST source application if runtime artifacts are missing.
+3. P0 support: Preserve or regenerate the active C1/NIST source application if runtime artifacts are missing.
    Purpose: keep `story_20260603_503c39418f15862d` from regressing to a permanent `critical_views` warning in local runtime state.
    Effect: keeps the active export auditable without treating ignored DB/export artifacts as tracked source.
 
-3. P1: Packet persistence.
+4. P1: Packet persistence.
    Purpose: store packet records as first-class DB rows instead of rebuilding them from cluster/articles at each downstream step.
    Effect: operator edits and critical-view additions can survive across later workflow stages.
 
-4. P2: Source expansion.
+5. P2: Source expansion.
    Purpose: add more deliberate source pools without implementing broad crawling or Inoreader OAuth.
    Effect: shortlist quality improves while RSS-first and manual approval boundaries remain intact.
 
-5. P2: M7 series / channel memory.
+6. P2: M7 series / channel memory.
    Purpose: connect daily production to series history, past claims, and next-episode planning.
    Effect: editorial continuity can be scored and reused across weekly planning.
 

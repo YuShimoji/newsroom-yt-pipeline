@@ -78,6 +78,14 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - `TODO[...]` tokens were pronounced because they are literal skeleton script text, not an import failure.
   - Local proof record `data\proofs\ymm4_import\episode_756343df9853\proof.yml` was updated to `import_result: pass` / `decision.status: passed`.
   - This proves CSV import acceptance and handoff-file readability only; subtitle placement, overlay safety, and final YMM4 geometry remain downstream scope.
+- Post-proof TODO skeleton gate on 2026-06-07:
+  - Active `script.csv` / `script_ir.json` still contain literal `TODO[...]` text in all 6 spoken rows.
+  - `export inspect` now reports this as `script_todo_skeleton` warning while keeping the bundle PASS.
+  - P0.5 Script materialization / TODO skeleton replacement should run before P1 QuoteManifest tightening.
+- Local validation after the TODO skeleton inspector slice:
+  - `.venv\Scripts\python.exe -m pytest -q` -> 55 passed.
+  - `git diff --check` -> passed.
+  - `.venv\Scripts\python.exe -m newsroom.cli.main export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with `script_todo_skeleton`, `speculation_vs_fact`, `needs_human_review`, and `human_required` warnings; `critical_view` warning remains absent.
 - Local YMM4 proof target prepared on 2026-06-03:
   - proof DB: `data\ymm4_import_proof.sqlite`
   - export bundle: `data\exports\episode_756343df9853`
@@ -85,7 +93,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - proof draft: `data\proofs\ymm4_import\episode_756343df9853\proof.yml`
   - inspector result: `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings.
 - Runtime proof artifacts under `data\proofs\` are intentionally git-ignored.
-- Implementation frontier: M1 through M6.4 are implemented; P0-A CSV import acceptance is proven for the active YMM4 export after adding the `ナレーター` character in the target YMM4 environment; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST.
+- Implementation frontier: M1 through M6.4 are implemented; P0-A CSV import acceptance is proven for the active YMM4 export after adding the `ナレーター` character in the target YMM4 environment; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST; P0.5 script materialization is now the next active artifact path.
 
 ## Immediate Resume Packet
 
@@ -108,6 +116,15 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - owner: assistant.
 - next move: do not reselect sources unless the git-ignored runtime DB/export artifacts are missing. If regeneration is needed, reapply C1/NIST with `newsroom packet add-critical`, then rebuild downstream artifacts. Do not commit runtime DB rows.
 
+### P0.5: Script materialization / TODO skeleton replacement
+
+- purpose: replace literal `TODO[...]` spoken rows with reviewable narration for the active script.
+- effect: moves the active export from YMM4-importable skeleton to production-reviewable script content.
+- requirements: preserve speaker `ナレーター`, CSV import shape, existing `source_refs`, C1/NIST critical-view coverage, and human-review flags unless the reviewer explicitly clears them.
+- state: not implemented. Active `script.csv` / `script_ir.json` still have 6 / 6 TODO skeleton spoken rows, and `export inspect` reports `script_todo_skeleton` as a warning.
+- owner: assistant for tooling/rebuilds and operator for editorial approval of final narration.
+- next move: add a narrow materialization path or operator-edit workflow, rebuild packet/script/visual/asset/quote/export as needed, then rerun `export inspect`. Do not proceed to QuoteManifest tightening as the active path while the script is still TODO skeleton.
+
 ### P1: QuoteManifest tightening
 
 - purpose: reduce noisy `human_required` quote rows.
@@ -115,7 +132,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - requirements: distinguish citation-only `source_refs` from direct quote or screenshot intent.
 - state: not implemented.
 - owner: assistant.
-- next move: add intent flags or builder heuristics, then extend `tests/test_quote_manifest.py`.
+- next move: after P0.5 materializes the active script, add intent flags or builder heuristics, then extend `tests/test_quote_manifest.py`.
 
 ### P1: Packet persistence
 

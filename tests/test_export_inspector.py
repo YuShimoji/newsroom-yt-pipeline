@@ -161,6 +161,20 @@ def test_inspect_invalid_script_csv_shape_fails(tmp_path):
     assert any(issue.code == "script_csv_shape" for issue in inspection.errors)
 
 
+def test_inspect_script_csv_todo_skeleton_is_warning(tmp_path):
+    output_dir = _valid_bundle(tmp_path)
+    (output_dir / "script.csv").write_text(
+        "ナレーター,TODO[plan#0]: operator が記入する。\n",
+        encoding="utf-8",
+    )
+
+    inspection = inspect_episode_bundle(output_dir)
+
+    assert inspection.passed
+    assert any(issue.code == "script_todo_skeleton" for issue in inspection.warnings)
+    assert all(issue.code != "script_todo_skeleton" for issue in inspection.errors)
+
+
 def test_inspect_human_required_is_warning_not_error(tmp_path):
     output_dir = _valid_bundle(tmp_path)
 

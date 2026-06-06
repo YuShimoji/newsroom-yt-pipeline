@@ -75,11 +75,24 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - next_allowed_work: continue publication/operator review gates, P1 QuoteManifest tightening, Packet persistence, or targeted fixes tied to concrete returned failures.
 - prohibited_work: do not relabel this as final YMM4 composition proof, and do not commit runtime proof/screenshots.
 
+## 2026-06-07 Post-Proof TODO Skeleton Gate
+
+- current_task: decide whether to continue into P0.5 script materialization or P1 QuoteManifest tightening after P0-A passed.
+- decision: supersede P1 until P0.5 is handled.
+- reason: the active `script.csv` imports correctly, but all 6 spoken rows still contain literal `TODO[...]` skeleton text. QuoteManifest tightening would operate on placeholder narration and would not move the active publishable artifact.
+- active_artifact: `data\exports\episode_756343df9853` remains the active export; `script.csv` and `script_ir.json` are importable but not production-listenable until TODO skeleton text is replaced.
+- true_blockers: script materialization requires an operator/editorial fill or a future source-bounded drafting path. Do not auto-invent final narration from sparse source metadata.
+- stale_or_false_blockers: the TODO text being pronounced is not a YMM4 import failure and should not invalidate the P0-A proof.
+- evidence_boundary: `newsroom export inspect` now reports `script_todo_skeleton` as a warning, not an error. This keeps import acceptance and script-content readiness separate.
+- next_allowed_work: P0.5 Script materialization / TODO skeleton replacement, with `source_refs`, speaker mapping, CSV shape, and C1/NIST critical-view coverage preserved.
+- prohibited_work: do not proceed to QuoteManifest tightening as the active path while the active spoken script is still 100% TODO skeleton; do not expand into subtitle placement, overlay proof, full `.ymmp`, GUI automation, or publishing.
+
 ## Blocked Or Pending
 
 - YMM4 GUI import proof: passed for CSV import acceptance and handoff-file readability on `episode_756343df9853`; downstream subtitle/overlay/final geometry proof remains out of newsroom scope.
 - Active critical view: applied locally with C1/NIST. If ignored runtime artifacts are missing in another checkout, reapply the same selected source and rebuild before treating `critical_view` as unresolved.
-- QuoteManifest human_required noise: P1. Do not let it consume P0 unless the active export path is already moving.
+- Active script materialization: P0.5. Replace literal TODO skeleton narration before treating QuoteManifest tightening as the active next path.
+- QuoteManifest human_required noise: P1. Do not let it consume P0.5 while the active spoken script is still TODO skeleton.
 - Packet persistence: P1. Current critical-source relation is durable DB input, but full NotebookPacket persistence remains separate.
 - VisualIR-to-final-look gap: keep evaluating whether VisualIR changes affect actual YMM4 composition, density, whitespace, and eye flow.
 
