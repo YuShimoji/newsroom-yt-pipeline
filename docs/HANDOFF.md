@@ -126,6 +126,12 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - `newsroom script apply-approved-materialization` now supports reapplying a tracked approved record to already-materialized ScriptIR rows and can apply the approved `human_review_required` flag while still validating speaker, source refs, critical refs, visual refs, and claim type.
   - Reapplied the approved record, rebuilt VisualIR/AssetManifest/QuoteManifest/export for `script_d2a46430e084`, and confirmed `export inspect` -> PASS with no issues found.
   - This is not publishing approval, legal approval, YMM4 visual approval, subtitle placement proof, overlay safety proof, or final YMM4 geometry proof.
+- P1 Packet persistence on 2026-06-07:
+  - Added `notebook_packets` as a first-class DB table for sanitized NotebookPacket records: source refs, timeline, glossary, questions, format hint, export dir, and timestamps.
+  - Added `upsert_notebook_packet`, `load_notebook_packet`, and `load_notebook_packet_for_story`.
+  - `newsroom packet build` now persists the packet before writing packet artifacts, and `newsroom packet show --packet <id>` / `--story <story_id>` reads persisted packet state back from the runtime DB.
+  - Downstream packet helper now prefers a persisted packet when present, preserving operator-edited questions/glossary/source choices, while appending newly required critical-view refs from `story_critical_sources` so C1/NIST additions are not lost.
+  - Runtime DB/export artifacts remain local and are not committed.
 - Local validation after the P0.5-D approved materialization apply:
   - `.venv\Scripts\python.exe -m pytest -q` -> 72 passed.
   - `git diff --check` -> passed.
@@ -143,6 +149,12 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - `.venv\Scripts\python.exe -m pytest -q` -> 81 passed.
   - `git diff --check` -> passed; Git reported a CRLF-to-LF normalization warning for the approved materialization YAML.
   - `.venv\Scripts\python.exe -m newsroom.cli.main export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with no issues found.
+- Local validation after the P1 Packet persistence slice:
+  - Targeted packet/storage tests -> 13 passed.
+  - `.venv\Scripts\python.exe -m pytest -q` -> 85 passed.
+  - `git diff --check` -> passed.
+  - Active runtime packet persisted with `newsroom packet build --story story_20260603_503c39418f15862d`; `packet show --story story_20260603_503c39418f15862d` read back `packet_20260603_2de578dcd4b0` with 1 primary source and 1 C1/NIST critical view.
+  - Rebuilt visual/asset/quote/export for `script_d2a46430e084`; `export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with no issues found.
 - Local validation after the P0.5-C approved authority slice:
   - `.venv\Scripts\python.exe -m pytest tests\test_script_materialization.py -q` -> 17 passed.
   - `.venv\Scripts\python.exe -m pytest -q` -> 72 passed.
@@ -172,7 +184,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - proof draft: `data\proofs\ymm4_import\episode_756343df9853\proof.yml`
   - inspector result: `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings.
 - Runtime proof artifacts under `data\proofs\` are intentionally git-ignored.
-- Implementation frontier: M1 through M6.4 are implemented; P0-A CSV import acceptance is proven for the active YMM4 export after adding the `ナレーター` character in the target YMM4 environment; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST; P0.5 approved materialization authority is implemented and applied to the active script; P1 quote/visual/asset/script review gates are applied for the active export, so `export inspect` reports no issues for `episode_756343df9853`.
+- Implementation frontier: M1 through M6.4 are implemented; P0-A CSV import acceptance is proven for the active YMM4 export after adding the `ナレーター` character in the target YMM4 environment; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST; P0.5 approved materialization authority is implemented and applied to the active script; P1 quote/visual/asset/script review gates are applied for the active export; P1 Packet persistence is implemented for DB-backed NotebookPacket rows and downstream reuse.
 
 ## Immediate Resume Packet
 
@@ -237,9 +249,9 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - purpose: store NotebookPacket records as first-class DB rows.
 - effect: operator packet edits and critical-view additions survive downstream rebuilds.
 - requirements: DB schema, load/upsert helpers, migration-safe existing DB behavior, and CLI readback.
-- state: not implemented.
+- state: implemented. `notebook_packets` persists sanitized packet records in the runtime DB. `packet build` upserts the packet, `packet show` reads it back, and downstream helpers prefer persisted packet state while merging newly required critical-view refs.
 - owner: assistant.
-- next move: add packet persistence after or with critical-view source entry.
+- next move: validate or regenerate the active runtime packet/export if needed, or continue to the next scoped backlog item. Do not treat packet persistence as NotebookLM API automation or publishing approval.
 
 ## Boundaries
 

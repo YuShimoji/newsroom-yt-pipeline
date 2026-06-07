@@ -54,12 +54,15 @@ from newsroom.store.db import (
     list_story_critical_source_articles,
     list_topic_scores_for_date,
     load_episode_plan,
+    load_notebook_packet,
+    load_notebook_packet_for_story,
     load_script_ir,
     load_visual_ir,
     load_visual_ir_for_script,
     replace_clusters_for_date,
     upsert_article,
     upsert_episode_plan,
+    upsert_notebook_packet,
     upsert_script_ir,
     upsert_topic_score,
     upsert_visual_ir,
@@ -119,6 +122,13 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["yukkuri", "anchor", "information_program"],
         help="Override the auto-resolved format_hint",
     )
+    packet_show = packet_sub.add_parser(
+        "show",
+        help="Read back a persisted NotebookPacket from the runtime DB",
+    )
+    packet_show_target = packet_show.add_mutually_exclusive_group(required=True)
+    packet_show_target.add_argument("--packet", dest="packet_id", help="NotebookPacket id")
+    packet_show_target.add_argument("--story", dest="story_id", help="Story cluster id")
     packet_critical = packet_sub.add_parser(
         "add-critical",
         help="Record a critical-view source for a story packet",
@@ -657,6 +667,8 @@ def cmd_packet(args: argparse.Namespace) -> int:
 
     if args.packet_command == "build":
         return _cmd_packet_build(args, db_path)
+    if args.packet_command == "show":
+        return _cmd_packet_show(args, db_path)
     if args.packet_command == "add-critical":
         return _cmd_packet_add_critical(args, db_path)
     print(f"Unsupported packet subcommand: {args.packet_command}")
@@ -681,10 +693,12 @@ def _cmd_packet_build(args: argparse.Namespace, db_path: Path) -> int:
         articles,
         args.series_config,
         packet_root=Path(args.packet_root),
+        prefer_persisted=False,
     )
     if args.format_override:
         packet = replace(packet, format_hint=args.format_override)
 
+    upsert_notebook_packet(db_path, packet)
     output_dir = write_packet(packet)
     print(f"Packet built: {packet.id}")
     print(f"Export dir: {output_dir}")
@@ -694,6 +708,29 @@ def _cmd_packet_build(args: argparse.Namespace, db_path: Path) -> int:
         f"News sources: {len(packet.news_sources)}  "
         f"Critical views: {len(packet.critical_views)}"
     )
+    return 0
+
+
+def _cmd_packet_show(args: argparse.Namespace, db_path: Path) -> int:
+    if args.packet_id:
+        packet = load_notebook_packet(db_path, args.packet_id)
+    else:
+        packet = load_notebook_packet_for_story(db_path, args.story_id)
+    if packet is None:
+        target = args.packet_id or args.story_id
+        print(f"NotebookPacket not found: {target}")
+        return 1
+
+    print(f"Packet: {packet.id}")
+    print(f"Story: {packet.story_cluster_id}")
+    print(f"Format hint: {packet.format_hint}")
+    print(f"Export dir: {packet.export_dir}")
+    print(
+        f"Primary sources: {len(packet.primary_sources)}  "
+        f"News sources: {len(packet.news_sources)}  "
+        f"Critical views: {len(packet.critical_views)}"
+    )
+    print(f"Questions: {len(packet.questions)}  Glossary terms: {len(packet.glossary)}")
     return 0
 
 
@@ -744,15 +781,41 @@ def _build_packet_for_cluster(
     articles: list[Article],
     series_config: str,
     packet_root: Path | str = DEFAULT_PACKET_ROOT,
+    prefer_persisted: bool = True,
 ) -> NotebookPacket:
     series_index = _load_series_index(series_config)
     critical_articles = list_story_critical_source_articles(db_path, cluster.id)
-    return NotebookPacketBuilder(series_index=series_index).build(
+    fresh_packet = NotebookPacketBuilder(series_index=series_index).build(
         cluster,
         articles,
         packet_root=packet_root,
         critical_articles=critical_articles,
     )
+    if not prefer_persisted:
+        return fresh_packet
+    persisted = load_notebook_packet_for_story(db_path, cluster.id)
+    if persisted is None:
+        upsert_notebook_packet(db_path, fresh_packet)
+        return fresh_packet
+    merged = _merge_required_packet_sources(persisted, fresh_packet)
+    if merged != persisted:
+        upsert_notebook_packet(db_path, merged)
+    return merged
+
+
+def _merge_required_packet_sources(
+    persisted: NotebookPacket,
+    fresh_packet: NotebookPacket,
+) -> NotebookPacket:
+    critical_by_id = {ref.article_id: ref for ref in persisted.critical_views}
+    merged_critical = list(persisted.critical_views)
+    for ref in fresh_packet.critical_views:
+        if ref.article_id in critical_by_id:
+            continue
+        merged_critical.append(ref)
+    if len(merged_critical) == len(persisted.critical_views):
+        return persisted
+    return replace(persisted, critical_views=merged_critical)
 
 
 def _format_to_ir_name(short_name: str) -> str:

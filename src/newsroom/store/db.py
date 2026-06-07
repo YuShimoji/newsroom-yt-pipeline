@@ -9,9 +9,13 @@ from newsroom.store.models import (
     Article,
     Chapter,
     EpisodePlan,
+    GlossaryTerm,
+    NotebookPacket,
     ScriptIR,
     ScriptSegment,
+    SourceRef,
     StoryCluster,
+    TimelineEvent,
     TopicScore,
     VisualIR,
     VisualUnit,
@@ -114,6 +118,24 @@ CREATE TABLE IF NOT EXISTS episode_plans (
 );
 
 CREATE INDEX IF NOT EXISTS idx_episode_plans_cluster ON episode_plans(story_cluster_id);
+
+CREATE TABLE IF NOT EXISTS notebook_packets (
+  id TEXT PRIMARY KEY,
+  story_cluster_id TEXT NOT NULL,
+  primary_sources TEXT NOT NULL,
+  news_sources TEXT NOT NULL,
+  critical_views TEXT NOT NULL,
+  timeline TEXT NOT NULL,
+  glossary TEXT NOT NULL,
+  questions TEXT NOT NULL,
+  format_hint TEXT NOT NULL,
+  export_dir TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (story_cluster_id) REFERENCES story_clusters(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_notebook_packets_cluster
+  ON notebook_packets(story_cluster_id);
 
 CREATE TABLE IF NOT EXISTS script_irs (
   id TEXT PRIMARY KEY,
@@ -456,6 +478,66 @@ def load_episode_plan(db_path: str | Path, plan_id: str) -> EpisodePlan | None:
     return _row_to_episode_plan(row)
 
 
+def upsert_notebook_packet(db_path: str | Path, packet: NotebookPacket) -> None:
+    init_db(db_path)
+    with connect(db_path) as connection:
+        connection.execute(
+            """
+            INSERT INTO notebook_packets (
+              id, story_cluster_id, primary_sources, news_sources,
+              critical_views, timeline, glossary, questions, format_hint,
+              export_dir, created_at
+            ) VALUES (
+              :id, :story_cluster_id, :primary_sources, :news_sources,
+              :critical_views, :timeline, :glossary, :questions, :format_hint,
+              :export_dir, :created_at
+            )
+            ON CONFLICT(id) DO UPDATE SET
+              story_cluster_id = excluded.story_cluster_id,
+              primary_sources = excluded.primary_sources,
+              news_sources = excluded.news_sources,
+              critical_views = excluded.critical_views,
+              timeline = excluded.timeline,
+              glossary = excluded.glossary,
+              questions = excluded.questions,
+              format_hint = excluded.format_hint,
+              export_dir = excluded.export_dir,
+              created_at = excluded.created_at
+            """,
+            _notebook_packet_values(packet),
+        )
+
+
+def load_notebook_packet(db_path: str | Path, packet_id: str) -> NotebookPacket | None:
+    init_db(db_path)
+    with connect(db_path) as connection:
+        row = connection.execute(
+            "SELECT * FROM notebook_packets WHERE id = ?", (packet_id,)
+        ).fetchone()
+    if row is None:
+        return None
+    return _row_to_notebook_packet(row)
+
+
+def load_notebook_packet_for_story(
+    db_path: str | Path, story_cluster_id: str
+) -> NotebookPacket | None:
+    init_db(db_path)
+    with connect(db_path) as connection:
+        row = connection.execute(
+            """
+            SELECT * FROM notebook_packets
+            WHERE story_cluster_id = ?
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1
+            """,
+            (story_cluster_id,),
+        ).fetchone()
+    if row is None:
+        return None
+    return _row_to_notebook_packet(row)
+
+
 def upsert_script_ir(db_path: str | Path, script: ScriptIR) -> None:
     init_db(db_path)
     with connect(db_path) as connection:
@@ -624,6 +706,126 @@ def _row_to_episode_plan(row: sqlite3.Row) -> EpisodePlan:
         risk_notes=json.loads(row["risk_notes"] or "[]"),
         approval_state=row["approval_state"],
         created_at=row["created_at"],
+    )
+
+
+def _notebook_packet_values(packet: NotebookPacket) -> dict[str, object]:
+    return {
+        "id": packet.id,
+        "story_cluster_id": packet.story_cluster_id,
+        "primary_sources": json.dumps(
+            [_source_ref_to_dict(ref) for ref in packet.primary_sources],
+            ensure_ascii=False,
+        ),
+        "news_sources": json.dumps(
+            [_source_ref_to_dict(ref) for ref in packet.news_sources],
+            ensure_ascii=False,
+        ),
+        "critical_views": json.dumps(
+            [_source_ref_to_dict(ref) for ref in packet.critical_views],
+            ensure_ascii=False,
+        ),
+        "timeline": json.dumps(
+            [_timeline_event_to_dict(event) for event in packet.timeline],
+            ensure_ascii=False,
+        ),
+        "glossary": json.dumps(
+            [_glossary_term_to_dict(term) for term in packet.glossary],
+            ensure_ascii=False,
+        ),
+        "questions": json.dumps(packet.questions, ensure_ascii=False),
+        "format_hint": packet.format_hint,
+        "export_dir": packet.export_dir,
+        "created_at": packet.created_at,
+    }
+
+
+def _row_to_notebook_packet(row: sqlite3.Row) -> NotebookPacket:
+    return NotebookPacket(
+        id=row["id"],
+        story_cluster_id=row["story_cluster_id"],
+        primary_sources=[
+            _dict_to_source_ref(payload)
+            for payload in json.loads(row["primary_sources"] or "[]")
+        ],
+        news_sources=[
+            _dict_to_source_ref(payload)
+            for payload in json.loads(row["news_sources"] or "[]")
+        ],
+        critical_views=[
+            _dict_to_source_ref(payload)
+            for payload in json.loads(row["critical_views"] or "[]")
+        ],
+        timeline=[
+            _dict_to_timeline_event(payload)
+            for payload in json.loads(row["timeline"] or "[]")
+        ],
+        glossary=[
+            _dict_to_glossary_term(payload)
+            for payload in json.loads(row["glossary"] or "[]")
+        ],
+        questions=json.loads(row["questions"] or "[]"),
+        format_hint=row["format_hint"],
+        export_dir=row["export_dir"],
+        created_at=row["created_at"],
+    )
+
+
+def _source_ref_to_dict(ref: SourceRef) -> dict[str, object]:
+    return {
+        "article_id": ref.article_id,
+        "url": ref.url,
+        "title": ref.title,
+        "source_name": ref.source_name,
+        "source_type": ref.source_type,
+        "published_at": ref.published_at,
+        "license_hint": ref.license_hint,
+    }
+
+
+def _dict_to_source_ref(payload: dict[str, object]) -> SourceRef:
+    return SourceRef(
+        article_id=str(payload["article_id"]),
+        url=str(payload["url"]),
+        title=str(payload["title"]),
+        source_name=str(payload["source_name"]),
+        source_type=str(payload["source_type"]),
+        published_at=payload.get("published_at"),
+        license_hint=payload.get("license_hint"),
+    )
+
+
+def _timeline_event_to_dict(event: TimelineEvent) -> dict[str, object]:
+    return {
+        "occurred_at": event.occurred_at,
+        "source_name": event.source_name,
+        "title": event.title,
+        "article_id": event.article_id,
+        "url": event.url,
+    }
+
+
+def _dict_to_timeline_event(payload: dict[str, object]) -> TimelineEvent:
+    return TimelineEvent(
+        occurred_at=payload.get("occurred_at"),
+        source_name=str(payload["source_name"]),
+        title=str(payload["title"]),
+        article_id=str(payload["article_id"]),
+        url=str(payload["url"]),
+    )
+
+
+def _glossary_term_to_dict(term: GlossaryTerm) -> dict[str, object]:
+    return {
+        "term": term.term,
+        "definition": term.definition,
+    }
+
+
+def _dict_to_glossary_term(payload: dict[str, object]) -> GlossaryTerm:
+    return GlossaryTerm(
+        term=str(payload["term"]),
+        definition=payload.get("definition"),
     )
 
 

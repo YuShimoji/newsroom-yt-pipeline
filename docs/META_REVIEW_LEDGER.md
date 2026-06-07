@@ -192,6 +192,18 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - next_allowed_work: Packet persistence, preserving/regenerating active runtime artifacts if needed, or targeted follow-up from a concrete downstream failure.
 - prohibited_work: do not treat this as permission to change source refs, claim types, subtitle/YMM4 geometry, overlay proof, full `.ymmp`, publishing, or unrelated story/source choices.
 
+## 2026-06-07 P1 Packet Persistence Gate
+
+- current_task: persist NotebookPacket records as first-class runtime DB rows and make downstream rebuilds reuse them.
+- decision: implement DB-backed packet persistence with conservative merge behavior.
+- reason: packet artifacts under `data\packets` are checkout-local, while downstream script/visual/asset/quote/export steps need a stable packet source that can retain operator packet edits and still pick up required critical-view additions.
+- active_artifact: runtime DB table `notebook_packets`; CLI readback via `newsroom packet show`.
+- true_blockers: none for the active export path; runtime DB rows are local evidence and may need regeneration in another checkout.
+- stale_or_false_blockers: packet persistence is not NotebookLM API automation and does not require committing packet artifacts or raw source bodies.
+- evidence_boundary: persisted packets store source refs and operator packet fields only. They do not store raw article bodies, private data, NotebookLM outputs, YMM4 geometry, subtitle placement, overlay proof, `.ymmp`, or publishing approval.
+- next_allowed_work: preserve/regenerate active runtime state, source expansion, M7 series/channel memory, or targeted follow-up from a concrete downstream failure.
+- prohibited_work: do not expand persistence into raw source storage, NotebookLM automation, YMM4/subtitle geometry, overlay proof, full `.ymmp`, or publishing.
+
 ## Blocked Or Pending
 
 - YMM4 GUI import proof: passed for CSV import acceptance and handoff-file readability on `episode_756343df9853`; downstream subtitle/overlay/final geometry proof remains out of newsroom scope.
@@ -200,7 +212,7 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - Approved narration authority: `docs\approved_materializations\script_d2a46430e084.materialization.yml` is the tracked sanitized authority. Runtime DB/export artifacts remain checkout-local and may need reapply/rebuild elsewhere.
 - Broad script review: applied in `docs\script_review_gates\script_d2a46430e084.review.yml`; `needs_human_review` and `speculation_vs_fact` are cleared for this script slice only after explicit operator/editorial decision.
 - QuoteManifest human_required noise: citation-only source refs are tightened; after the visual/asset/screenshot gate, active quote rows are 10 citation-only and 0 screenshot `human_required`.
-- Packet persistence: P1. Current critical-source relation is durable DB input, but full NotebookPacket persistence remains separate.
+- Packet persistence: implemented. Current critical-source relation remains durable DB input, and NotebookPacket rows now persist sanitized packet state in the runtime DB.
 - VisualIR-to-final-look gap: keep evaluating whether VisualIR changes affect actual YMM4 composition, density, whitespace, and eye flow.
 
 ## Standing Cautions

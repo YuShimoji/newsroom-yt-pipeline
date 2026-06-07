@@ -4,15 +4,17 @@ import json
 
 import yaml
 
-from newsroom.cli.main import main
+from newsroom.cli.main import _build_packet_for_cluster, main
 from newsroom.store.db import (
     add_story_critical_source,
     init_db,
+    load_notebook_packet_for_story,
     list_story_critical_source_articles,
     replace_clusters_for_date,
     upsert_article,
+    upsert_notebook_packet,
 )
-from newsroom.store.models import Article, StoryCluster
+from newsroom.store.models import Article, GlossaryTerm, NotebookPacket, SourceRef, StoryCluster
 
 
 def _article(seed: str, source_type: str = "official") -> Article:
@@ -136,6 +138,139 @@ def test_packet_add_critical_existing_article_flows_into_packet_artifact(tmp_pat
     sources = json.loads((packet_dirs[0] / "sources.json").read_text(encoding="utf-8"))
     assert sources["critical_views"][0]["article_id"] == critical.id
     assert sources["critical_views"][0]["source_name"] == critical.source_name
+
+
+def test_packet_build_persists_packet_and_show_reads_back(tmp_path, capsys):
+    db_path = tmp_path / "newsroom.sqlite"
+    packet_root = tmp_path / "packets"
+    primary = _article("primary", source_type="official")
+    cluster = _cluster(primary)
+    upsert_article(db_path, primary)
+    replace_clusters_for_date(db_path, cluster.cluster_date, [cluster])
+
+    build_exit = main(
+        [
+            "--db",
+            str(db_path),
+            "packet",
+            "build",
+            "--story",
+            cluster.id,
+            "--packet-root",
+            str(packet_root),
+        ]
+    )
+    assert build_exit == 0
+
+    persisted = load_notebook_packet_for_story(db_path, cluster.id)
+    assert persisted is not None
+    assert persisted.story_cluster_id == cluster.id
+    assert persisted.primary_sources[0].article_id == primary.id
+
+    show_exit = main(
+        [
+            "--db",
+            str(db_path),
+            "packet",
+            "show",
+            "--story",
+            cluster.id,
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert show_exit == 0
+    assert f"Packet: {persisted.id}" in captured.out
+    assert "Primary sources: 1" in captured.out
+
+
+def test_downstream_packet_helper_reuses_persisted_operator_packet(tmp_path):
+    db_path = tmp_path / "newsroom.sqlite"
+    primary = _article("primary", source_type="official")
+    cluster = _cluster(primary)
+    upsert_article(db_path, primary)
+    replace_clusters_for_date(db_path, cluster.cluster_date, [cluster])
+    persisted = NotebookPacket(
+        id="packet_operator_edited",
+        story_cluster_id=cluster.id,
+        primary_sources=[
+            SourceRef(
+                article_id=primary.id,
+                url=primary.url,
+                title=primary.title,
+                source_name=primary.source_name,
+                source_type=primary.source_type,
+                published_at=primary.published_at,
+            )
+        ],
+        news_sources=[],
+        critical_views=[],
+        timeline=[],
+        glossary=[GlossaryTerm(term="operator-term", definition="edited")],
+        questions=["operator-edited packet question"],
+        format_hint="anchor",
+        export_dir=str(tmp_path / "packets" / "packet_operator_edited"),
+        created_at="2026-05-18T04:00:00+00:00",
+    )
+    upsert_notebook_packet(db_path, persisted)
+
+    packet = _build_packet_for_cluster(
+        db_path,
+        cluster,
+        [primary],
+        "missing-series.yml",
+        packet_root=tmp_path / "packets",
+    )
+
+    assert packet.id == persisted.id
+    assert packet.questions == ["operator-edited packet question"]
+    assert packet.glossary == [GlossaryTerm(term="operator-term", definition="edited")]
+
+
+def test_downstream_packet_helper_merges_new_critical_source_into_persisted_packet(tmp_path):
+    db_path = tmp_path / "newsroom.sqlite"
+    primary = _article("primary", source_type="official")
+    critical = _article("critical", source_type="official")
+    cluster = _cluster(primary)
+    upsert_article(db_path, primary)
+    upsert_article(db_path, critical)
+    replace_clusters_for_date(db_path, cluster.cluster_date, [cluster])
+    persisted = NotebookPacket(
+        id="packet_operator_edited",
+        story_cluster_id=cluster.id,
+        primary_sources=[],
+        news_sources=[],
+        critical_views=[],
+        timeline=[],
+        glossary=[],
+        questions=["operator-edited packet question"],
+        format_hint="anchor",
+        export_dir=str(tmp_path / "packets" / "packet_operator_edited"),
+        created_at="2026-05-18T04:00:00+00:00",
+    )
+    upsert_notebook_packet(db_path, persisted)
+    add_story_critical_source(
+        db_path,
+        cluster_id=cluster.id,
+        article_id=critical.id,
+        note="risk framing",
+        created_at="2026-05-18T05:00:00+00:00",
+    )
+
+    packet = _build_packet_for_cluster(
+        db_path,
+        cluster,
+        [primary],
+        "missing-series.yml",
+        packet_root=tmp_path / "packets",
+    )
+
+    assert packet.id == persisted.id
+    assert packet.questions == ["operator-edited packet question"]
+    assert [ref.article_id for ref in packet.critical_views] == [critical.id]
+    reloaded = load_notebook_packet_for_story(db_path, cluster.id)
+    assert reloaded is not None
+    assert [ref.article_id for ref in reloaded.critical_views] == [critical.id]
 
 
 def test_story_critical_sources_schema_is_idempotent_for_existing_db(tmp_path):
