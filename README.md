@@ -41,6 +41,11 @@ Fetch enabled RSS feeds from `configs/sources.yml`:
 newsroom fetch --source rss
 ```
 
+Deliberate source-pool metadata lives in `configs/source_pools.yml`. Feed rows
+may reference a `source_pool_id` so packet sources can carry roles such as
+`vendor_official`, `standards_body`, or `critical_view_candidate`; this does not
+enable broad crawling or automatic source adoption.
+
 Print today's stored article candidates:
 
 ```bash

@@ -11,6 +11,8 @@ def test_parse_rss_feed_normalizes_article():
         kind="rss",
         url="https://example.com/feed.xml",
         source_type="official",
+        source_role="vendor_official",
+        source_pool_id="vendor_pool",
         tags=["watch/test"],
     )
     xml = """
@@ -37,6 +39,8 @@ def test_parse_rss_feed_normalizes_article():
     assert article.source_name == "Test Source"
     assert article.published_at == "2026-05-16T01:02:03+00:00"
     assert article.tags == ["watch/test"]
+    assert article.source_role == "vendor_official"
+    assert article.source_pool_id == "vendor_pool"
 
 
 def test_parse_atom_feed_without_published_date():
@@ -56,4 +60,3 @@ def test_parse_atom_feed_without_published_date():
     assert len(articles) == 1
     assert articles[0].published_at is None
     assert articles[0].url == "https://example.com/atom-a"
-

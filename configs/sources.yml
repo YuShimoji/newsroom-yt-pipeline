@@ -3,6 +3,7 @@ feeds:
     name: Microsoft Blog
     kind: rss
     url: https://blogs.microsoft.com/feed/
+    source_pool_id: microsoft_official
     source_type: official
     tags:
       - watch/bigtech
@@ -14,6 +15,7 @@ feeds:
     name: YouTube Official Blog
     kind: rss
     url: https://blog.youtube/rss/
+    source_pool_id: youtube_official
     source_type: official
     tags:
       - watch/platform
@@ -25,6 +27,7 @@ feeds:
     name: Competitor Watch Example
     kind: rss
     url: https://example.com/feed.xml
+    source_pool_id: critical_view_candidates
     source_type: competitor
     tags:
       - pool/competitor-watch
@@ -41,4 +44,3 @@ inoreader:
       stream_id: user/-/label/watch-ai
       tags:
         - watch/ai
-

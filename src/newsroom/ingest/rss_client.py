@@ -62,6 +62,8 @@ def _parse_rss(root: ElementTree.Element, feed: SourceFeed, fetched_at: str) -> 
                 summary=_child_text(item, "description"),
                 tags=feed.tags,
                 source_type=feed.source_type,
+                source_role=feed.source_role,
+                source_pool_id=feed.source_pool_id,
             )
         )
     return articles
@@ -88,6 +90,8 @@ def _parse_atom(root: ElementTree.Element, feed: SourceFeed, fetched_at: str) ->
                 summary=_child_text(entry, "summary"),
                 tags=feed.tags,
                 source_type=feed.source_type,
+                source_role=feed.source_role,
+                source_pool_id=feed.source_pool_id,
             )
         )
     return articles
@@ -160,4 +164,3 @@ def _children(element: ElementTree.Element, child_name: str) -> list[ElementTree
 
 def _local_name(tag: str) -> str:
     return tag.rsplit("}", 1)[-1]
-

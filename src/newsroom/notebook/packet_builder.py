@@ -55,7 +55,12 @@ class NotebookPacketBuilder:
             cluster, article_index, types={"news", "commentary"}
         )
         critical_sources = _dedupe_refs(
-            _select_sources(cluster, article_index, types={"competitor"})
+            _select_sources(
+                cluster,
+                article_index,
+                types={"competitor"},
+                exclude_source_roles={"critical_view_candidate"},
+            )
             + [_to_source_ref(article) for article in (critical_articles or [])]
         )
 
@@ -92,11 +97,15 @@ def _select_sources(
     cluster: StoryCluster,
     article_index: dict[str, Article],
     types: set[str],
+    exclude_source_roles: set[str] | None = None,
 ) -> list[SourceRef]:
     refs: list[SourceRef] = []
+    excluded_roles = exclude_source_roles or set()
     for article_id in cluster.article_ids:
         article = article_index.get(article_id)
         if article is None or article.source_type not in types:
+            continue
+        if article.source_role in excluded_roles:
             continue
         refs.append(_to_source_ref(article))
     return refs
@@ -120,6 +129,8 @@ def _to_source_ref(article: Article) -> SourceRef:
         title=article.title,
         source_name=article.source_name,
         source_type=article.source_type,
+        source_role=article.source_role,
+        source_pool_id=article.source_pool_id,
         published_at=article.published_at,
         license_hint=article.license_hint,
     )

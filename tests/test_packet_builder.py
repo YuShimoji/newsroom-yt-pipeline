@@ -7,7 +7,13 @@ from newsroom.notebook.packet_builder import NotebookPacketBuilder
 from newsroom.store.models import Article, StoryCluster
 
 
-def _make_article(seed: str, source_type: str = "news", source: str | None = None) -> Article:
+def _make_article(
+    seed: str,
+    source_type: str = "news",
+    source: str | None = None,
+    source_role: str | None = None,
+    source_pool_id: str | None = None,
+) -> Article:
     suffix = seed[-1]
     hour_seed = int(suffix) if suffix.isdigit() else 0
     return Article.create(
@@ -18,6 +24,8 @@ def _make_article(seed: str, source_type: str = "news", source: str | None = Non
         published_at=f"2026-05-18T0{hour_seed % 9 + 1}:00:00+00:00",
         fetched_at="2026-05-18T12:00:00+00:00",
         tags=["series/copilot"],
+        source_role=source_role,
+        source_pool_id=source_pool_id,
     )
 
 
@@ -39,7 +47,13 @@ def _make_cluster(articles: list[Article]) -> StoryCluster:
 
 def test_packet_build_emits_full_artifact_bundle(tmp_path):
     articles = [
-        _make_article("a", source_type="official", source="Microsoft Blog"),
+        _make_article(
+            "a",
+            source_type="official",
+            source="Microsoft Blog",
+            source_role="vendor_official",
+            source_pool_id="microsoft_official",
+        ),
         _make_article("b", source_type="news", source="The Verge"),
     ]
     cluster = _make_cluster(articles)
@@ -55,6 +69,8 @@ def test_packet_build_emits_full_artifact_bundle(tmp_path):
     assert sources["story_cluster_id"] == cluster.id
     assert len(sources["primary_sources"]) == 1
     assert sources["primary_sources"][0]["source_name"] == "Microsoft Blog"
+    assert sources["primary_sources"][0]["source_role"] == "vendor_official"
+    assert sources["primary_sources"][0]["source_pool_id"] == "microsoft_official"
     assert len(sources["news_sources"]) == 1
 
     glossary_text = (output_dir / "glossary.md").read_text(encoding="utf-8")
@@ -99,6 +115,46 @@ def test_packet_build_carries_critical_views_into_artifacts(tmp_path):
     assert "## Critical views" in packet_md
     operator_notes = (output_dir / "operator_notes.md").read_text(encoding="utf-8")
     assert "Critical-view source count: 2" in operator_notes
+
+
+def test_critical_view_candidate_is_not_auto_adopted(tmp_path):
+    articles = [
+        _make_article("a", source_type="official", source="Microsoft Blog"),
+        _make_article(
+            "b",
+            source_type="competitor",
+            source="Candidate Analysis",
+            source_role="critical_view_candidate",
+            source_pool_id="critical_view_candidates",
+        ),
+    ]
+    cluster = _make_cluster(articles)
+
+    packet = NotebookPacketBuilder().build(cluster, articles, packet_root=tmp_path)
+
+    assert packet.critical_views == []
+
+
+def test_manual_critical_view_candidate_can_be_adopted(tmp_path):
+    articles = [_make_article("a", source_type="official", source="Microsoft Blog")]
+    manual_candidate = _make_article(
+        "critical-candidate",
+        source_type="competitor",
+        source="Candidate Analysis",
+        source_role="critical_view_candidate",
+        source_pool_id="critical_view_candidates",
+    )
+    cluster = _make_cluster(articles)
+
+    packet = NotebookPacketBuilder().build(
+        cluster,
+        articles,
+        packet_root=tmp_path,
+        critical_articles=[manual_candidate],
+    )
+
+    assert [ref.article_id for ref in packet.critical_views] == [manual_candidate.id]
+    assert packet.critical_views[0].source_role == "critical_view_candidate"
 
 
 def test_format_hint_resolves_from_series_index(tmp_path):

@@ -19,6 +19,8 @@ def test_upsert_article_deduplicates_by_url(tmp_path):
         source_name="Example",
         published_at="2026-05-16T01:00:00+00:00",
         fetched_at="2026-05-16T03:00:00+00:00",
+        source_role="independent_analysis",
+        source_pool_id="independent_analysis",
     )
 
     upsert_article(db_path, article)
@@ -28,4 +30,5 @@ def test_upsert_article_deduplicates_by_url(tmp_path):
     articles = list_articles_for_date(db_path, "2026-05-16")
     assert len(articles) == 1
     assert articles[0].title == "Updated Title"
-
+    assert articles[0].source_role == "independent_analysis"
+    assert articles[0].source_pool_id == "independent_analysis"

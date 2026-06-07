@@ -1,6 +1,6 @@
 # Meta-Review Ledger
 
-Last updated: 2026-06-07
+Last updated: 2026-06-08
 
 This ledger preserves supervision decisions that should survive restarts. Keep it short; do not turn it into a runtime-state duplicate.
 
@@ -203,6 +203,17 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - evidence_boundary: persisted packets store source refs and operator packet fields only. They do not store raw article bodies, private data, NotebookLM outputs, YMM4 geometry, subtitle placement, overlay proof, `.ymmp`, or publishing approval.
 - next_allowed_work: preserve/regenerate active runtime state, source expansion, M7 series/channel memory, or targeted follow-up from a concrete downstream failure.
 - prohibited_work: do not expand persistence into raw source storage, NotebookLM automation, YMM4/subtitle geometry, overlay proof, full `.ymmp`, or publishing.
+
+## 2026-06-08 P2 Source Expansion Gate
+
+- current_task: add deliberate source pools while preserving RSS-first and manual-approval boundaries.
+- decision: continue with a metadata-only source-pool registry and role propagation.
+- reason: source quality can improve by classifying vendor, regulator, standards, independent-analysis, technical-reference, and critical-view candidate sources without adding broad crawling, OAuth, NotebookLM automation, scraping, or auto-adoption.
+- active_artifact: `configs\source_pools.yml` plus `configs\sources.yml` feed metadata; active runtime packet/export remain local evidence and still inspect PASS with no issues found before the P2 implementation.
+- true_blockers: operator/editorial authority is still required to adopt story sources or promote `critical_view_candidate` sources into active packet critical views.
+- stale_or_false_blockers: adding a source pool is not the same as selecting or approving a source, and source-role metadata does not require moving source selection into NLMYTGen.
+- next_allowed_work: add/tune source pool metadata deliberately, use manual critical-source selection for chosen candidates, or continue to M7 series/channel memory.
+- prohibited_work: do not implement broad crawling, Inoreader OAuth/token flow, NotebookLM API automation, raw article body tracking, automatic critical-view adoption, NLMYTGen subprocess/path dependency, YMM4 geometry, overlay proof, full `.ymmp`, or publishing.
 
 ## Blocked Or Pending
 

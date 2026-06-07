@@ -1,0 +1,91 @@
+roles:
+  - id: vendor_official
+    description: Vendor-owned official announcements, blogs, and documentation.
+  - id: regulator_public
+    description: Public regulator guidance, enforcement, consultation, or policy sources.
+  - id: standards_body
+    description: Standards organizations and public technical governance material.
+  - id: independent_analysis
+    description: Independent analysis, reporting, or commentary.
+  - id: technical_reference
+    description: Technical docs, specs, repositories, or explainers used for background.
+  - id: critical_view_candidate
+    description: Candidate skeptical or risk-framing sources that require manual adoption.
+
+pools:
+  - id: microsoft_official
+    label: Microsoft official sources
+    source_role: vendor_official
+    source_type: official
+    description: Official Microsoft feeds suitable for vendor narrative grounding.
+    tags:
+      - pool/microsoft-official
+      - role/vendor-official
+    manual_approval_required: true
+    enabled: true
+
+  - id: youtube_official
+    label: YouTube official sources
+    source_role: vendor_official
+    source_type: official
+    description: Official YouTube feeds for platform-side narrative grounding.
+    tags:
+      - pool/youtube-official
+      - role/vendor-official
+    manual_approval_required: true
+    enabled: true
+
+  - id: regulator_public
+    label: Public regulator sources
+    source_role: regulator_public
+    source_type: official
+    description: Public regulatory materials used for policy or enforcement framing.
+    tags:
+      - pool/regulator-public
+      - role/regulator-public
+    manual_approval_required: true
+    enabled: true
+
+  - id: standards_body
+    label: Standards body sources
+    source_role: standards_body
+    source_type: official
+    description: Standards and trustworthiness frameworks used as review lenses.
+    tags:
+      - pool/standards-body
+      - role/standards-body
+    manual_approval_required: true
+    enabled: true
+
+  - id: independent_analysis
+    label: Independent analysis sources
+    source_role: independent_analysis
+    source_type: commentary
+    description: Analysis used for context after manual editorial selection.
+    tags:
+      - pool/independent-analysis
+      - role/independent-analysis
+    manual_approval_required: true
+    enabled: true
+
+  - id: technical_reference
+    label: Technical reference sources
+    source_role: technical_reference
+    source_type: official
+    description: Public docs, specs, and reference material for technical grounding.
+    tags:
+      - pool/technical-reference
+      - role/technical-reference
+    manual_approval_required: true
+    enabled: true
+
+  - id: critical_view_candidates
+    label: Critical-view candidates
+    source_role: critical_view_candidate
+    source_type: competitor
+    description: Skeptical or competing-angle candidates; not auto-adopted as packet critical views.
+    tags:
+      - pool/critical-view-candidates
+      - role/critical-view-candidate
+    manual_approval_required: true
+    enabled: true

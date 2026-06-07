@@ -1,6 +1,6 @@
 # Handoff
 
-Last updated: 2026-06-07
+Last updated: 2026-06-08
 
 ## Restart Order
 
@@ -132,6 +132,13 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - `newsroom packet build` now persists the packet before writing packet artifacts, and `newsroom packet show --packet <id>` / `--story <story_id>` reads persisted packet state back from the runtime DB.
   - Downstream packet helper now prefers a persisted packet when present, preserving operator-edited questions/glossary/source choices, while appending newly required critical-view refs from `story_critical_sources` so C1/NIST additions are not lost.
   - Runtime DB/export artifacts remain local and are not committed.
+- P2 Source expansion gate on 2026-06-08:
+  - Added `configs\source_pools.yml` as a deliberate source-pool registry with the allowed roles `vendor_official`, `regulator_public`, `standards_body`, `independent_analysis`, `technical_reference`, and `critical_view_candidate`.
+  - Existing RSS feed entries now carry `source_pool_id`; feed loading applies pool defaults as metadata only.
+  - RSS-ingested articles and packet `SourceRef` rows can carry `source_role` / `source_pool_id`; persisted packet JSON keeps that metadata.
+  - `critical_view_candidate` sources are exposed as candidates and are not auto-adopted into `packet.critical_views`; explicit operator/manual critical selection still works.
+  - No broad crawling, Inoreader OAuth/token flow, NotebookLM API automation, source scraping, or automatic source adoption was added.
+  - Validation: targeted source/storage/packet tests -> 16 passed; full `.venv\Scripts\python.exe -m pytest -q` -> 91 passed; `git diff --check` -> passed; active `packet show --story story_20260603_503c39418f15862d` and `export inspect --episode-dir data\exports\episode_756343df9853` still pass.
 - Local validation after the P0.5-D approved materialization apply:
   - `.venv\Scripts\python.exe -m pytest -q` -> 72 passed.
   - `git diff --check` -> passed.
@@ -253,6 +260,15 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - owner: assistant.
 - next move: validate or regenerate the active runtime packet/export if needed, or continue to the next scoped backlog item. Do not treat packet persistence as NotebookLM API automation or publishing approval.
 
+### P2: Source expansion
+
+- purpose: add deliberate source pools while preserving RSS-first intake and manual approval boundaries.
+- effect: story selection and packet quality can distinguish vendor, regulator, standards, independent analysis, technical reference, and critical-view candidate sources without collecting everything.
+- requirements: source pool metadata only, no tracked raw article bodies, no private data, no OAuth/token flow, no NotebookLM automation, and no automatic adoption of critical-view candidates.
+- state: implemented. `configs\source_pools.yml` defines the allowed roles and pools; `configs\sources.yml` feed rows can reference a pool; RSS articles and packet source refs preserve `source_role` / `source_pool_id`; `critical_view_candidate` is not automatically added to `packet.critical_views`.
+- owner: assistant for registry/tooling behavior; operator/editor for deciding which candidate sources become active story or critical-view inputs.
+- next move: use the registry to add or tune feed metadata deliberately, then continue to M7 series/channel memory or another explicitly scoped backlog item. Do not expand this into broad crawling, Inoreader OAuth, NotebookLM automation, or automatic source adoption.
+
 ## Boundaries
 
 - NotebookLM remains a manual packet bridge; no NotebookLM API automation.
@@ -263,6 +279,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - Inoreader OAuth/token flow is deferred.
 - External image download and automatic external asset approval remain out of scope.
 - NLMYTGen integration is schema-only: CSV / JSON / Markdown handoff, not subprocess, path dependency, pip dependency, or shared code.
+- Source expansion is metadata-first and RSS-first. Source pools classify feeds and packet refs; they do not fetch broad web content, scrape raw articles into tracked artifacts, or approve candidates automatically.
 
 ## Proof And Artifact Locations
 

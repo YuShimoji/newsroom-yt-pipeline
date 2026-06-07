@@ -4,9 +4,31 @@ from dataclasses import dataclass, field
 from hashlib import sha256
 from typing import Any
 
+VALID_SOURCE_ROLES = {
+    "vendor_official",
+    "regulator_public",
+    "standards_body",
+    "independent_analysis",
+    "technical_reference",
+    "critical_view_candidate",
+}
+
 
 def stable_hash(value: str) -> str:
     return sha256(value.strip().lower().encode("utf-8")).hexdigest()
+
+
+def validate_source_role(source_role: str | None, owner: str) -> str | None:
+    if source_role is None:
+        return None
+    role = source_role.strip()
+    if not role:
+        return None
+    if role not in VALID_SOURCE_ROLES:
+        raise ValueError(
+            f"{owner} source_role must be one of {sorted(VALID_SOURCE_ROLES)}"
+        )
+    return role
 
 
 @dataclass(frozen=True)
@@ -17,6 +39,8 @@ class SourceFeed:
     url: str | None = None
     inoreader_stream_id: str | None = None
     source_type: str = "unknown"
+    source_role: str | None = None
+    source_pool_id: str | None = None
     tags: list[str] = field(default_factory=list)
     enabled: bool = True
     fetch_interval_minutes: int = 360
@@ -46,6 +70,10 @@ class SourceFeed:
             url=data.get("url"),
             inoreader_stream_id=data.get("inoreader_stream_id"),
             source_type=str(data.get("source_type") or "unknown"),
+            source_role=validate_source_role(data.get("source_role"), f"SourceFeed {feed_id!r}"),
+            source_pool_id=(str(data.get("source_pool_id")).strip() or None)
+            if data.get("source_pool_id") is not None
+            else None,
             tags=[str(tag) for tag in raw_tags],
             enabled=bool(data.get("enabled", True)),
             fetch_interval_minutes=int(data.get("fetch_interval_minutes", 360)),
@@ -85,6 +113,8 @@ class SourceRef:
     title: str
     source_name: str
     source_type: str
+    source_role: str | None = None
+    source_pool_id: str | None = None
     published_at: str | None = None
     license_hint: str | None = None
 
@@ -249,6 +279,8 @@ class Article:
     language: str | None = None
     tags: list[str] = field(default_factory=list)
     source_type: str = "unknown"
+    source_role: str | None = None
+    source_pool_id: str | None = None
     license_hint: str | None = None
     hash_url: str = ""
     hash_title: str = ""
@@ -273,6 +305,8 @@ class Article:
         language: str | None = None,
         tags: list[str] | None = None,
         source_type: str = "unknown",
+        source_role: str | None = None,
+        source_pool_id: str | None = None,
         license_hint: str | None = None,
         fetch_status: str = "fetched",
         fetch_error: str | None = None,
@@ -303,6 +337,8 @@ class Article:
             language=language,
             tags=tags or [],
             source_type=source_type,
+            source_role=validate_source_role(source_role, f"Article {clean_title!r}"),
+            source_pool_id=(source_pool_id.strip() or None) if source_pool_id else None,
             license_hint=license_hint,
             hash_url=url_hash,
             hash_title=stable_hash(clean_title),

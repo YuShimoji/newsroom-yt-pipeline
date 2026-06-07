@@ -1,6 +1,6 @@
 # Runtime State
 
-Last updated: 2026-06-07
+Last updated: 2026-06-08
 
 ## Sync Point
 
@@ -53,6 +53,9 @@ Last updated: 2026-06-07
 - P1 Packet persistence on 2026-06-07: added first-class runtime DB persistence for sanitized NotebookPacket records. `packet build` now upserts a packet row, `packet show` reads persisted packets by packet id or story id, and downstream helpers prefer persisted packet state while appending newly required `story_critical_sources` critical refs.
 - Packet persistence boundary: persisted packets store source refs, timeline, glossary, questions, format hint, export dir, and timestamps. They do not store raw article bodies, private data, NotebookLM outputs, YMM4 geometry, subtitle placement, overlay proof, `.ymmp`, or publishing approval.
 - Validation after the P1 Packet persistence slice: targeted packet/storage tests -> 13 passed; full `.venv\Scripts\python.exe -m pytest -q` -> 85 passed; `git diff --check` -> passed. Active runtime packet readback: `packet_20260603_2de578dcd4b0`, 1 primary source, 1 C1/NIST critical view. Rebuilt active export remains PASS with no issues found.
+- P2 Source expansion on 2026-06-08: added a metadata-only source pool registry at `configs\source_pools.yml` and allowed feed rows in `configs\sources.yml` to reference pools. Source roles are limited to `vendor_official`, `regulator_public`, `standards_body`, `independent_analysis`, `technical_reference`, and `critical_view_candidate`.
+- Source expansion boundary: RSS feed loading applies pool defaults to `SourceFeed`, RSS ingestion carries `source_role` / `source_pool_id` to Article rows, and NotebookPacket `SourceRef` rows preserve that metadata. `critical_view_candidate` rows are not auto-adopted into packet critical views; operator/manual selection remains required.
+- Validation after the P2 Source expansion slice: targeted source/storage/packet tests -> 16 passed; full `.venv\Scripts\python.exe -m pytest -q` -> 91 passed; `git diff --check` -> passed. Active runtime packet readback remained `packet_20260603_2de578dcd4b0` with 1 primary source and 1 C1/NIST critical view. Active export remained PASS with no issues found.
 
 ## Implemented Milestones
 
@@ -73,6 +76,7 @@ Last updated: 2026-06-07
 - P1 visual/asset/screenshot gate: done for the active path. Citation-only facts default to local `claim_evidence_card`; explicit source-card/screenshot intent still remains operator-reviewed.
 - P1 broad script review gate: done for the active path after explicit operator/editorial decision. Remaining script warnings are cleared for `script_d2a46430e084` through the tracked approved materialization and review gate artifacts.
 - P1 Packet persistence: done. NotebookPacket rows are persisted in the runtime DB and reused by downstream rebuild helpers.
+- P2 Source expansion: done for the deliberate source-pool registry and source-role propagation. It is metadata-only and does not implement broad crawling, Inoreader OAuth, NotebookLM automation, scraping, or auto source adoption.
 - M6.4 export integration: done. `newsroom export ymm4` now bundles `visual_plan.md`, `visual_ir.json`, `asset_manifest.yml`, and `quote_manifest.yml` alongside the existing script/source/notes/manifest handoff files.
 
 ## M6.4 Completed In Previous Slice
@@ -165,7 +169,7 @@ Last updated: 2026-06-07
 
 ## Handoff Snapshot
 
-- Assistant status: YMM4 manual import proof preparation is implemented and P0-A CSV import acceptance is passed for the active export; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts; P0.5-D approved narration was recorded, applied, and rebuilt for the active export; P1 QuoteManifest tightening, the remaining visual/asset/screenshot gate, the broad script review decision apply path, and Packet persistence are implemented for the active path.
+- Assistant status: YMM4 manual import proof preparation is implemented and P0-A CSV import acceptance is passed for the active export; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts; P0.5-D approved narration was recorded, applied, and rebuilt for the active export; P1 QuoteManifest tightening, the remaining visual/asset/screenshot gate, the broad script review decision apply path, Packet persistence, and P2 source-pool metadata are implemented for the active path.
 - User action: no active newsroom-side operator review decision is pending for `episode_756343df9853`. If downstream YMM4 subtitle/overlay work exposes a concrete failure, pass that result separately.
 - Assistant next after restart: preserve/regenerate active runtime state if needed, continue to a scoped next backlog item, or handle a concrete returned downstream failure. If runtime artifacts are missing, rebuild/persist the packet, reapply the tracked approved materialization record, rerun visual/asset/quote suggest, and rebuild export before inspecting.
 - What counts as progress next: active runtime preservation, next scoped backlog implementation, or handling a concrete returned downstream failure.
@@ -176,6 +180,7 @@ Last updated: 2026-06-07
 - The active proof bundle has a selected C1/NIST critical view in this local runtime checkout, but the runtime DB/export artifacts are git-ignored and may need regeneration in a different checkout.
 - The active approved narration has a durable tracked authority record, but DB ScriptIR and export artifacts remain git-ignored runtime state and may need reapplication/rebuild in a different checkout.
 - Packet persistence is implemented in the runtime DB, but runtime DB rows are not committed and may need regeneration in another checkout.
+- Source pools classify feeds and packet refs, but source candidates are not automatically adopted into story packets or critical views.
 - QuoteManifest persistence is artifact-only; quote records are not stored as first-class DB rows.
 - QuoteManifest rows are conservative candidates, not legal decisions. Citation-only rows are no longer `human_required`; direct quote, explicit screenshot/source-card, and data-use rows remain operator-review items when present.
 - The active export currently has 0 visual/asset/quote `human_required` items and 0 broad script `needs_human_review` flags, but this is not publishing approval.
@@ -197,11 +202,7 @@ Last updated: 2026-06-07
    Purpose: keep `story_20260603_503c39418f15862d` from regressing to a permanent `critical_views` warning in local runtime state.
    Effect: keeps the active export auditable without treating ignored DB/export artifacts as tracked source.
 
-2. P2: Source expansion.
-   Purpose: add more deliberate source pools without implementing broad crawling or Inoreader OAuth.
-   Effect: shortlist quality improves while RSS-first and manual approval boundaries remain intact.
-
-3. P2: M7 series / channel memory.
+2. P2: M7 series / channel memory.
    Purpose: connect daily production to series history, past claims, and next-episode planning.
    Effect: editorial continuity can be scored and reused across weekly planning.
 

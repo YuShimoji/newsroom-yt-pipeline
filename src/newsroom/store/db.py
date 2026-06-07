@@ -41,6 +41,8 @@ CREATE TABLE IF NOT EXISTS articles (
   language TEXT,
   tags TEXT NOT NULL,
   source_type TEXT NOT NULL,
+  source_role TEXT,
+  source_pool_id TEXT,
   license_hint TEXT,
   hash_url TEXT NOT NULL UNIQUE,
   hash_title TEXT NOT NULL,
@@ -171,6 +173,19 @@ def connect(db_path: str | Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
 def init_db(db_path: str | Path = DEFAULT_DB_PATH) -> None:
     with connect(db_path) as connection:
         connection.executescript(SCHEMA)
+        _ensure_column(connection, "articles", "source_role", "TEXT")
+        _ensure_column(connection, "articles", "source_pool_id", "TEXT")
+
+
+def _ensure_column(
+    connection: sqlite3.Connection, table_name: str, column_name: str, column_type: str
+) -> None:
+    columns = {
+        str(row["name"])
+        for row in connection.execute(f"PRAGMA table_info({table_name})").fetchall()
+    }
+    if column_name not in columns:
+        connection.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}")
 
 
 def upsert_article(db_path: str | Path, article: Article) -> None:
@@ -182,14 +197,14 @@ def upsert_article(db_path: str | Path, article: Article) -> None:
             INSERT INTO articles (
               id, url, canonical_url, title, source_name, source_url, author,
               published_at, fetched_at, body_text, summary, language, tags,
-              source_type, license_hint, hash_url, hash_title, hash_body,
-              fetch_status, fetch_error
+              source_type, source_role, source_pool_id, license_hint, hash_url,
+              hash_title, hash_body, fetch_status, fetch_error
             )
             VALUES (
               :id, :url, :canonical_url, :title, :source_name, :source_url, :author,
               :published_at, :fetched_at, :body_text, :summary, :language, :tags,
-              :source_type, :license_hint, :hash_url, :hash_title, :hash_body,
-              :fetch_status, :fetch_error
+              :source_type, :source_role, :source_pool_id, :license_hint, :hash_url,
+              :hash_title, :hash_body, :fetch_status, :fetch_error
             )
             ON CONFLICT(hash_url) DO UPDATE SET
               title = excluded.title,
@@ -203,6 +218,8 @@ def upsert_article(db_path: str | Path, article: Article) -> None:
               language = excluded.language,
               tags = excluded.tags,
               source_type = excluded.source_type,
+              source_role = excluded.source_role,
+              source_pool_id = excluded.source_pool_id,
               license_hint = excluded.license_hint,
               hash_title = excluded.hash_title,
               hash_body = excluded.hash_body,
@@ -778,6 +795,8 @@ def _source_ref_to_dict(ref: SourceRef) -> dict[str, object]:
         "title": ref.title,
         "source_name": ref.source_name,
         "source_type": ref.source_type,
+        "source_role": ref.source_role,
+        "source_pool_id": ref.source_pool_id,
         "published_at": ref.published_at,
         "license_hint": ref.license_hint,
     }
@@ -790,6 +809,8 @@ def _dict_to_source_ref(payload: dict[str, object]) -> SourceRef:
         title=str(payload["title"]),
         source_name=str(payload["source_name"]),
         source_type=str(payload["source_type"]),
+        source_role=payload.get("source_role"),
+        source_pool_id=payload.get("source_pool_id"),
         published_at=payload.get("published_at"),
         license_hint=payload.get("license_hint"),
     )
@@ -920,6 +941,8 @@ def _article_values(article: Article) -> dict[str, object]:
         "language": article.language,
         "tags": json.dumps(article.tags, ensure_ascii=False),
         "source_type": article.source_type,
+        "source_role": article.source_role,
+        "source_pool_id": article.source_pool_id,
         "license_hint": article.license_hint,
         "hash_url": article.hash_url,
         "hash_title": article.hash_title,
@@ -947,6 +970,8 @@ def _row_to_article(row: sqlite3.Row) -> Article:
         language=row["language"],
         tags=tags,
         source_type=row["source_type"],
+        source_role=row["source_role"],
+        source_pool_id=row["source_pool_id"],
         license_hint=row["license_hint"],
         hash_url=row["hash_url"],
         hash_title=row["hash_title"],

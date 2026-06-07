@@ -113,6 +113,8 @@ def test_notebook_packet_round_trips_through_sqlite(tmp_path):
                 title="Primary source",
                 source_name="Microsoft Blog",
                 source_type="official",
+                source_role="vendor_official",
+                source_pool_id="microsoft_official",
                 published_at="2026-05-18T00:00:00+00:00",
                 license_hint="public",
             )
