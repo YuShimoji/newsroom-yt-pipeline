@@ -7,6 +7,7 @@ Last updated: 2026-06-08
 - Current sync base HEAD before this slice: `4b83531 feat: integrate M6 artifacts into YMM4 export`.
 - Current pulled HEAD before this docs-only handoff refresh: `8c3bc27 docs: refresh handoff restart point`.
 - Remote status at restart: `HEAD...origin/main` was `0 0`.
+- Cross-terminal handoff confirmation on 2026-06-08: HEAD is `5afd0f8 feat: add deliberate source pools`, `HEAD...origin/main` is `0 0`, the working tree is clean, active `packet show --story story_20260603_503c39418f15862d` reads back `packet_20260603_2de578dcd4b0`, and active `export inspect --episode-dir data\exports\episode_756343df9853` is PASS with no issues found.
 - M6.4 export integration is pushed to `origin/main` and was in sync before this slice.
 - YMM4 import proof preparation and handoff confirmation are pushed to `origin/main`; pull latest `origin/main` and read `docs/HANDOFF.md` as the short restart packet.
 - Working tree was clean before the local YMM4 import proof preparation slice.
