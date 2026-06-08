@@ -59,6 +59,7 @@ Last updated: 2026-06-08
 - Validation after the P2 Source expansion slice: targeted source/storage/packet tests -> 16 passed; full `.venv\Scripts\python.exe -m pytest -q` -> 91 passed; `git diff --check` -> passed. Active runtime packet readback remained `packet_20260603_2de578dcd4b0` with 1 primary source and 1 C1/NIST critical view. Active export remained PASS with no issues found.
 - M7 channel memory seed on 2026-06-08: added `docs\channel_memory\copilot_watch.yml` and `newsroom.editorial.channel_memory` as the first narrow series/channel-memory slice. The record links the active episode/story/script/packet to compact claim summaries, source-role coverage, NIST critical-view use, open questions, and follow-up seeds without raw article bodies, private data, full narration text, runtime DB paths, screenshots, YMM4 geometry, subtitle coordinates, `.ymmp`, or overlay proof. Validation: channel-memory tests -> 5 passed; active export inspect remained PASS with no issues found.
 - M7-B series report / channel memory readback on 2026-06-08: added `newsroom series report --series <series_id>` and a report renderer for `ChannelMemory`. The report is read-only and shows series title/status, episode/story/script/packet ids, source-role coverage, critical views, compact claims, open questions, and follow-up seeds, while explicitly stating that seeds are not approved stories. Validation: channel-memory CLI tests -> 7 passed; full `.venv\Scripts\python.exe -m pytest -q` -> 98 passed; `git diff --check` -> passed; active export inspect remained PASS / no issues found.
+- M7-C channel memory append workflow on 2026-06-08: added `newsroom series append-episode --series <series_id> --episode-record <path>` as a read/validate/write path for already approved episode memory. It rejects duplicate episode/story/script/packet ids, rejects forbidden raw/private/runtime/YMM4/proof fields, preserves follow-up candidates as `seed`, and does not mutate runtime DB/export/proof state.
 
 ## Implemented Milestones
 
@@ -82,6 +83,7 @@ Last updated: 2026-06-08
 - P2 Source expansion: done for the deliberate source-pool registry and source-role propagation. It is metadata-only and does not implement broad crawling, Inoreader OAuth, NotebookLM automation, scraping, or auto source adoption.
 - M7 channel memory seed: done for the first tracked sanitized series memory record and schema validator. It records editorial continuity and next-episode seeds only; no autonomous recommendation, crawling, NotebookLM automation, dashboard, or publishing strategy is implemented.
 - M7-B series report readback: done. `newsroom series report --series copilot_watch` renders tracked memory for human inspection without appending episodes, promoting sources, mutating runtime artifacts, or selecting stories.
+- M7-C channel memory append workflow: done. `newsroom series append-episode --series copilot_watch --episode-record <path>` appends validated approved episode memory without generating episodes, promoting seeds, or writing runtime artifacts.
 - M6.4 export integration: done. `newsroom export ymm4` now bundles `visual_plan.md`, `visual_ir.json`, `asset_manifest.yml`, and `quote_manifest.yml` alongside the existing script/source/notes/manifest handoff files.
 
 ## M6.4 Completed In Previous Slice
@@ -174,7 +176,7 @@ Last updated: 2026-06-08
 
 ## Handoff Snapshot
 
-- Assistant status: YMM4 manual import proof preparation is implemented and P0-A CSV import acceptance is passed for the active export; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts; P0.5-D approved narration was recorded, applied, and rebuilt for the active export; P1 QuoteManifest tightening, the remaining visual/asset/screenshot gate, the broad script review decision apply path, Packet persistence, P2 source-pool metadata, and the first M7 channel-memory seed are implemented for the active path.
+- Assistant status: YMM4 manual import proof preparation is implemented and P0-A CSV import acceptance is passed for the active export; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts; P0.5-D approved narration was recorded, applied, and rebuilt for the active export; P1 QuoteManifest tightening, the remaining visual/asset/screenshot gate, the broad script review decision apply path, Packet persistence, P2 source-pool metadata, M7 channel-memory seed, M7-B readback, and M7-C append workflow are implemented for the active path.
 - User action: no active newsroom-side operator review decision is pending for `episode_756343df9853`. If downstream YMM4 subtitle/overlay work exposes a concrete failure, pass that result separately.
 - Assistant next after restart: preserve/regenerate active runtime state if needed, continue to a scoped next backlog item, or handle a concrete returned downstream failure. If runtime artifacts are missing, rebuild/persist the packet, reapply the tracked approved materialization record, rerun visual/asset/quote suggest, and rebuild export before inspecting.
 - What counts as progress next: active runtime preservation, next scoped backlog implementation, or handling a concrete returned downstream failure.
@@ -207,9 +209,9 @@ Last updated: 2026-06-08
    Purpose: keep `story_20260603_503c39418f15862d` from regressing to a permanent `critical_views` warning in local runtime state.
    Effect: keeps the active export auditable without treating ignored DB/export artifacts as tracked source.
 
-2. P2: M7 series / channel memory.
-   Purpose: connect daily production to series history, past claims, and next-episode planning.
-   Effect: editorial continuity can be scored and reused across weekly planning.
+2. M7-D: source-role backfill for legacy active memory.
+   Purpose: reduce `unclassified / no_pool` readback in the first Copilot Watch memory record without inventing source decisions.
+   Effect: series continuity reports can show deliberate source-role coverage more clearly.
 
 ## Restart Commands
 

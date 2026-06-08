@@ -20,6 +20,48 @@ The report includes episode ids, story/script/packet ids, source-role coverage,
 critical views, compact claims, open questions, and follow-up seeds. Follow-up
 seeds are explicitly not approved stories.
 
+## Append Workflow
+
+Append only operator/editorial-approved episode memory. The append workflow is
+for recording a completed newsroom handoff, not for selecting a story or
+promoting a follow-up seed.
+
+```powershell
+.venv\Scripts\python.exe -m newsroom.cli.main series append-episode --series copilot_watch --episode-record path\to\episode_record.yml
+```
+
+The command validates the existing memory and the incoming record, rejects
+duplicate `episode_id`, `story_id`, `script_id`, or `packet_id` values, writes
+only the tracked memory YAML, and leaves runtime DB/export/proof artifacts
+untouched.
+
+Episode records may be either a bare episode mapping or a wrapper with:
+
+```yaml
+artifact_type: channel_memory_episode
+schema_version: 1
+```
+
+Required episode fields:
+
+- `episode_id`
+- `story_id`
+- `script_id`
+- `packet_id`
+- `topic`
+- `status`
+
+Supported review fields:
+
+- `source_roles_used`
+- `critical_views_used`
+- `claims_made`
+- `open_questions`
+- `followup_candidates`
+
+`followup_candidates[*].status` must remain `seed`; an append record cannot turn
+a seed into an approved story.
+
 ## Record Shape
 
 Use one YAML file per series:

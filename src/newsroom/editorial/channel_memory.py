@@ -24,6 +24,14 @@ FORBIDDEN_MEMORY_KEYS = {
     "ymm4_geometry",
 }
 
+EPISODE_RECORD_OPTIONAL_KEYS = {
+    "claims_made",
+    "critical_views_used",
+    "followup_candidates",
+    "open_questions",
+    "source_roles_used",
+}
+
 
 class ChannelMemoryValidationError(ValueError):
     """Raised when a tracked channel memory record is not safe to use."""
@@ -176,12 +184,48 @@ def render_channel_memory_report(memory: ChannelMemory) -> str:
 
 def load_channel_memory(path: str | Path) -> ChannelMemory:
     memory_path = Path(path)
-    with memory_path.open("r", encoding="utf-8") as handle:
-        payload = yaml.safe_load(handle) or {}
+    payload = _load_yaml_mapping(memory_path, "channel memory root")
     if not isinstance(payload, dict):
         raise ChannelMemoryValidationError("channel memory root must be a mapping")
     validate_channel_memory_payload(payload)
     return _memory_from_payload(payload)
+
+
+def append_episode_record(
+    memory_path: str | Path,
+    episode_record_path: str | Path,
+) -> ChannelMemory:
+    memory_file = Path(memory_path)
+    memory_payload = _load_yaml_mapping(memory_file, "channel memory root")
+    validate_channel_memory_payload(memory_payload)
+
+    episode_payload = load_episode_record_payload(episode_record_path)
+    _reject_duplicate_episode_ids(memory_payload["episodes"], episode_payload)
+
+    memory_payload["episodes"].append(episode_payload)
+    validate_channel_memory_payload(memory_payload)
+    with memory_file.open("w", encoding="utf-8", newline="\n") as handle:
+        yaml.safe_dump(
+            memory_payload,
+            handle,
+            allow_unicode=True,
+            sort_keys=False,
+        )
+    return _memory_from_payload(memory_payload)
+
+
+def load_episode_record_payload(path: str | Path) -> dict[str, Any]:
+    payload = _load_yaml_mapping(Path(path), "episode record")
+    if payload.get("artifact_type") is not None:
+        _require(payload, "artifact_type", "channel_memory_episode")
+        _require(payload, "schema_version", 1)
+        payload = {
+            key: value
+            for key, value in payload.items()
+            if key not in {"artifact_type", "schema_version"}
+        }
+    _validate_episode_record_payload(payload)
+    return payload
 
 
 def validate_channel_memory_payload(payload: dict[str, Any]) -> None:
@@ -196,6 +240,26 @@ def validate_channel_memory_payload(payload: dict[str, Any]) -> None:
         raise ChannelMemoryValidationError("channel memory requires at least one episode")
     for episode in episodes:
         _validate_episode(episode)
+    _reject_duplicate_episode_ids(episodes)
+
+
+def _validate_episode_record_payload(payload: dict[str, Any]) -> None:
+    _reject_forbidden_keys(payload)
+    allowed_keys = {
+        "episode_id",
+        "story_id",
+        "script_id",
+        "packet_id",
+        "topic",
+        "status",
+        *EPISODE_RECORD_OPTIONAL_KEYS,
+    }
+    unknown_keys = sorted(str(key) for key in payload.keys() if key not in allowed_keys)
+    if unknown_keys:
+        raise ChannelMemoryValidationError(
+            f"episode record contains unsupported keys: {', '.join(unknown_keys)}"
+        )
+    _validate_episode(payload)
 
 
 def _validate_episode(payload: Any) -> None:
@@ -254,6 +318,8 @@ def _validate_followup(payload: Any) -> None:
         raise ChannelMemoryValidationError("followup_candidates entries must be mappings")
     for key in ("candidate_id", "title", "rationale", "status"):
         _require_string(payload, key)
+    if payload["status"] != "seed":
+        raise ChannelMemoryValidationError("followup_candidates status must be 'seed'")
     roles = payload.get("source_roles_needed", [])
     if not isinstance(roles, list):
         raise ChannelMemoryValidationError("source_roles_needed must be a list")
@@ -282,6 +348,32 @@ def _require(payload: dict[str, Any], key: str, expected: Any) -> None:
 def _require_string(payload: dict[str, Any], key: str) -> None:
     if not isinstance(payload.get(key), str) or not payload[key].strip():
         raise ChannelMemoryValidationError(f"{key} must be a non-empty string")
+
+
+def _load_yaml_mapping(path: Path, label: str) -> dict[str, Any]:
+    with path.open("r", encoding="utf-8") as handle:
+        payload = yaml.safe_load(handle) or {}
+    if not isinstance(payload, dict):
+        raise ChannelMemoryValidationError(f"{label} must be a mapping")
+    return payload
+
+
+def _reject_duplicate_episode_ids(
+    existing_episodes: list[dict[str, Any]],
+    new_episode: dict[str, Any] | None = None,
+) -> None:
+    episodes = [*existing_episodes]
+    if new_episode is not None:
+        episodes.append(new_episode)
+    for key in ("episode_id", "story_id", "script_id", "packet_id"):
+        seen: set[str] = set()
+        for episode in episodes:
+            value = episode.get(key)
+            if not isinstance(value, str):
+                continue
+            if value in seen:
+                raise ChannelMemoryValidationError(f"duplicate {key}: {value}")
+            seen.add(value)
 
 
 def _memory_from_payload(payload: dict[str, Any]) -> ChannelMemory:

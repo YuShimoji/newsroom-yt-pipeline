@@ -10,6 +10,8 @@ from newsroom.clustering.story_clusterer import StoryClusterer
 from newsroom.config import DEFAULT_SERIES_CONFIG, load_series, load_source_feeds
 from newsroom.editorial.channel_memory import (
     DEFAULT_CHANNEL_MEMORY_ROOT,
+    ChannelMemoryValidationError,
+    append_episode_record,
     load_channel_memory,
     render_channel_memory_report,
 )
@@ -114,6 +116,21 @@ def build_parser() -> argparse.ArgumentParser:
     )
     series_report.add_argument("--series", required=True, help="Series id, e.g. copilot_watch")
     series_report.add_argument(
+        "--memory-root",
+        default=str(DEFAULT_CHANNEL_MEMORY_ROOT),
+        help="Root directory for tracked channel memory YAML records",
+    )
+    series_append = series_sub.add_parser(
+        "append-episode",
+        help="Append an approved episode record to tracked channel memory",
+    )
+    series_append.add_argument("--series", required=True, help="Series id, e.g. copilot_watch")
+    series_append.add_argument(
+        "--episode-record",
+        required=True,
+        help="YAML episode record to append after validation",
+    )
+    series_append.add_argument(
         "--memory-root",
         default=str(DEFAULT_CHANNEL_MEMORY_ROOT),
         help="Root directory for tracked channel memory YAML records",
@@ -682,6 +699,8 @@ def _load_series_index(path: str) -> dict[str, object]:
 def cmd_series(args: argparse.Namespace) -> int:
     if args.series_command == "report":
         return _cmd_series_report(args)
+    if args.series_command == "append-episode":
+        return _cmd_series_append_episode(args)
     print(f"Unsupported series subcommand: {args.series_command}")
     return 2
 
@@ -693,6 +712,23 @@ def _cmd_series_report(args: argparse.Namespace) -> int:
         return 1
     memory = load_channel_memory(memory_path)
     print(render_channel_memory_report(memory))
+    return 0
+
+
+def _cmd_series_append_episode(args: argparse.Namespace) -> int:
+    memory_path = Path(args.memory_root) / f"{args.series}.yml"
+    if not memory_path.exists():
+        print(f"Channel memory not found: {memory_path}")
+        return 1
+    try:
+        memory = append_episode_record(memory_path, args.episode_record)
+    except (ChannelMemoryValidationError, FileNotFoundError) as exc:
+        print(f"Channel memory append failed: {exc}")
+        return 1
+    print(f"Appended episode record to {memory_path}")
+    print(f"Series: {memory.title} ({memory.series_id})")
+    print(f"Episodes: {len(memory.episodes)}")
+    print("Important: follow-up seeds remain seeds and are not approved stories.")
     return 0
 
 

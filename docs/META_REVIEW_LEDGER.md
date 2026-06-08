@@ -237,6 +237,17 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - next_allowed_work: refine report formatting or add an append workflow only after a second episode or a returned manual story-selection decision exists.
 - prohibited_work: do not add autonomous recommendation, broad crawling, social trend scraping, Inoreader OAuth, NotebookLM API automation, raw article body tracking, source candidate auto-promotion, dashboarding, NLMYTGen integration, YMM4 geometry, overlay proof, full `.ymmp`, or publishing strategy.
 
+## 2026-06-08 M7-C Channel Memory Append Workflow Gate
+
+- current_task: add an operator-safe append workflow for approved episode memory.
+- decision: narrow.
+- reason: the useful machine-closeable step is validating and appending an already approved episode record to tracked channel memory, not generating a second episode or promoting a follow-up seed.
+- active_artifact: `docs\channel_memory\copilot_watch.yml` remains the tracked memory record; active runtime export `data\exports\episode_756343df9853` remains runtime evidence and is not rewritten by append.
+- true_blockers: operator/editorial authority is required before an episode record can be considered approved input and before any follow-up seed becomes a story.
+- stale_or_false_blockers: append workflow support does not require a DB migration, dashboard, runtime packet archive, source candidate promotion, or NotebookLM/YMM4 automation.
+- next_allowed_work: use `newsroom series append-episode --series <series_id> --episode-record <path>` when a second approved episode record exists, or backfill legacy source roles only with explicit source authority.
+- prohibited_work: do not auto-generate episodes, auto-promote seeds, implement autonomous recommendation, add broad crawling/social trend scraping/Inoreader OAuth/NotebookLM API automation, store raw/private/copyright-unclear text, commit runtime artifacts, or move YMM4 geometry/overlay/full `.ymmp`/publishing into newsroom.
+
 ## Blocked Or Pending
 
 - YMM4 GUI import proof: passed for CSV import acceptance and handoff-file readability on `episode_756343df9853`; downstream subtitle/overlay/final geometry proof remains out of newsroom scope.

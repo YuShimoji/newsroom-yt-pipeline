@@ -158,6 +158,12 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - The report explicitly states that follow-up seeds are not approved stories and still require normal editorial selection and source approval.
   - No episode append workflow, autonomous recommendation, source candidate promotion, dashboard, publishing strategy, NLMYTGen integration, DB migration, or runtime export mutation was added.
   - Validation: channel-memory CLI tests -> 7 passed; full `.venv\Scripts\python.exe -m pytest -q` -> 98 passed; `git diff --check` -> passed; active export inspect remained PASS / `No issues found.`
+- M7-C channel memory append workflow on 2026-06-08:
+  - Added `newsroom series append-episode --series <series_id> --episode-record <path>` as a file-based append path for already approved episode memory.
+  - The append path validates the existing tracked memory and incoming episode record, rejects duplicate `episode_id`, `story_id`, `script_id`, and `packet_id`, and keeps follow-up candidates as `seed`.
+  - Episode append records can carry source-role coverage, critical-view use, compact claims, open questions, and follow-up seeds, but cannot carry raw article body, private data, full narration text, runtime DB paths, proof/screenshot paths, YMM4 geometry, subtitle coordinates, `.ymmp`, or overlay proof.
+  - This is not second-episode generation, follow-up seed promotion, autonomous recommendation, source candidate promotion, dashboarding, publishing strategy, NLMYTGen integration, DB migration, or runtime export mutation.
+  - Validation: channel-memory append tests -> 15 passed; full `.venv\Scripts\python.exe -m pytest -q` -> 106 passed; `git diff --check` -> passed; active export inspect remained PASS / `No issues found.`
 - Local validation after the P0.5-D approved materialization apply:
   - `.venv\Scripts\python.exe -m pytest -q` -> 72 passed.
   - `git diff --check` -> passed.
@@ -210,7 +216,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - proof draft: `data\proofs\ymm4_import\episode_756343df9853\proof.yml`
   - inspector result: `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings.
 - Runtime proof artifacts under `data\proofs\` are intentionally git-ignored.
-- Implementation frontier: M1 through M6.4 are implemented; P0-A CSV import acceptance is proven for the active YMM4 export after adding the `ナレーター` character in the target YMM4 environment; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST; P0.5 approved materialization authority is implemented and applied to the active script; P1 quote/visual/asset/script review gates are applied for the active export; P1 Packet persistence is implemented for DB-backed NotebookPacket rows and downstream reuse; P2 source pools and the first M7 channel-memory seed are implemented.
+- Implementation frontier: M1 through M6.4 are implemented; P0-A CSV import acceptance is proven for the active YMM4 export after adding the `ナレーター` character in the target YMM4 environment; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST; P0.5 approved materialization authority is implemented and applied to the active script; P1 quote/visual/asset/script review gates are applied for the active export; P1 Packet persistence is implemented for DB-backed NotebookPacket rows and downstream reuse; P2 source pools, the first M7 channel-memory seed, M7-B readback, and M7-C append workflow are implemented.
 
 ## Immediate Resume Packet
 

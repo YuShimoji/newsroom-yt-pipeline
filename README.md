@@ -57,6 +57,15 @@ Read back a tracked series memory report:
 newsroom series report --series copilot_watch
 ```
 
+Append an operator-approved episode memory record to a tracked series:
+
+```bash
+newsroom series append-episode --series copilot_watch --episode-record path\to\episode_record.yml
+```
+
+The append command validates the record, rejects duplicate episode/story/script/
+packet ids, and keeps follow-up candidates as seeds rather than approved stories.
+
 Print today's stored article candidates:
 
 ```bash

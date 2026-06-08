@@ -7,7 +7,9 @@ import yaml
 
 from newsroom.editorial.channel_memory import (
     ChannelMemoryValidationError,
+    append_episode_record,
     load_channel_memory,
+    load_episode_record_payload,
     render_channel_memory_report,
     validate_channel_memory_payload,
 )
@@ -96,6 +98,116 @@ def test_channel_memory_rejects_unknown_source_role():
         validate_channel_memory_payload(payload)
 
 
+def test_append_episode_record_adds_valid_episode(tmp_path):
+    memory_path = _write_yaml(tmp_path / "copilot_watch.yml", _minimal_payload())
+    record_path = _write_yaml(tmp_path / "episode_record.yml", _episode_record())
+
+    memory = append_episode_record(memory_path, record_path)
+
+    assert len(memory.episodes) == 2
+    assert memory.episodes[1].episode_id == "episode_2"
+    assert memory.episodes[1].followup_candidates[0].status == "seed"
+    report = render_channel_memory_report(memory)
+    assert "Episodes: 2" in report
+    assert "Episode episode_2" in report
+    assert "[seed] candidate_2" in report
+
+
+def test_append_episode_record_rejects_duplicate_episode_id(tmp_path):
+    memory_path = _write_yaml(tmp_path / "copilot_watch.yml", _minimal_payload())
+    record = _episode_record()
+    record["episode_id"] = "episode_1"
+    record_path = _write_yaml(tmp_path / "episode_record.yml", record)
+
+    with pytest.raises(ChannelMemoryValidationError, match="duplicate episode_id"):
+        append_episode_record(memory_path, record_path)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("story_id", "story_1", "duplicate story_id"),
+        ("script_id", "script_1", "duplicate script_id"),
+        ("packet_id", "packet_1", "duplicate packet_id"),
+    ],
+)
+def test_append_episode_record_rejects_duplicate_story_script_packet_ids(
+    tmp_path, field, value, message
+):
+    memory_path = _write_yaml(tmp_path / "copilot_watch.yml", _minimal_payload())
+    record = _episode_record()
+    record[field] = value
+    record_path = _write_yaml(tmp_path / "episode_record.yml", record)
+
+    with pytest.raises(ChannelMemoryValidationError, match=message):
+        append_episode_record(memory_path, record_path)
+
+
+def test_episode_record_rejects_forbidden_and_unknown_fields(tmp_path):
+    record = _episode_record()
+    record["runtime_db_path"] = "data/newsroom.sqlite"
+    record_path = _write_yaml(tmp_path / "episode_record.yml", record)
+
+    with pytest.raises(ChannelMemoryValidationError, match="runtime_db_path"):
+        load_episode_record_payload(record_path)
+
+    record = _episode_record()
+    record["export_manifest"] = "data/exports/episode_2/export_manifest.json"
+    record_path = _write_yaml(tmp_path / "episode_record.yml", record)
+
+    with pytest.raises(ChannelMemoryValidationError, match="unsupported keys"):
+        load_episode_record_payload(record_path)
+
+
+def test_followup_candidate_status_must_remain_seed():
+    payload = _minimal_payload()
+    payload["episodes"][0]["followup_candidates"][0]["status"] = "approved_story"
+
+    with pytest.raises(ChannelMemoryValidationError, match="must be 'seed'"):
+        validate_channel_memory_payload(payload)
+
+
+def test_series_append_episode_cli_writes_memory_and_keeps_report_stable(tmp_path, capsys):
+    memory_root = tmp_path / "memory"
+    memory_root.mkdir()
+    _write_yaml(memory_root / "copilot_watch.yml", _minimal_payload())
+    record_path = _write_yaml(tmp_path / "episode_record.yml", _episode_record())
+
+    exit_code = main(
+        [
+            "series",
+            "append-episode",
+            "--series",
+            "copilot_watch",
+            "--memory-root",
+            str(memory_root),
+            "--episode-record",
+            str(record_path),
+        ]
+    )
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert "Episodes: 2" in output
+    assert "follow-up seeds remain seeds" in output
+
+    exit_code = main(
+        [
+            "series",
+            "report",
+            "--series",
+            "copilot_watch",
+            "--memory-root",
+            str(memory_root),
+        ]
+    )
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert "Episodes: 2" in output
+    assert "Episode episode_2" in output
+    assert "[seed] candidate_2" in output
+
+
 def _minimal_payload() -> dict:
     return {
         "artifact_type": "channel_memory",
@@ -142,3 +254,59 @@ def _minimal_payload() -> dict:
             }
         ],
     }
+
+
+def _episode_record() -> dict:
+    return {
+        "artifact_type": "channel_memory_episode",
+        "schema_version": 1,
+        "episode_id": "episode_2",
+        "story_id": "story_2",
+        "script_id": "script_2",
+        "packet_id": "packet_2",
+        "topic": "A second source-bounded topic.",
+        "status": "newsroom_handoff_clean",
+        "source_roles_used": [
+            {
+                "source_role": "vendor_official",
+                "source_pool_id": "microsoft_official",
+                "source_type": "official",
+                "source_count": 1,
+                "article_ids": ["article_2"],
+            }
+        ],
+        "critical_views_used": [
+            {
+                "article_id": "article_3",
+                "source_name": "Regulator",
+                "source_type": "official",
+                "source_role": "regulator_public",
+                "source_pool_id": "regulator_public",
+                "title": "Public oversight note",
+                "purpose": "Keep the story bounded by public risk framing.",
+            }
+        ],
+        "claims_made": [
+            {
+                "claim_id": "claim_2",
+                "summary": "A compact second-episode claim summary.",
+                "source_refs": ["article_2"],
+                "critical_refs": ["article_3"],
+            }
+        ],
+        "open_questions": ["What source should be paired next?"],
+        "followup_candidates": [
+            {
+                "candidate_id": "candidate_2",
+                "title": "Next seed",
+                "rationale": "Keep the trail visible without selecting a story.",
+                "source_roles_needed": ["vendor_official", "regulator_public"],
+                "status": "seed",
+            }
+        ],
+    }
+
+
+def _write_yaml(path: Path, payload: dict) -> Path:
+    path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+    return path
