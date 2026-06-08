@@ -51,6 +51,12 @@ approved episodes to series continuity, source-role coverage, critical views,
 open questions, and follow-up seeds without storing raw article bodies or
 automating editorial recommendations.
 
+Read back a tracked series memory report:
+
+```bash
+newsroom series report --series copilot_watch
+```
+
 Print today's stored article candidates:
 
 ```bash

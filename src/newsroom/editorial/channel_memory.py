@@ -9,6 +9,8 @@ import yaml
 from newsroom.store.models import validate_source_role
 
 
+DEFAULT_CHANNEL_MEMORY_ROOT = Path("docs/channel_memory")
+
 FORBIDDEN_MEMORY_KEYS = {
     "article_body",
     "approved_text",
@@ -85,6 +87,91 @@ class ChannelMemory:
     title: str
     status: str
     episodes: list[EpisodeMemory] = field(default_factory=list)
+
+
+def render_channel_memory_report(memory: ChannelMemory) -> str:
+    lines = [
+        f"Series: {memory.title} ({memory.series_id})",
+        f"Status: {memory.status}",
+        f"Episodes: {len(memory.episodes)}",
+        "",
+        "Important: follow-up seeds are not approved stories.",
+        "They require normal editorial selection and source approval before use.",
+    ]
+    for episode in memory.episodes:
+        lines.extend(
+            [
+                "",
+                f"## Episode {episode.episode_id}",
+                f"- Status: {episode.status}",
+                f"- Story: {episode.story_id}",
+                f"- Script: {episode.script_id}",
+                f"- Packet: {episode.packet_id}",
+                f"- Topic: {episode.topic}",
+                "",
+                "Source-role coverage:",
+            ]
+        )
+        if episode.source_roles_used:
+            for role in episode.source_roles_used:
+                role_label = role.source_role or "unclassified"
+                pool_label = role.source_pool_id or "no_pool"
+                article_ids = ", ".join(role.article_ids) if role.article_ids else "none"
+                lines.append(
+                    f"- {role_label} / {pool_label} / {role.source_type}: "
+                    f"{role.source_count} source(s) [{article_ids}]"
+                )
+        else:
+            lines.append("- none recorded")
+
+        lines.append("")
+        lines.append("Critical views:")
+        if episode.critical_views_used:
+            for critical in episode.critical_views_used:
+                title = f" - {critical.title}" if critical.title else ""
+                purpose = f" ({critical.purpose})" if critical.purpose else ""
+                role_label = critical.source_role or "unclassified"
+                lines.append(
+                    f"- {critical.source_name}: {critical.article_id} "
+                    f"[{critical.source_type}, {role_label}]{title}{purpose}"
+                )
+        else:
+            lines.append("- none recorded")
+
+        lines.append("")
+        lines.append("Compact claims:")
+        if episode.claims_made:
+            for claim in episode.claims_made:
+                source_refs = ", ".join(claim.source_refs) or "none"
+                critical_refs = ", ".join(claim.critical_refs) or "none"
+                lines.append(
+                    f"- {claim.claim_id}: {claim.summary} "
+                    f"(sources: {source_refs}; critical: {critical_refs})"
+                )
+        else:
+            lines.append("- none recorded")
+
+        lines.append("")
+        lines.append("Open questions:")
+        if episode.open_questions:
+            lines.extend(f"- {question}" for question in episode.open_questions)
+        else:
+            lines.append("- none recorded")
+
+        lines.append("")
+        lines.append("Follow-up seeds:")
+        if episode.followup_candidates:
+            for candidate in episode.followup_candidates:
+                roles = ", ".join(candidate.source_roles_needed) or "none"
+                lines.append(
+                    f"- [{candidate.status}] {candidate.candidate_id}: "
+                    f"{candidate.title} (needed roles: {roles})"
+                )
+                lines.append(f"  Rationale: {candidate.rationale}")
+        else:
+            lines.append("- none recorded")
+
+    return "\n".join(lines)
 
 
 def load_channel_memory(path: str | Path) -> ChannelMemory:

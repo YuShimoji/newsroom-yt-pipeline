@@ -58,6 +58,7 @@ Last updated: 2026-06-08
 - Source expansion boundary: RSS feed loading applies pool defaults to `SourceFeed`, RSS ingestion carries `source_role` / `source_pool_id` to Article rows, and NotebookPacket `SourceRef` rows preserve that metadata. `critical_view_candidate` rows are not auto-adopted into packet critical views; operator/manual selection remains required.
 - Validation after the P2 Source expansion slice: targeted source/storage/packet tests -> 16 passed; full `.venv\Scripts\python.exe -m pytest -q` -> 91 passed; `git diff --check` -> passed. Active runtime packet readback remained `packet_20260603_2de578dcd4b0` with 1 primary source and 1 C1/NIST critical view. Active export remained PASS with no issues found.
 - M7 channel memory seed on 2026-06-08: added `docs\channel_memory\copilot_watch.yml` and `newsroom.editorial.channel_memory` as the first narrow series/channel-memory slice. The record links the active episode/story/script/packet to compact claim summaries, source-role coverage, NIST critical-view use, open questions, and follow-up seeds without raw article bodies, private data, full narration text, runtime DB paths, screenshots, YMM4 geometry, subtitle coordinates, `.ymmp`, or overlay proof. Validation: channel-memory tests -> 5 passed; active export inspect remained PASS with no issues found.
+- M7-B series report / channel memory readback on 2026-06-08: added `newsroom series report --series <series_id>` and a report renderer for `ChannelMemory`. The report is read-only and shows series title/status, episode/story/script/packet ids, source-role coverage, critical views, compact claims, open questions, and follow-up seeds, while explicitly stating that seeds are not approved stories. Validation: channel-memory CLI tests -> 7 passed; full `.venv\Scripts\python.exe -m pytest -q` -> 98 passed; `git diff --check` -> passed; active export inspect remained PASS / no issues found.
 
 ## Implemented Milestones
 
@@ -80,6 +81,7 @@ Last updated: 2026-06-08
 - P1 Packet persistence: done. NotebookPacket rows are persisted in the runtime DB and reused by downstream rebuild helpers.
 - P2 Source expansion: done for the deliberate source-pool registry and source-role propagation. It is metadata-only and does not implement broad crawling, Inoreader OAuth, NotebookLM automation, scraping, or auto source adoption.
 - M7 channel memory seed: done for the first tracked sanitized series memory record and schema validator. It records editorial continuity and next-episode seeds only; no autonomous recommendation, crawling, NotebookLM automation, dashboard, or publishing strategy is implemented.
+- M7-B series report readback: done. `newsroom series report --series copilot_watch` renders tracked memory for human inspection without appending episodes, promoting sources, mutating runtime artifacts, or selecting stories.
 - M6.4 export integration: done. `newsroom export ymm4` now bundles `visual_plan.md`, `visual_ir.json`, `asset_manifest.yml`, and `quote_manifest.yml` alongside the existing script/source/notes/manifest handoff files.
 
 ## M6.4 Completed In Previous Slice
@@ -195,7 +197,7 @@ Last updated: 2026-06-08
 - NotebookLM API automation is out of scope.
 - Full `.ymmp` generation is out of scope.
 - YouTube upload and publishing are out of scope.
-- M7 has only the first tracked channel-memory seed and validator. Series report, append workflow, weekly strategy, and autonomous planning are not implemented.
+- M7 has the first tracked channel-memory seed, validator, and read-only series report. Episode append workflow, weekly strategy, source promotion, and autonomous planning are not implemented.
 - Inoreader OAuth / token flow is still deferred.
 - External image download and automatic external asset approval remain out of scope.
 

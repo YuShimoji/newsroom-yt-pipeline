@@ -152,6 +152,12 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - Channel memory records reject raw article body, private data, full approved text, runtime DB paths, screenshots, YMM4 geometry, subtitle coordinates, `.ymmp`, and overlay proof fields.
   - This is not autonomous topic recommendation, broad crawling, NotebookLM automation, NLMYTGen integration, publishing strategy, or a dashboard.
   - Validation: channel-memory tests -> 5 passed; active export inspect remained PASS / `No issues found.`
+- M7-B series report / channel memory readback on 2026-06-08:
+  - Added `newsroom series report --series <series_id>` to render tracked channel memory for human review.
+  - The report shows series title/status, episode count, episode/story/script/packet ids, source-role coverage, critical views, compact claims, open questions, and follow-up seeds.
+  - The report explicitly states that follow-up seeds are not approved stories and still require normal editorial selection and source approval.
+  - No episode append workflow, autonomous recommendation, source candidate promotion, dashboard, publishing strategy, NLMYTGen integration, DB migration, or runtime export mutation was added.
+  - Validation: channel-memory CLI tests -> 7 passed; full `.venv\Scripts\python.exe -m pytest -q` -> 98 passed; `git diff --check` -> passed; active export inspect remained PASS / `No issues found.`
 - Local validation after the P0.5-D approved materialization apply:
   - `.venv\Scripts\python.exe -m pytest -q` -> 72 passed.
   - `git diff --check` -> passed.
@@ -290,6 +296,15 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - state: implemented as the first narrow slice. `docs\channel_memory\copilot_watch.yml` records the active episode and next-episode seeds; `newsroom.editorial.channel_memory` validates that records stay schema-safe and do not contain forbidden fields.
 - owner: assistant for schema/tooling; operator/editor for deciding which follow-up seed becomes an actual story.
 - next move: add a small report or append workflow only after another episode exists or the operator asks to promote a follow-up seed. Do not expand this into dashboarding, scraping, or publishing strategy.
+
+### M7-B: Series report readback
+
+- purpose: make tracked channel memory readable from the CLI without editing DB/export/runtime state.
+- effect: an operator can inspect series continuity, source-role coverage, critical-view use, compact claims, open questions, and follow-up seeds before deciding the next story.
+- requirements: read `docs\channel_memory\<series_id>.yml`; render only; do not auto-select stories, promote source candidates, or mutate runtime artifacts.
+- state: implemented. `newsroom series report --series copilot_watch` reads the tracked memory record and prints the report with an explicit note that follow-up seeds are not approved stories.
+- owner: assistant for report tooling; operator/editor for any future story selection.
+- next move: add append/report refinements only when a second episode exists or a manual promotion decision is returned.
 
 ## Boundaries
 

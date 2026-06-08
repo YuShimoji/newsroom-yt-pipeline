@@ -8,6 +8,11 @@ from pathlib import Path
 
 from newsroom.clustering.story_clusterer import StoryClusterer
 from newsroom.config import DEFAULT_SERIES_CONFIG, load_series, load_source_feeds
+from newsroom.editorial.channel_memory import (
+    DEFAULT_CHANNEL_MEMORY_ROOT,
+    load_channel_memory,
+    render_channel_memory_report,
+)
 from newsroom.ingest.inoreader_client import InoreaderClient
 from newsroom.ingest.rss_client import RssClient
 from newsroom.adapters.ymm4_export import (
@@ -100,6 +105,19 @@ def build_parser() -> argparse.ArgumentParser:
     shortlist_parser = subparsers.add_parser("shortlist", help="Print the top scored story clusters")
     _add_date_args(shortlist_parser)
     shortlist_parser.add_argument("--top", type=int, default=10, help="Number of stories to print")
+
+    series_parser = subparsers.add_parser("series", help="Series memory operations")
+    series_sub = series_parser.add_subparsers(dest="series_command", required=True)
+    series_report = series_sub.add_parser(
+        "report",
+        help="Read back a tracked channel memory report",
+    )
+    series_report.add_argument("--series", required=True, help="Series id, e.g. copilot_watch")
+    series_report.add_argument(
+        "--memory-root",
+        default=str(DEFAULT_CHANNEL_MEMORY_ROOT),
+        help="Root directory for tracked channel memory YAML records",
+    )
 
     packet_parser = subparsers.add_parser("packet", help="NotebookLM packet operations")
     packet_sub = packet_parser.add_subparsers(dest="packet_command", required=True)
@@ -659,6 +677,23 @@ def _load_series_index(path: str) -> dict[str, object]:
     except FileNotFoundError:
         return {}
     return {series.id: series for series in series_list}
+
+
+def cmd_series(args: argparse.Namespace) -> int:
+    if args.series_command == "report":
+        return _cmd_series_report(args)
+    print(f"Unsupported series subcommand: {args.series_command}")
+    return 2
+
+
+def _cmd_series_report(args: argparse.Namespace) -> int:
+    memory_path = Path(args.memory_root) / f"{args.series}.yml"
+    if not memory_path.exists():
+        print(f"Channel memory not found: {memory_path}")
+        return 1
+    memory = load_channel_memory(memory_path)
+    print(render_channel_memory_report(memory))
+    return 0
 
 
 def cmd_packet(args: argparse.Namespace) -> int:
@@ -1391,6 +1426,7 @@ def main(argv: list[str] | None = None) -> int:
         "cluster": cmd_cluster,
         "score": cmd_score,
         "shortlist": cmd_shortlist,
+        "series": cmd_series,
         "packet": cmd_packet,
         "script": cmd_script,
         "visual": cmd_visual,

@@ -8,6 +8,18 @@ Channel memory is not a recommendation engine. It does not fetch sources,
 promote source candidates, automate NotebookLM, create YMM4 geometry, or approve
 publishing.
 
+## Readback
+
+Use the CLI to inspect tracked memory without changing runtime DB/export state:
+
+```powershell
+.venv\Scripts\python.exe -m newsroom.cli.main series report --series copilot_watch
+```
+
+The report includes episode ids, story/script/packet ids, source-role coverage,
+critical views, compact claims, open questions, and follow-up seeds. Follow-up
+seeds are explicitly not approved stories.
+
 ## Record Shape
 
 Use one YAML file per series:

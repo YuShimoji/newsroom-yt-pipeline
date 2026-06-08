@@ -8,8 +8,10 @@ import yaml
 from newsroom.editorial.channel_memory import (
     ChannelMemoryValidationError,
     load_channel_memory,
+    render_channel_memory_report,
     validate_channel_memory_payload,
 )
+from newsroom.cli.main import main
 
 
 def test_default_channel_memory_loads_active_episode():
@@ -42,6 +44,36 @@ def test_default_channel_memory_has_next_episode_seed():
     assert [candidate.status for candidate in candidates] == ["seed", "seed"]
     assert "regulator_public" in candidates[0].source_roles_needed
     assert "critical_view_candidate" in candidates[1].source_roles_needed
+
+
+def test_channel_memory_report_includes_readback_sections():
+    memory = load_channel_memory("docs/channel_memory/copilot_watch.yml")
+
+    report = render_channel_memory_report(memory)
+
+    assert "Series: Copilot Watch (copilot_watch)" in report
+    assert "Episodes: 1" in report
+    assert "Episode episode_756343df9853" in report
+    assert "Story: story_20260603_503c39418f15862d" in report
+    assert "Script: script_d2a46430e084" in report
+    assert "Packet: packet_20260603_2de578dcd4b0" in report
+    assert "Source-role coverage:" in report
+    assert "Critical views:" in report
+    assert "NIST: article_bfba4cd5131daa71" in report
+    assert "Compact claims:" in report
+    assert "Open questions:" in report
+    assert "Follow-up seeds:" in report
+    assert "follow-up seeds are not approved stories" in report
+
+
+def test_series_report_cli_prints_channel_memory(capsys):
+    exit_code = main(["series", "report", "--series", "copilot_watch"])
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert "Series: Copilot Watch (copilot_watch)" in output
+    assert "Episode episode_756343df9853" in output
+    assert "follow-up seeds are not approved stories" in output
 
 
 def test_channel_memory_rejects_raw_article_body(tmp_path):
