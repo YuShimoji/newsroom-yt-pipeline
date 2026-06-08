@@ -1,0 +1,75 @@
+artifact_type: channel_memory
+schema_version: 1
+series_id: copilot_watch
+title: Copilot Watch
+status: active
+updated_at: '2026-06-08'
+non_goals:
+  - autonomous_topic_recommendation
+  - broad_crawling
+  - notebooklm_api_automation
+  - ymm4_geometry
+  - publishing_approval
+episodes:
+  - episode_id: episode_756343df9853
+    story_id: story_20260603_503c39418f15862d
+    script_id: script_d2a46430e084
+    packet_id: packet_20260603_2de578dcd4b0
+    topic: Microsoft positions enterprise AI value around systems that run agents, not model choice alone.
+    status: newsroom_handoff_clean
+    export_manifest: data/exports/episode_756343df9853/export_manifest.json
+    approved_materialization_record: docs/approved_materializations/script_d2a46430e084.materialization.yml
+    script_review_gate: docs/script_review_gates/script_d2a46430e084.review.yml
+    source_roles_used:
+      - source_role:
+        source_pool_id:
+        source_type: official
+        source_count: 2
+        article_ids:
+          - article_f4124bbb866ef6b0
+          - article_bfba4cd5131daa71
+        note: Legacy active runtime sources predate tracked source_role/source_pool_id metadata; preserve nulls rather than inventing classifications.
+    critical_views_used:
+      - article_id: article_bfba4cd5131daa71
+        source_name: NIST
+        source_type: official
+        source_role:
+        source_pool_id:
+        title: 'Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile'
+        purpose: Risk-management frame for evaluating Microsoft's enterprise AI systems narrative.
+    claims_made:
+      - claim_id: copilot_system_over_model_choice
+        summary: The episode frames enterprise AI value as shifting from model selection toward systems that operate inside business workflows.
+        source_refs:
+          - article_f4124bbb866ef6b0
+        critical_refs: []
+      - claim_id: integrated_agent_governance
+        summary: The episode treats agent construction, execution, management, improvement, and workplace delivery as one operational flow.
+        source_refs:
+          - article_f4124bbb866ef6b0
+        critical_refs: []
+      - claim_id: risk_management_lens
+        summary: The episode uses NIST as a trustworthiness and lifecycle-risk lens rather than as a competing news source.
+        source_refs:
+          - article_bfba4cd5131daa71
+        critical_refs:
+          - article_bfba4cd5131daa71
+    open_questions:
+      - Which governance controls become visible when Copilot agents move from pilots into daily workflows?
+      - What independent or regulator source should be paired with Microsoft official claims in the next Copilot Watch episode?
+    followup_candidates:
+      - candidate_id: copilot_governance_controls
+        title: Track practical governance controls for workplace Copilot agents.
+        rationale: The current episode establishes the system-level claim; the next useful step is testing what oversight and stop conditions look like in practice.
+        source_roles_needed:
+          - vendor_official
+          - regulator_public
+          - independent_analysis
+        status: seed
+      - candidate_id: copilot_user_value_gap
+        title: Compare Microsoft productivity claims with operator-visible user value.
+        rationale: This follows the same series question without turning the memory record into automatic topic selection.
+        source_roles_needed:
+          - vendor_official
+          - critical_view_candidate
+        status: seed

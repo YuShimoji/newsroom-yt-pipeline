@@ -215,6 +215,17 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - next_allowed_work: add/tune source pool metadata deliberately, use manual critical-source selection for chosen candidates, or continue to M7 series/channel memory.
 - prohibited_work: do not implement broad crawling, Inoreader OAuth/token flow, NotebookLM API automation, raw article body tracking, automatic critical-view adoption, NLMYTGen subprocess/path dependency, YMM4 geometry, overlay proof, full `.ymmp`, or publishing.
 
+## 2026-06-08 M7 Channel Memory Seed Gate
+
+- current_task: add the first narrow series/channel-memory slice using P2 source-role metadata and P1 packet persistence context.
+- decision: continue with tracked sanitized YAML and a schema validator; do not add DB persistence or recommendation automation yet.
+- reason: editorial continuity needs a durable record of episode ids, compact recurring claims, source-role coverage, critical-view use, open questions, and follow-up seeds, but it should not select topics or sources automatically.
+- active_artifact: `docs\channel_memory\copilot_watch.yml` records `episode_756343df9853` / `story_20260603_503c39418f15862d` / `script_d2a46430e084` / `packet_20260603_2de578dcd4b0`; active runtime export remains PASS with no issues found.
+- true_blockers: operator/editorial authority is required before any follow-up seed becomes an actual selected story or before any source candidate is promoted.
+- stale_or_false_blockers: a channel-memory seed is not a runtime export dependency and does not require a DB migration, dashboard, or autonomous planning engine.
+- next_allowed_work: add a report or append workflow after another episode exists, or manually promote one follow-up seed into a normal RSS-first source/story workflow.
+- prohibited_work: do not implement broad crawling, social trend scraping, Inoreader OAuth/token flow, NotebookLM API automation, raw article body tracking, full narration copying, automatic topic/source adoption, NLMYTGen integration, YMM4 geometry, overlay proof, full `.ymmp`, dashboarding, or publishing strategy.
+
 ## Blocked Or Pending
 
 - YMM4 GUI import proof: passed for CSV import acceptance and handoff-file readability on `episode_756343df9853`; downstream subtitle/overlay/final geometry proof remains out of newsroom scope.
@@ -224,6 +235,7 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - Broad script review: applied in `docs\script_review_gates\script_d2a46430e084.review.yml`; `needs_human_review` and `speculation_vs_fact` are cleared for this script slice only after explicit operator/editorial decision.
 - QuoteManifest human_required noise: citation-only source refs are tightened; after the visual/asset/screenshot gate, active quote rows are 10 citation-only and 0 screenshot `human_required`.
 - Packet persistence: implemented. Current critical-source relation remains durable DB input, and NotebookPacket rows now persist sanitized packet state in the runtime DB.
+- Channel memory seed: implemented for `copilot_watch` as tracked sanitized YAML with validation. Follow-up candidates remain seeds, not approved story selections.
 - VisualIR-to-final-look gap: keep evaluating whether VisualIR changes affect actual YMM4 composition, density, whitespace, and eye flow.
 
 ## Standing Cautions

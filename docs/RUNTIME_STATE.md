@@ -57,6 +57,7 @@ Last updated: 2026-06-08
 - P2 Source expansion on 2026-06-08: added a metadata-only source pool registry at `configs\source_pools.yml` and allowed feed rows in `configs\sources.yml` to reference pools. Source roles are limited to `vendor_official`, `regulator_public`, `standards_body`, `independent_analysis`, `technical_reference`, and `critical_view_candidate`.
 - Source expansion boundary: RSS feed loading applies pool defaults to `SourceFeed`, RSS ingestion carries `source_role` / `source_pool_id` to Article rows, and NotebookPacket `SourceRef` rows preserve that metadata. `critical_view_candidate` rows are not auto-adopted into packet critical views; operator/manual selection remains required.
 - Validation after the P2 Source expansion slice: targeted source/storage/packet tests -> 16 passed; full `.venv\Scripts\python.exe -m pytest -q` -> 91 passed; `git diff --check` -> passed. Active runtime packet readback remained `packet_20260603_2de578dcd4b0` with 1 primary source and 1 C1/NIST critical view. Active export remained PASS with no issues found.
+- M7 channel memory seed on 2026-06-08: added `docs\channel_memory\copilot_watch.yml` and `newsroom.editorial.channel_memory` as the first narrow series/channel-memory slice. The record links the active episode/story/script/packet to compact claim summaries, source-role coverage, NIST critical-view use, open questions, and follow-up seeds without raw article bodies, private data, full narration text, runtime DB paths, screenshots, YMM4 geometry, subtitle coordinates, `.ymmp`, or overlay proof. Validation: channel-memory tests -> 5 passed; active export inspect remained PASS with no issues found.
 
 ## Implemented Milestones
 
@@ -78,6 +79,7 @@ Last updated: 2026-06-08
 - P1 broad script review gate: done for the active path after explicit operator/editorial decision. Remaining script warnings are cleared for `script_d2a46430e084` through the tracked approved materialization and review gate artifacts.
 - P1 Packet persistence: done. NotebookPacket rows are persisted in the runtime DB and reused by downstream rebuild helpers.
 - P2 Source expansion: done for the deliberate source-pool registry and source-role propagation. It is metadata-only and does not implement broad crawling, Inoreader OAuth, NotebookLM automation, scraping, or auto source adoption.
+- M7 channel memory seed: done for the first tracked sanitized series memory record and schema validator. It records editorial continuity and next-episode seeds only; no autonomous recommendation, crawling, NotebookLM automation, dashboard, or publishing strategy is implemented.
 - M6.4 export integration: done. `newsroom export ymm4` now bundles `visual_plan.md`, `visual_ir.json`, `asset_manifest.yml`, and `quote_manifest.yml` alongside the existing script/source/notes/manifest handoff files.
 
 ## M6.4 Completed In Previous Slice
@@ -170,7 +172,7 @@ Last updated: 2026-06-08
 
 ## Handoff Snapshot
 
-- Assistant status: YMM4 manual import proof preparation is implemented and P0-A CSV import acceptance is passed for the active export; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts; P0.5-D approved narration was recorded, applied, and rebuilt for the active export; P1 QuoteManifest tightening, the remaining visual/asset/screenshot gate, the broad script review decision apply path, Packet persistence, and P2 source-pool metadata are implemented for the active path.
+- Assistant status: YMM4 manual import proof preparation is implemented and P0-A CSV import acceptance is passed for the active export; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts; P0.5-D approved narration was recorded, applied, and rebuilt for the active export; P1 QuoteManifest tightening, the remaining visual/asset/screenshot gate, the broad script review decision apply path, Packet persistence, P2 source-pool metadata, and the first M7 channel-memory seed are implemented for the active path.
 - User action: no active newsroom-side operator review decision is pending for `episode_756343df9853`. If downstream YMM4 subtitle/overlay work exposes a concrete failure, pass that result separately.
 - Assistant next after restart: preserve/regenerate active runtime state if needed, continue to a scoped next backlog item, or handle a concrete returned downstream failure. If runtime artifacts are missing, rebuild/persist the packet, reapply the tracked approved materialization record, rerun visual/asset/quote suggest, and rebuild export before inspecting.
 - What counts as progress next: active runtime preservation, next scoped backlog implementation, or handling a concrete returned downstream failure.
@@ -193,7 +195,7 @@ Last updated: 2026-06-08
 - NotebookLM API automation is out of scope.
 - Full `.ymmp` generation is out of scope.
 - YouTube upload and publishing are out of scope.
-- M7 series / channel memory and weekly strategy are not implemented.
+- M7 has only the first tracked channel-memory seed and validator. Series report, append workflow, weekly strategy, and autonomous planning are not implemented.
 - Inoreader OAuth / token flow is still deferred.
 - External image download and automatic external asset approval remain out of scope.
 

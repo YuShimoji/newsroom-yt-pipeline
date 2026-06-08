@@ -46,6 +46,11 @@ may reference a `source_pool_id` so packet sources can carry roles such as
 `vendor_official`, `standards_body`, or `critical_view_candidate`; this does not
 enable broad crawling or automatic source adoption.
 
+Tracked channel memory lives under `docs/channel_memory/`. These records connect
+approved episodes to series continuity, source-role coverage, critical views,
+open questions, and follow-up seeds without storing raw article bodies or
+automating editorial recommendations.
+
 Print today's stored article candidates:
 
 ```bash

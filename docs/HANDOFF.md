@@ -145,6 +145,13 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - `critical_view_candidate` sources are exposed as candidates and are not auto-adopted into `packet.critical_views`; explicit operator/manual critical selection still works.
   - No broad crawling, Inoreader OAuth/token flow, NotebookLM API automation, source scraping, or automatic source adoption was added.
   - Validation: targeted source/storage/packet tests -> 16 passed; full `.venv\Scripts\python.exe -m pytest -q` -> 91 passed; `git diff --check` -> passed; active `packet show --story story_20260603_503c39418f15862d` and `export inspect --episode-dir data\exports\episode_756343df9853` still pass.
+- M7 channel memory seed on 2026-06-08:
+  - Added `docs\channel_memory\copilot_watch.yml` as a tracked sanitized memory record for the active Copilot Watch episode.
+  - Added `newsroom.editorial.channel_memory` as a small YAML loader/validator for series memory, episode ids, source-role coverage, critical-view use, compact claim summaries, open questions, and follow-up seeds.
+  - The record references `episode_756343df9853`, `story_20260603_503c39418f15862d`, `script_d2a46430e084`, `packet_20260603_2de578dcd4b0`, the approved materialization record, and the script review gate without copying approved narration text.
+  - Channel memory records reject raw article body, private data, full approved text, runtime DB paths, screenshots, YMM4 geometry, subtitle coordinates, `.ymmp`, and overlay proof fields.
+  - This is not autonomous topic recommendation, broad crawling, NotebookLM automation, NLMYTGen integration, publishing strategy, or a dashboard.
+  - Validation: channel-memory tests -> 5 passed; active export inspect remained PASS / `No issues found.`
 - Local validation after the P0.5-D approved materialization apply:
   - `.venv\Scripts\python.exe -m pytest -q` -> 72 passed.
   - `git diff --check` -> passed.
@@ -197,7 +204,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - proof draft: `data\proofs\ymm4_import\episode_756343df9853\proof.yml`
   - inspector result: `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings.
 - Runtime proof artifacts under `data\proofs\` are intentionally git-ignored.
-- Implementation frontier: M1 through M6.4 are implemented; P0-A CSV import acceptance is proven for the active YMM4 export after adding the `ナレーター` character in the target YMM4 environment; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST; P0.5 approved materialization authority is implemented and applied to the active script; P1 quote/visual/asset/script review gates are applied for the active export; P1 Packet persistence is implemented for DB-backed NotebookPacket rows and downstream reuse.
+- Implementation frontier: M1 through M6.4 are implemented; P0-A CSV import acceptance is proven for the active YMM4 export after adding the `ナレーター` character in the target YMM4 environment; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST; P0.5 approved materialization authority is implemented and applied to the active script; P1 quote/visual/asset/script review gates are applied for the active export; P1 Packet persistence is implemented for DB-backed NotebookPacket rows and downstream reuse; P2 source pools and the first M7 channel-memory seed are implemented.
 
 ## Immediate Resume Packet
 
@@ -275,6 +282,15 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - owner: assistant for registry/tooling behavior; operator/editor for deciding which candidate sources become active story or critical-view inputs.
 - next move: use the registry to add or tune feed metadata deliberately, then continue to M7 series/channel memory or another explicitly scoped backlog item. Do not expand this into broad crawling, Inoreader OAuth, NotebookLM automation, or automatic source adoption.
 
+### M7: Channel memory seed
+
+- purpose: connect the active approved episode to series continuity without turning the repo into an autonomous recommendation engine.
+- effect: future planning can see prior episode ids, compact claims, source-role coverage, NIST critical-view use, open questions, and follow-up seeds.
+- requirements: tracked sanitized YAML only, no raw article body, no private data, no full narration copy, no runtime DB/export/proof authority, and no automatic source or topic adoption.
+- state: implemented as the first narrow slice. `docs\channel_memory\copilot_watch.yml` records the active episode and next-episode seeds; `newsroom.editorial.channel_memory` validates that records stay schema-safe and do not contain forbidden fields.
+- owner: assistant for schema/tooling; operator/editor for deciding which follow-up seed becomes an actual story.
+- next move: add a small report or append workflow only after another episode exists or the operator asks to promote a follow-up seed. Do not expand this into dashboarding, scraping, or publishing strategy.
+
 ## Boundaries
 
 - NotebookLM remains a manual packet bridge; no NotebookLM API automation.
@@ -286,6 +302,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - External image download and automatic external asset approval remain out of scope.
 - NLMYTGen integration is schema-only: CSV / JSON / Markdown handoff, not subprocess, path dependency, pip dependency, or shared code.
 - Source expansion is metadata-first and RSS-first. Source pools classify feeds and packet refs; they do not fetch broad web content, scrape raw articles into tracked artifacts, or approve candidates automatically.
+- Channel memory is tracked editorial continuity only. It stores compact episode memory and planning seeds; it does not recommend, fetch, publish, or approve topics automatically.
 
 ## Proof And Artifact Locations
 
