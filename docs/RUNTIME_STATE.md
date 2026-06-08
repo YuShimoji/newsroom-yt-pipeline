@@ -7,7 +7,7 @@ Last updated: 2026-06-08
 - Current sync base HEAD before this slice: `4b83531 feat: integrate M6 artifacts into YMM4 export`.
 - Current pulled HEAD before this docs-only handoff refresh: `8c3bc27 docs: refresh handoff restart point`.
 - Remote status at restart: `HEAD...origin/main` was `0 0`.
-- Cross-terminal handoff confirmation on 2026-06-08: HEAD is `5afd0f8 feat: add deliberate source pools`, `HEAD...origin/main` is `0 0`, the working tree is clean, active `packet show --story story_20260603_503c39418f15862d` reads back `packet_20260603_2de578dcd4b0`, and active `export inspect --episode-dir data\exports\episode_756343df9853` is PASS with no issues found.
+- Cross-terminal handoff confirmation after M7-C on 2026-06-08: latest implementation commit before this docs-only refresh is `0322d37 feat: add channel memory append workflow`, `HEAD...origin/main` was `0 0`, the working tree was clean, channel-memory tests passed with 15 tests, full `.venv\Scripts\python.exe -m pytest -q` passed with 106 tests, active `series report --series copilot_watch` read back one active episode with follow-up candidates still marked as seeds, active `packet show --story story_20260603_503c39418f15862d` read back `packet_20260603_2de578dcd4b0` from `data\ymm4_import_proof.sqlite`, and active `export inspect --episode-dir data\exports\episode_756343df9853` was PASS with no issues found.
 - M6.4 export integration is pushed to `origin/main` and was in sync before this slice.
 - YMM4 import proof preparation and handoff confirmation are pushed to `origin/main`; pull latest `origin/main` and read `docs/HANDOFF.md` as the short restart packet.
 - Working tree was clean before the local YMM4 import proof preparation slice.

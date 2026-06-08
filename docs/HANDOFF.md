@@ -37,12 +37,15 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 
 - Branch: `main`
 - Remote: `origin/main`
-- Cross-terminal handoff confirmation on 2026-06-08:
-  - HEAD: `5afd0f8 feat: add deliberate source pools`
+- Cross-terminal handoff confirmation after M7-C on 2026-06-08:
+  - Latest implementation commit before this docs-only refresh: `0322d37 feat: add channel memory append workflow`
   - `HEAD...origin/main`: `0 0`
   - Working tree: clean
+  - Full validation: `.venv\Scripts\python.exe -m pytest -q` -> 106 passed.
+  - Channel-memory validation: `.venv\Scripts\python.exe -m pytest tests\test_channel_memory.py -q` -> 15 passed.
+  - Active series report: `newsroom series report --series copilot_watch` reads back one active episode and keeps follow-up candidates as seeds.
   - Active export inspect: PASS / `No issues found.`
-  - Next assistant-owned backlog item: P2 M7 series / channel memory.
+  - Next assistant-owned backlog item: M7-D source-role backfill for legacy active channel memory.
 - Last pulled upstream before this active-source refresh: `13246b5 feat: add critical-view source entry path`
 - Local validation on 2026-06-03 before this handoff refresh:
   - `.venv\Scripts\python.exe -m pytest -q` -> 48 passed

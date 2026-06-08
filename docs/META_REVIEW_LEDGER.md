@@ -259,6 +259,7 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - Packet persistence: implemented. Current critical-source relation remains durable DB input, and NotebookPacket rows now persist sanitized packet state in the runtime DB.
 - Channel memory seed: implemented for `copilot_watch` as tracked sanitized YAML with validation. Follow-up candidates remain seeds, not approved story selections.
 - Series report readback: implemented as read-only CLI output. It does not append episodes, promote sources, or select stories.
+- Channel memory append workflow: implemented as file-based `series append-episode`. It appends only validated approved episode records and does not generate episodes, promote seeds, select sources, or mutate runtime artifacts.
 - VisualIR-to-final-look gap: keep evaluating whether VisualIR changes affect actual YMM4 composition, density, whitespace, and eye flow.
 
 ## Standing Cautions
