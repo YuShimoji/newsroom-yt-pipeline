@@ -37,15 +37,15 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 
 - Branch: `main`
 - Remote: `origin/main`
-- Cross-terminal handoff confirmation after M7-C on 2026-06-08:
-  - Latest implementation commit before this docs-only refresh: `0322d37 feat: add channel memory append workflow`
+- Cross-terminal handoff confirmation after M7-D on 2026-06-08:
+  - Synced start commit before M7-D local changes: `ad81fd2 docs: refresh M7-C handoff`
   - `HEAD...origin/main`: `0 0`
   - Working tree: clean
-  - Full validation: `.venv\Scripts\python.exe -m pytest -q` -> 106 passed.
-  - Channel-memory validation: `.venv\Scripts\python.exe -m pytest tests\test_channel_memory.py -q` -> 15 passed.
-  - Active series report: `newsroom series report --series copilot_watch` reads back one active episode and keeps follow-up candidates as seeds.
+  - Full validation: `.venv\Scripts\python.exe -m pytest -q` -> 107 passed.
+  - Channel-memory validation: `.venv\Scripts\python.exe -m pytest tests\test_channel_memory.py -q` -> 16 passed.
+  - Active series report: `newsroom series report --series copilot_watch` reads back Microsoft Blog as `vendor_official / microsoft_official` and NIST as `standards_body / standards_body`; `unclassified / no_pool` is absent.
   - Active export inspect: PASS / `No issues found.`
-  - Next assistant-owned backlog item: M7-D source-role backfill for legacy active channel memory.
+  - Next assistant-owned backlog item: wait for an operator-approved second episode record, an explicit follow-up seed selection, or a concrete downstream failure.
 - Last pulled upstream before this active-source refresh: `13246b5 feat: add critical-view source entry path`
 - Local validation on 2026-06-03 before this handoff refresh:
   - `.venv\Scripts\python.exe -m pytest -q` -> 48 passed
@@ -167,6 +167,12 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - Episode append records can carry source-role coverage, critical-view use, compact claims, open questions, and follow-up seeds, but cannot carry raw article body, private data, full narration text, runtime DB paths, proof/screenshot paths, YMM4 geometry, subtitle coordinates, `.ymmp`, or overlay proof.
   - This is not second-episode generation, follow-up seed promotion, autonomous recommendation, source candidate promotion, dashboarding, publishing strategy, NLMYTGen integration, DB migration, or runtime export mutation.
   - Validation: channel-memory append tests -> 15 passed; full `.venv\Scripts\python.exe -m pytest -q` -> 106 passed; `git diff --check` -> passed; active export inspect remained PASS / `No issues found.`
+- M7-D source-role backfill on 2026-06-08:
+  - Backfilled the active `docs\channel_memory\copilot_watch.yml` source-role coverage from existing authority only.
+  - `article_f4124bbb866ef6b0` now reads as Microsoft Blog `microsoft_official` / `vendor_official`.
+  - `article_bfba4cd5131daa71` now reads as NIST `standards_body` / `standards_body`, including the critical-view row.
+  - Follow-up candidates remain `seed`; no source candidate was promoted, no story was selected, and no runtime DB/export/proof artifact was committed.
+  - Validation: channel-memory tests -> 16 passed; full `.venv\Scripts\python.exe -m pytest -q` -> 107 passed; `git diff --check` -> passed; active series report has no `unclassified / no_pool`; active export inspect remained PASS / `No issues found.`
 - Local validation after the P0.5-D approved materialization apply:
   - `.venv\Scripts\python.exe -m pytest -q` -> 72 passed.
   - `git diff --check` -> passed.
@@ -219,7 +225,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
   - proof draft: `data\proofs\ymm4_import\episode_756343df9853\proof.yml`
   - inspector result: `newsroom export inspect --episode-dir data\exports\episode_756343df9853` -> PASS with review warnings.
 - Runtime proof artifacts under `data\proofs\` are intentionally git-ignored.
-- Implementation frontier: M1 through M6.4 are implemented; P0-A CSV import acceptance is proven for the active YMM4 export after adding the `ナレーター` character in the target YMM4 environment; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST; P0.5 approved materialization authority is implemented and applied to the active script; P1 quote/visual/asset/script review gates are applied for the active export; P1 Packet persistence is implemented for DB-backed NotebookPacket rows and downstream reuse; P2 source pools, the first M7 channel-memory seed, M7-B readback, and M7-C append workflow are implemented.
+- Implementation frontier: M1 through M6.4 are implemented; P0-A CSV import acceptance is proven for the active YMM4 export after adding the `ナレーター` character in the target YMM4 environment; P0-B critical-view source entry has a DB-backed CLI path and has been exercised on the active story with C1/NIST; P0.5 approved materialization authority is implemented and applied to the active script; P1 quote/visual/asset/script review gates are applied for the active export; P1 Packet persistence is implemented for DB-backed NotebookPacket rows and downstream reuse; P2 source pools, the first M7 channel-memory seed, M7-B readback, M7-C append workflow, and M7-D source-role backfill are implemented.
 
 ## Immediate Resume Packet
 
@@ -314,6 +320,15 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - state: implemented. `newsroom series report --series copilot_watch` reads the tracked memory record and prints the report with an explicit note that follow-up seeds are not approved stories.
 - owner: assistant for report tooling; operator/editor for any future story selection.
 - next move: add append/report refinements only when a second episode exists or a manual promotion decision is returned.
+
+### M7-D: Source-role backfill
+
+- purpose: remove legacy `unclassified / no_pool` readback from the active `copilot_watch` memory record without inventing source decisions.
+- effect: series continuity now shows Microsoft Blog as `vendor_official / microsoft_official` and NIST as `standards_body / standards_body`.
+- requirements: use only explicit source authority from tracked config and the already adopted C1/NIST critical-view context; preserve follow-up seeds as seeds.
+- state: implemented for `episode_756343df9853`. Active `series report --series copilot_watch` has no `unclassified / no_pool`, and active export inspect remains PASS / `No issues found.`
+- owner: assistant for metadata hygiene; operator/editor for any future source/story adoption.
+- next move: wait for an operator-approved second episode record, an explicit follow-up seed selection, or a concrete downstream failure. Do not expand this into crawling, autonomous recommendation, NotebookLM automation, YMM4 geometry, or publishing work.
 
 ## Boundaries
 

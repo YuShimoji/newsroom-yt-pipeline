@@ -20,6 +20,18 @@ The report includes episode ids, story/script/packet ids, source-role coverage,
 critical views, compact claims, open questions, and follow-up seeds. Follow-up
 seeds are explicitly not approved stories.
 
+## Source-Role Backfill
+
+Backfill source-role coverage only from explicit source authority already present
+in tracked config or approved episode context. For the active `copilot_watch`
+record, Microsoft Blog uses `microsoft_official` / `vendor_official` from
+`configs/sources.yml` and `configs/source_pools.yml`, and the adopted C1/NIST
+critical view uses the existing `standards_body` pool because it is a standards
+and trustworthiness framework lens.
+
+Do not use channel memory backfill to adopt new sources, promote follow-up
+seeds, crawl broadly, store raw article text, or create publishing/YMM4 proof.
+
 ## Append Workflow
 
 Append only operator/editorial-approved episode memory. The append workflow is

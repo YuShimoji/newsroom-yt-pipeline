@@ -248,6 +248,17 @@ This ledger preserves supervision decisions that should survive restarts. Keep i
 - next_allowed_work: use `newsroom series append-episode --series <series_id> --episode-record <path>` when a second approved episode record exists, or backfill legacy source roles only with explicit source authority.
 - prohibited_work: do not auto-generate episodes, auto-promote seeds, implement autonomous recommendation, add broad crawling/social trend scraping/Inoreader OAuth/NotebookLM API automation, store raw/private/copyright-unclear text, commit runtime artifacts, or move YMM4 geometry/overlay/full `.ymmp`/publishing into newsroom.
 
+## 2026-06-08 M7-D Source-Role Backfill Gate
+
+- current_task: backfill legacy `copilot_watch` source-role coverage so the series report no longer shows `unclassified / no_pool`.
+- decision: narrow.
+- reason: Microsoft Blog already has tracked source-pool authority in `configs\sources.yml` / `configs\source_pools.yml`, and the adopted C1/NIST critical view matches the existing `standards_body` pool. This is metadata readback cleanup, not source adoption.
+- active_artifact: `docs\channel_memory\copilot_watch.yml` remains the tracked channel-memory record; `data\exports\episode_756343df9853` remains checkout-local runtime evidence.
+- true_blockers: none for the metadata backfill.
+- stale_or_false_blockers: missing or checkout-sensitive runtime DB/export/proof artifacts do not block tracked channel-memory backfill when the source authority is already in tracked docs/config.
+- next_allowed_work: run `series report --series copilot_watch` and validation; later use append only with an operator-approved episode record or run normal source/story selection if a follow-up seed is explicitly chosen.
+- prohibited_work: do not promote follow-up seeds, adopt new source candidates, crawl broadly, add NotebookLM/YMM4 automation, commit runtime artifacts, store raw article body/private text, or move YMM4 geometry/overlay/full `.ymmp`/publishing into newsroom.
+
 ## Blocked Or Pending
 
 - YMM4 GUI import proof: passed for CSV import acceptance and handoff-file readability on `episode_756343df9853`; downstream subtitle/overlay/final geometry proof remains out of newsroom scope.

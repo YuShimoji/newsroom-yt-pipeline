@@ -29,14 +29,25 @@ def test_default_channel_memory_loads_active_episode():
 def test_default_channel_memory_preserves_source_and_critical_fields():
     memory = load_channel_memory("docs/channel_memory/copilot_watch.yml")
     episode = memory.episodes[0]
+    roles_by_pool = {role.source_pool_id: role for role in episode.source_roles_used}
 
-    assert episode.source_roles_used[0].source_type == "official"
-    assert episode.source_roles_used[0].article_ids == [
-        "article_f4124bbb866ef6b0",
-        "article_bfba4cd5131daa71",
+    assert set(roles_by_pool) == {"microsoft_official", "standards_body"}
+    assert roles_by_pool["microsoft_official"].source_role == "vendor_official"
+    assert roles_by_pool["microsoft_official"].source_type == "official"
+    assert roles_by_pool["microsoft_official"].article_ids == [
+        "article_f4124bbb866ef6b0"
     ]
-    assert episode.critical_views_used[0].article_id == "article_bfba4cd5131daa71"
-    assert episode.critical_views_used[0].source_name == "NIST"
+    assert roles_by_pool["standards_body"].source_role == "standards_body"
+    assert roles_by_pool["standards_body"].source_type == "official"
+    assert roles_by_pool["standards_body"].article_ids == [
+        "article_bfba4cd5131daa71"
+    ]
+
+    critical = episode.critical_views_used[0]
+    assert critical.article_id == "article_bfba4cd5131daa71"
+    assert critical.source_name == "NIST"
+    assert critical.source_role == "standards_body"
+    assert critical.source_pool_id == "standards_body"
 
 
 def test_default_channel_memory_has_next_episode_seed():
@@ -60,8 +71,18 @@ def test_channel_memory_report_includes_readback_sections():
     assert "Script: script_d2a46430e084" in report
     assert "Packet: packet_20260603_2de578dcd4b0" in report
     assert "Source-role coverage:" in report
+    assert (
+        "vendor_official / microsoft_official / official: "
+        "1 source(s) [article_f4124bbb866ef6b0]"
+    ) in report
+    assert (
+        "standards_body / standards_body / official: "
+        "1 source(s) [article_bfba4cd5131daa71]"
+    ) in report
+    assert "unclassified / no_pool" not in report
     assert "Critical views:" in report
     assert "NIST: article_bfba4cd5131daa71" in report
+    assert "[official, standards_body]" in report
     assert "Compact claims:" in report
     assert "Open questions:" in report
     assert "Follow-up seeds:" in report
@@ -75,7 +96,30 @@ def test_series_report_cli_prints_channel_memory(capsys):
     assert exit_code == 0
     assert "Series: Copilot Watch (copilot_watch)" in output
     assert "Episode episode_756343df9853" in output
+    assert "vendor_official / microsoft_official" in output
+    assert "standards_body / standards_body" in output
+    assert "unclassified / no_pool" not in output
     assert "follow-up seeds are not approved stories" in output
+
+
+def test_default_channel_memory_does_not_store_forbidden_payload_fields():
+    payload = yaml.safe_load(
+        Path("docs/channel_memory/copilot_watch.yml").read_text(encoding="utf-8")
+    )
+
+    for forbidden in (
+        "article_body",
+        "approved_text",
+        "body_text",
+        "private_data",
+        "raw_article_body",
+        "runtime_db_path",
+        "screenshot_path",
+        "subtitle_coordinates",
+        "ymmp",
+        "ymm4_geometry",
+    ):
+        assert not _contains_key(payload, forbidden)
 
 
 def test_channel_memory_rejects_raw_article_body(tmp_path):
@@ -310,3 +354,11 @@ def _episode_record() -> dict:
 def _write_yaml(path: Path, payload: dict) -> Path:
     path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
     return path
+
+
+def _contains_key(value: object, key: str) -> bool:
+    if isinstance(value, dict):
+        return key in value or any(_contains_key(child, key) for child in value.values())
+    if isinstance(value, list):
+        return any(_contains_key(item, key) for item in value)
+    return False

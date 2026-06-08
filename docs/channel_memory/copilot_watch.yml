@@ -21,20 +21,26 @@ episodes:
     approved_materialization_record: docs/approved_materializations/script_d2a46430e084.materialization.yml
     script_review_gate: docs/script_review_gates/script_d2a46430e084.review.yml
     source_roles_used:
-      - source_role:
-        source_pool_id:
+      - source_role: vendor_official
+        source_pool_id: microsoft_official
         source_type: official
-        source_count: 2
+        source_count: 1
         article_ids:
           - article_f4124bbb866ef6b0
+        note: Microsoft Blog is mapped to microsoft_official in configs/sources.yml and configs/source_pools.yml; used as the primary vendor narrative source.
+      - source_role: standards_body
+        source_pool_id: standards_body
+        source_type: official
+        source_count: 1
+        article_ids:
           - article_bfba4cd5131daa71
-        note: Legacy active runtime sources predate tracked source_role/source_pool_id metadata; preserve nulls rather than inventing classifications.
+        note: NIST AI RMF Generative AI Profile is the adopted C1 critical-view standards and trustworthiness framework for this episode.
     critical_views_used:
       - article_id: article_bfba4cd5131daa71
         source_name: NIST
         source_type: official
-        source_role:
-        source_pool_id:
+        source_role: standards_body
+        source_pool_id: standards_body
         title: 'Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile'
         purpose: Risk-management frame for evaluating Microsoft's enterprise AI systems narrative.
     claims_made:
