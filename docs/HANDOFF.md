@@ -1,6 +1,6 @@
 # Handoff
 
-Last updated: 2026-06-08
+Last updated: 2026-06-09
 
 ## Restart Order
 
@@ -37,6 +37,18 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 
 - Branch: `main`
 - Remote: `origin/main`
+- Cross-terminal no-op restart check on 2026-06-09:
+  - Started from `1296b8e docs: backfill channel memory source roles`.
+  - `git checkout main` and `git pull --ff-only origin main` confirmed `Already up to date`.
+  - `HEAD...origin/main`: `0 0`
+  - Working tree: clean; `git status --porcelain=v1 --untracked-files=all` returned no files.
+  - Channel-memory validation: `.venv\Scripts\python.exe -m pytest tests\test_channel_memory.py -q` -> 16 passed.
+  - Active series report: `newsroom series report --series copilot_watch` reads back Microsoft Blog as `vendor_official / microsoft_official / official` and NIST as `standards_body / standards_body / official`; `unclassified / no_pool` is absent.
+  - Follow-up candidates remain `seed` and are not approved stories: `copilot_governance_controls`, `copilot_user_value_gap`.
+  - Active export inspect: `.venv\Scripts\python.exe -m newsroom.cli.main export inspect --episode-dir data\exports\episode_756343df9853` -> PASS / `No issues found.`
+  - `git diff --check` passed.
+  - No M7-D reimplementation, seed promotion, source adoption, broad crawling, NotebookLM/YMM4 automation, runtime artifact commit, or downstream subtitle/YMM4 geometry work.
+  - Next action still requires one explicit human input: an approved second episode record YAML full path, a selected follow-up seed, or a concrete downstream failure log/artifact/proof path.
 - Cross-terminal handoff confirmation after M7-D on 2026-06-08:
   - Synced start commit before M7-D local changes: `ad81fd2 docs: refresh M7-C handoff`
   - `HEAD...origin/main`: `0 0`

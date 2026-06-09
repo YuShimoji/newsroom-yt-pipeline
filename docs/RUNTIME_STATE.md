@@ -1,9 +1,10 @@
 # Runtime State
 
-Last updated: 2026-06-08
+Last updated: 2026-06-09
 
 ## Sync Point
 
+- No-op restart check on 2026-06-09: `git checkout main` and `git pull --ff-only origin main` confirmed the checkout was already up to date at `1296b8e docs: backfill channel memory source roles`; `HEAD...origin/main` was `0 0`; the working tree was clean; `git status --porcelain=v1 --untracked-files=all` returned no files. Required readback stayed healthy: `newsroom series report --series copilot_watch` showed Microsoft Blog as `vendor_official / microsoft_official / official`, NIST as `standards_body / standards_body / official`, no `unclassified / no_pool`, and follow-up candidates still marked as `seed`; `newsroom export inspect --episode-dir data\exports\episode_756343df9853` returned PASS / `No issues found.`; channel-memory tests passed with 16 tests; `git diff --check` passed. No M7-D reimplementation, seed promotion, source adoption, broad crawling, NotebookLM/YMM4 automation, runtime artifact commit, or downstream subtitle/YMM4 geometry work was done.
 - Current sync base HEAD before this slice: `4b83531 feat: integrate M6 artifacts into YMM4 export`.
 - Current pulled HEAD before this docs-only handoff refresh: `8c3bc27 docs: refresh handoff restart point`.
 - Remote status at restart: `HEAD...origin/main` was `0 0`.
@@ -179,8 +180,8 @@ Last updated: 2026-06-08
 ## Handoff Snapshot
 
 - Assistant status: YMM4 manual import proof preparation is implemented and P0-A CSV import acceptance is passed for the active export; P0-B critical-view source entry capability is implemented and applied to the active story with C1/NIST in local runtime artifacts; P0.5-D approved narration was recorded, applied, and rebuilt for the active export; P1 QuoteManifest tightening, the remaining visual/asset/screenshot gate, the broad script review decision apply path, Packet persistence, P2 source-pool metadata, M7 channel-memory seed, M7-B readback, M7-C append workflow, and M7-D source-role backfill are implemented for the active path.
-- User action: no active newsroom-side operator review decision is pending for `episode_756343df9853`. If downstream YMM4 subtitle/overlay work exposes a concrete failure, pass that result separately.
-- Assistant next after restart: preserve/regenerate active runtime state if needed, continue to a scoped next backlog item, or handle a concrete returned downstream failure. If runtime artifacts are missing, rebuild/persist the packet, reapply the tracked approved materialization record, rerun visual/asset/quote suggest, and rebuild export before inspecting.
+- User action: no active newsroom-side operator review decision is pending for `episode_756343df9853`. Continue only after one explicit input is supplied: an approved second episode record YAML full path, a selected follow-up seed, or a concrete downstream failure log/artifact/proof path.
+- Assistant next after restart: if an approved episode record is supplied, use `newsroom series append-episode --series copilot_watch --episode-record <path>` and validate; if a follow-up seed is selected, return to normal source/story selection without auto-adoption; if a downstream failure is supplied, keep newsroom handling limited to CSV/JSON/Markdown handoff and source/script/manifest consistency. If runtime artifacts are missing, rebuild/persist the packet, reapply the tracked approved materialization record, rerun visual/asset/quote suggest, and rebuild export before inspecting.
 - What counts as progress next: active runtime preservation, next scoped backlog implementation, or handling a concrete returned downstream failure.
 - What does not count as progress next: NotebookLM API automation, Inoreader OAuth, GUI/dashboard work, `.ymmp` generation, YouTube upload, NLMYTGen subprocess/path integration, or treating subtitle layout/overlay safety as newsroom-side proof.
 
@@ -214,6 +215,10 @@ Last updated: 2026-06-08
 2. M7 next: use append only when another operator-approved episode memory record exists, or run the normal source/story workflow if a follow-up seed is explicitly selected.
    Purpose: keep channel memory as approved continuity, not automatic planning.
    Effect: future series reports stay readable without turning seeds into selected stories.
+
+3. Downstream failure intake: act only when the operator provides a concrete failure description plus the full log/artifact/proof path.
+   Purpose: keep newsroom-side work tied to reproducible CSV/JSON/Markdown handoff, source, script, or manifest consistency evidence.
+   Effect: prevents subtitle placement, overlay proof, full `.ymmp`, or publishing scope from drifting into newsroom without an owned artifact boundary.
 
 ## Restart Commands
 
