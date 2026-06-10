@@ -1,6 +1,6 @@
 # Handoff
 
-Last updated: 2026-06-09
+Last updated: 2026-06-10
 
 ## Restart Order
 
@@ -37,6 +37,14 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 
 - Branch: `main`
 - Remote: `origin/main`
+- Newsroom handoff inventory record on 2026-06-10:
+  - Recorded the read-only inventory of active export `data\exports\episode_756343df9853` in `docs\verification\NEWSROOM-HANDOFF-INVENTORY-2026-06-10.md`.
+  - The export folder exists with 9 handoff files: manifest, script CSV/IR, source list, visual plan/IR, asset manifest, quote manifest, and YMM4 notes.
+  - `newsroom series report --series copilot_watch` reads back Microsoft Blog as `vendor_official / microsoft_official / official` and NIST as `standards_body / standards_body / official`; `unclassified / no_pool` is absent.
+  - `newsroom export inspect --episode-dir data\exports\episode_756343df9853` returns PASS / `No issues found.`
+  - Handoff readiness remains `partial`: the package is a Newsroom-side candidate for NLMYTGen review, but copy-in authority, read-only path authority, source/rights/production approval, YMM4 geometry, subtitle placement, overlay proof, `.ymmp`, render, and publishing authority are not supplied.
+  - No NLMYTGen repo change, copy-in, read-only path pinning, runtime export/proof/DB commit, source adoption, seed promotion, NotebookLM automation, Inoreader OAuth, broad crawling, render, production, or publishing work was performed.
+  - Next action requires an explicit human decision: copy the package into NLMYTGen, review it by read-only path, or keep the handoff on hold.
 - Cross-terminal no-op restart check on 2026-06-09:
   - Started from `1296b8e docs: backfill channel memory source roles`.
   - `git checkout main` and `git pull --ff-only origin main` confirmed `Already up to date`.

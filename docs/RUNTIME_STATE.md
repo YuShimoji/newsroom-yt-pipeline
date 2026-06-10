@@ -1,9 +1,10 @@
 # Runtime State
 
-Last updated: 2026-06-09
+Last updated: 2026-06-10
 
 ## Sync Point
 
+- Docs-only handoff inventory record on 2026-06-10: recorded the prior read-only inventory / authority check in `docs\verification\NEWSROOM-HANDOFF-INVENTORY-2026-06-10.md`. The active export folder `data\exports\episode_756343df9853` exists and inspected PASS / `No issues found`; series readback still shows Microsoft Blog as `vendor_official / microsoft_official / official`, NIST as `standards_body / standards_body / official`, no `unclassified / no_pool`, and follow-up candidates as `seed`. Handoff readiness remains `partial` until a human supplies copy-in, read-only path reference, or hold authority for NLMYTGen. No generated export artifact, runtime DB, proof, screenshot, YMM4 geometry, `.ymmp`, render, production, publishing output, NLMYTGen integration, source adoption, seed promotion, NotebookLM automation, Inoreader OAuth, or broad crawling work was committed.
 - No-op restart check on 2026-06-09: `git checkout main` and `git pull --ff-only origin main` confirmed the checkout was already up to date at `1296b8e docs: backfill channel memory source roles`; `HEAD...origin/main` was `0 0`; the working tree was clean; `git status --porcelain=v1 --untracked-files=all` returned no files. Required readback stayed healthy: `newsroom series report --series copilot_watch` showed Microsoft Blog as `vendor_official / microsoft_official / official`, NIST as `standards_body / standards_body / official`, no `unclassified / no_pool`, and follow-up candidates still marked as `seed`; `newsroom export inspect --episode-dir data\exports\episode_756343df9853` returned PASS / `No issues found.`; channel-memory tests passed with 16 tests; `git diff --check` passed. No M7-D reimplementation, seed promotion, source adoption, broad crawling, NotebookLM/YMM4 automation, runtime artifact commit, or downstream subtitle/YMM4 geometry work was done.
 - Current sync base HEAD before this slice: `4b83531 feat: integrate M6 artifacts into YMM4 export`.
 - Current pulled HEAD before this docs-only handoff refresh: `8c3bc27 docs: refresh handoff restart point`.
