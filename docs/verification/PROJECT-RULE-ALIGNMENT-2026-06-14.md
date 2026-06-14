@@ -7,6 +7,29 @@ handoff-supervision state with the updated operating rules. It is a docs-only
 audit. It does not start Newsroom ingest, NLMYTGen adapter work, YMM4 geometry,
 rendering, publishing, context visual generation, or runtime artifact transfer.
 
+## Current Recheck
+
+Latest live recheck on 2026-06-15 JST:
+
+- Newsroom was synced on `main` at baseline commit `0b859bd docs: align project
+  handoff rules`, with `HEAD...@{u}=0 0` before this docs-only packet refresh.
+  The working tree was clean before editing this document.
+- NLMYTGen was synced on `master` at `4746d81 docs: design live repo status
+  producer`, with `HEAD...@{u}=0 0`. Tracked and staged state stayed clean.
+  Untracked `.claude/worktrees/jolly-albattani-d6dd78/` and
+  `samples/2026-05-16.ymmp` were observed and left untouched.
+- `newsroom series report --series copilot_watch` still reports
+  `newsroom_handoff_clean`, Microsoft Blog as
+  `vendor_official / microsoft_official / official`, NIST as
+  `standards_body / standards_body / official`, and follow-up candidates as
+  `seed`.
+- `newsroom export inspect --episode-dir data\exports\episode_756343df9853`
+  still returns `PASS` / `No issues found`.
+- `data/exports/episode_756343df9853` is still ignored by `.gitignore`, and no
+  files from that export are tracked.
+- Classification remains `request_authority`: the export is a valid upstream
+  candidate, but NLMYTGen downstream intake still needs human authority.
+
 ## Classification
 
 - Current state: `request_authority`.
@@ -24,8 +47,8 @@ Observed local repo:
 
 - `C:\Users\thank\Storage\Media Contents Projects\newsroom-yt-pipeline`
 - Branch: `main`
-- HEAD: `223c9aa`
-- Latest commit: `223c9aa docs: record newsroom handoff inventory`
+- Live recheck baseline HEAD before this packet refresh: `0b859bd`
+- Latest commit at recheck baseline: `0b859bd docs: align project handoff rules`
 - Upstream parity after sync: `HEAD...@{u}=0 0`
 - Tracked/staged/untracked state after sync: clean
 
@@ -154,8 +177,8 @@ write reports, or treat worker reports as production approval.
 
 | Location | State | Effect | Next move |
 |---|---|---|---|
-| Newsroom `docs/verification/NEWSROOM-HANDOFF-INVENTORY-2026-06-10.md` | Stale local absolute path and stale HEAD snapshot. | It records `C:\Users\PLANNER007\newsroom-yt-pipeline` and `a89b8e4`, while the current observed repo is under `C:\Users\thank\Storage\Media Contents Projects\newsroom-yt-pipeline` at `223c9aa`. | Keep as prior inventory; use this packet for the current machine/path/HEAD readback. |
-| NLMYTGen `docs/verification/NEWSROOM-HANDOFF-SUPERVISION-GATE-2026-06-09.md` | Valid decision, stale repo-state facts. | It records Newsroom at `1296b8e`; current synced Newsroom is `223c9aa`. | Keep the decision; refresh state facts before any downstream intake. |
+| Newsroom `docs/verification/NEWSROOM-HANDOFF-INVENTORY-2026-06-10.md` | Stale local absolute path and stale HEAD snapshot. | It records `C:\Users\PLANNER007\newsroom-yt-pipeline` and `a89b8e4`, while the current observed repo is under `C:\Users\thank\Storage\Media Contents Projects\newsroom-yt-pipeline` and was rechecked at baseline `0b859bd` before this packet refresh. | Keep as prior inventory; use this packet plus fresh git commands for the current machine/path/HEAD readback. |
+| NLMYTGen `docs/verification/NEWSROOM-HANDOFF-SUPERVISION-GATE-2026-06-09.md` | Valid decision, stale repo-state facts. | It records Newsroom at `1296b8e`; current synced Newsroom was rechecked at baseline `0b859bd` before this packet refresh. | Keep the decision; refresh state facts before any downstream intake. |
 | NLMYTGen `docs/USER_COPYPASTE_BLOCKS.md` Section 21 | Superseded for the next worker prompt. | It carries the old Newsroom HEAD and a prior `BEGIN_COPY_BLOCK_FOR_CHATGPT` report wrapper. | Do not execute blindly. Use the replacement prompt in this packet. |
 | NLMYTGen `docs/USER_COPYPASTE_BLOCKS.md` older sections | Stale local path examples. | Several older restart prompts mention `C:\Users\PLANNER007\NLMYTGen`; that path is not the observed repo in this run. | Treat as historical unless a future environment verifies that path live. |
 | NLMYTGen `docs/project-context.md` and `docs/runtime-state.md` historical entries | Mixed historical snapshots. | Some entries correctly preserve prior environment facts but are not current readback for this machine. | Use only the latest current-state sections plus fresh git commands for restart. |
@@ -329,7 +352,7 @@ NLMYTGen read order:
 Current expected state:
 - Newsroom active export candidate is data/exports/episode_756343df9853.
 - The export is ignored runtime output and must not be committed.
-- Current alignment packet last observed Newsroom main at 223c9aa and NLMYTGen master at 4746d81 with both repos at upstream parity.
+- Current alignment packet last rechecked Newsroom main at baseline 0b859bd and NLMYTGen master at 4746d81 with both repos at upstream parity; rerun git commands for the exact live HEAD before acting.
 - NLMYTGen known untracked residue may include .claude/worktrees/ and samples/2026-05-16.ymmp; do not stage or delete it.
 - The handoff decision remains request_authority unless the user explicitly supplies copy-in/read-only/hold and G-28 pause/supersede authority.
 
