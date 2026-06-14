@@ -58,6 +58,7 @@ from newsroom.store.db import (
     list_articles_for_date,
     list_articles_in_date_range,
     list_clusters_for_date,
+    list_story_critical_sources,
     list_story_critical_source_articles,
     list_topic_scores_for_date,
     load_episode_plan,
@@ -183,6 +184,11 @@ def build_parser() -> argparse.ArgumentParser:
     packet_critical.add_argument("--published-at", help="Manual source published timestamp")
     packet_critical.add_argument("--license-hint", help="Manual source license hint")
     packet_critical.add_argument("--note", help="Operator note explaining the critical angle")
+    packet_list_critical = packet_sub.add_parser(
+        "list-critical",
+        help="Read back critical-view sources recorded for a story",
+    )
+    packet_list_critical.add_argument("--story", required=True, help="Story cluster id")
 
     script_parser = subparsers.add_parser("script", help="Script workbench operations")
     script_sub = script_parser.add_subparsers(dest="script_command", required=True)
@@ -742,6 +748,8 @@ def cmd_packet(args: argparse.Namespace) -> int:
         return _cmd_packet_show(args, db_path)
     if args.packet_command == "add-critical":
         return _cmd_packet_add_critical(args, db_path)
+    if args.packet_command == "list-critical":
+        return _cmd_packet_list_critical(args, db_path)
     print(f"Unsupported packet subcommand: {args.packet_command}")
     return 2
 
@@ -843,6 +851,35 @@ def _cmd_packet_add_critical(args: argparse.Namespace, db_path: Path) -> int:
     print(f"Critical-view source recorded for {cluster.id}: {article.id}")
     print(f"Title: {article.title}")
     print("Rebuild the packet to carry this source into downstream artifacts.")
+    return 0
+
+
+def _cmd_packet_list_critical(args: argparse.Namespace, db_path: Path) -> int:
+    found = _find_cluster(db_path, args.story)
+    if found is None:
+        print(f"Story cluster not found: {args.story}")
+        return 1
+    cluster, _ = found
+
+    records = list_story_critical_sources(db_path, cluster.id)
+    print(f"Critical-view sources for {cluster.id}: {len(records)}")
+    if not records:
+        print("No critical-view sources recorded. Use packet add-critical before rebuilding the packet.")
+        return 0
+
+    for index, record in enumerate(records, start=1):
+        article = record.article
+        source_role = article.source_role or "unclassified"
+        source_pool = article.source_pool_id or "no_pool"
+        note = record.note or "none"
+        print(
+            f"{index}. {article.id} | {article.source_name} | "
+            f"{article.source_type} / {source_role} / {source_pool}"
+        )
+        print(f"   title: {article.title}")
+        print(f"   note: {note}")
+        print(f"   recorded_at: {record.created_at}")
+    print("This is readback only; rebuild the packet to carry sources into downstream artifacts.")
     return 0
 
 

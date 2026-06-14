@@ -8,6 +8,7 @@ from pathlib import Path
 from newsroom.store.models import (
     Article,
     Chapter,
+    CriticalSourceRecord,
     EpisodePlan,
     GlossaryTerm,
     NotebookPacket,
@@ -322,11 +323,23 @@ def add_story_critical_source(
 def list_story_critical_source_articles(
     db_path: str | Path, cluster_id: str
 ) -> list[Article]:
+    return [
+        record.article
+        for record in list_story_critical_sources(db_path, cluster_id)
+    ]
+
+
+def list_story_critical_sources(
+    db_path: str | Path, cluster_id: str
+) -> list[CriticalSourceRecord]:
     init_db(db_path)
     with connect(db_path) as connection:
         rows = connection.execute(
             """
-            SELECT articles.*
+            SELECT
+              articles.*,
+              story_critical_sources.note AS critical_note,
+              story_critical_sources.created_at AS critical_created_at
             FROM story_critical_sources
             JOIN articles ON articles.id = story_critical_sources.article_id
             WHERE story_critical_sources.cluster_id = ?
@@ -334,7 +347,14 @@ def list_story_critical_source_articles(
             """,
             (cluster_id,),
         ).fetchall()
-    return [_row_to_article(row) for row in rows]
+    return [
+        CriticalSourceRecord(
+            article=_row_to_article(row),
+            note=row["critical_note"],
+            created_at=row["critical_created_at"],
+        )
+        for row in rows
+    ]
 
 
 def replace_clusters_for_date(

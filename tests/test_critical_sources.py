@@ -9,6 +9,7 @@ from newsroom.store.db import (
     add_story_critical_source,
     init_db,
     load_notebook_packet_for_story,
+    list_story_critical_sources,
     list_story_critical_source_articles,
     replace_clusters_for_date,
     upsert_article,
@@ -93,6 +94,56 @@ def test_packet_add_critical_manual_source_flows_into_packet_artifact(tmp_path):
     sources = json.loads((packet_dirs[0] / "sources.json").read_text(encoding="utf-8"))
     assert sources["critical_views"][0]["source_name"] == "Independent Analyst"
     assert sources["critical_views"][0]["title"] == "Critical analysis"
+
+
+def test_packet_list_critical_reads_back_operator_note_without_url(tmp_path, capsys):
+    db_path = tmp_path / "newsroom.sqlite"
+    primary = _article("primary", source_type="official")
+    cluster = _cluster(primary)
+    upsert_article(db_path, primary)
+    replace_clusters_for_date(db_path, cluster.cluster_date, [cluster])
+
+    add_exit = main(
+        [
+            "--db",
+            str(db_path),
+            "packet",
+            "add-critical",
+            "--story",
+            cluster.id,
+            "--url",
+            "https://example.com/critical",
+            "--title",
+            "Critical analysis",
+            "--source-name",
+            "Independent Analyst",
+            "--source-type",
+            "commentary",
+            "--note",
+            "skeptical counterpoint",
+        ]
+    )
+    assert add_exit == 0
+    capsys.readouterr()
+
+    list_exit = main(
+        [
+            "--db",
+            str(db_path),
+            "packet",
+            "list-critical",
+            "--story",
+            cluster.id,
+        ]
+    )
+    output = capsys.readouterr().out
+
+    assert list_exit == 0
+    assert "Critical-view sources for story_20260518_test: 1" in output
+    assert "Independent Analyst" in output
+    assert "Critical analysis" in output
+    assert "skeptical counterpoint" in output
+    assert "https://example.com/critical" not in output
 
 
 def test_packet_add_critical_existing_article_flows_into_packet_artifact(tmp_path):
@@ -300,6 +351,8 @@ def test_story_critical_sources_schema_is_idempotent_for_existing_db(tmp_path):
 
     critical_sources = list_story_critical_source_articles(db_path, cluster.id)
     assert [source.id for source in critical_sources] == [article.id]
+    critical_records = list_story_critical_sources(db_path, cluster.id)
+    assert critical_records[0].note == "updated note"
 
 
 def test_export_rebuild_prefers_refreshed_review_manifest_roots(tmp_path):

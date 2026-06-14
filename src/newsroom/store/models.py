@@ -120,6 +120,13 @@ class SourceRef:
 
 
 @dataclass(frozen=True)
+class CriticalSourceRecord:
+    article: Article
+    note: str | None
+    created_at: str
+
+
+@dataclass(frozen=True)
 class TimelineEvent:
     occurred_at: str | None
     source_name: str
