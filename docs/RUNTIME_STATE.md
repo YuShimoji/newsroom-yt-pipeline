@@ -1,9 +1,10 @@
 # Runtime State
 
-Last updated: 2026-06-10
+Last updated: 2026-06-15
 
 ## Sync Point
 
+- Autonomous foundation run governance pass on 2026-06-15: local checkout was `main` at `393831f docs: refresh project handoff alignment`, `origin/main` was `https://github.com/YuShimoji/newsroom-yt-pipeline.git`, and `HEAD...origin/main` was `0 0`. Startup dirty set was limited to expected docs-only files: `docs/RUNTIME_STATE.md` and untracked `docs/DEVELOPMENT_PRACTICES.md`, so no destructive git action or pull was run. `.venv\Scripts\python.exe -m pytest -q` passed with 107 tests and `git diff --check` passed before implementation work. `docs\DEVELOPMENT_PRACTICES.md` now fixes the source-of-truth hierarchy, `NEXT_ACTION` protocol including `autonomous_foundation_run`, default no-op behavior, preview gate policy, boundary rules, human approval gates, evidence discipline, repository hygiene, residual-work reporting, and completion-report expectations. No M1 reimplementation, M7 / series-memory reimplementation, seed promotion, NotebookLM input, NotebookLM API automation, Inoreader OAuth, broad crawler, YMM4 GUI automation, `.ymmp` generation, YouTube upload/publishing, external asset approval, NLMYTGen integration, runtime artifact commit, source adoption, or new YMM4 proof intake was performed during the governance pass.
 - Docs-only handoff inventory record on 2026-06-10: recorded the prior read-only inventory / authority check in `docs\verification\NEWSROOM-HANDOFF-INVENTORY-2026-06-10.md`. The active export folder `data\exports\episode_756343df9853` exists and inspected PASS / `No issues found`; series readback still shows Microsoft Blog as `vendor_official / microsoft_official / official`, NIST as `standards_body / standards_body / official`, no `unclassified / no_pool`, and follow-up candidates as `seed`. Handoff readiness remains `partial` until a human supplies copy-in, read-only path reference, or hold authority for NLMYTGen. No generated export artifact, runtime DB, proof, screenshot, YMM4 geometry, `.ymmp`, render, production, publishing output, NLMYTGen integration, source adoption, seed promotion, NotebookLM automation, Inoreader OAuth, or broad crawling work was committed.
 - No-op restart check on 2026-06-09: `git checkout main` and `git pull --ff-only origin main` confirmed the checkout was already up to date at `1296b8e docs: backfill channel memory source roles`; `HEAD...origin/main` was `0 0`; the working tree was clean; `git status --porcelain=v1 --untracked-files=all` returned no files. Required readback stayed healthy: `newsroom series report --series copilot_watch` showed Microsoft Blog as `vendor_official / microsoft_official / official`, NIST as `standards_body / standards_body / official`, no `unclassified / no_pool`, and follow-up candidates still marked as `seed`; `newsroom export inspect --episode-dir data\exports\episode_756343df9853` returned PASS / `No issues found.`; channel-memory tests passed with 16 tests; `git diff --check` passed. No M7-D reimplementation, seed promotion, source adoption, broad crawling, NotebookLM/YMM4 automation, runtime artifact commit, or downstream subtitle/YMM4 geometry work was done.
 - Current sync base HEAD before this slice: `4b83531 feat: integrate M6 artifacts into YMM4 export`.
@@ -209,17 +210,53 @@ Last updated: 2026-06-10
 
 ## Next Recommended Work
 
-1. P0 support: Preserve or regenerate the active C1/NIST source application, persisted packet, approved materialization, and tightened QuoteManifest if runtime artifacts are missing.
-   Purpose: keep `story_20260603_503c39418f15862d` from regressing to a permanent `critical_views` warning in local runtime state.
-   Effect: keeps the active export auditable without treating ignored DB/export artifacts as tracked source.
+1. P0: operator-run YMM4 GUI import proof intake.
+   Purpose: record concrete YMM4-side CSV import evidence when the operator supplies it.
+   Effect: updates proof state without automating YMM4 or widening proof scope.
+   Requirements: `OPERATOR_PROOF_PATH`, YMM4 version, import result, and any screenshot path or issue details supplied by the operator.
+   State: no proof path was supplied in the 2026-06-15 `restart_check`; no new YMM4 proof state was changed. Existing proof boundaries remain CSV import acceptance and handoff-file readability only.
+   Owner: operator owns GUI execution and proof capture; assistant owns repo readback and doc reflection.
+   Next move: use `NEXT_ACTION=record_ymm4_import_proof` only when a concrete proof path is provided.
 
-2. M7 next: use append only when another operator-approved episode memory record exists, or run the normal source/story workflow if a follow-up seed is explicitly selected.
-   Purpose: keep channel memory as approved continuity, not automatic planning.
-   Effect: future series reports stay readable without turning seeds into selected stories.
+2. P0: critical-view source path.
+   Purpose: keep opposing, critical, or supporting source entry durable and reviewable.
+   Effect: lets packets and scripts carry critical-view coverage without automatic source adoption.
+   Requirements: an approved story/source decision or a concrete source classification task.
+   State: implemented for the active path; do not reselect sources unless runtime artifacts are missing or a new story requires it.
+   Owner: operator/editor owns source decisions; assistant owns schema-safe tooling and rebuilds.
+   Next move: if runtime artifacts are missing, preserve or regenerate the active C1/NIST source application, persisted packet, approved materialization, and tightened QuoteManifest before doing new feature work.
 
-3. Downstream failure intake: act only when the operator provides a concrete failure description plus the full log/artifact/proof path.
-   Purpose: keep newsroom-side work tied to reproducible CSV/JSON/Markdown handoff, source, script, or manifest consistency evidence.
-   Effect: prevents subtitle placement, overlay proof, full `.ymmp`, or publishing scope from drifting into newsroom without an owned artifact boundary.
+3. P1: QuoteManifest tightening.
+   Purpose: keep quote review focused on direct quote, screenshot, and data-use intent rather than every citation-only source ref.
+   Effect: reduces noisy `human_required` rows while preserving review gates for real rights risk.
+   Requirements: source refs, intended quote/screenshot/data use, and operator review state.
+   State: implemented for the active path; rows remain conservative candidates, not legal decisions.
+   Owner: assistant owns manifest behavior; operator owns rights and quote approval.
+   Next move: revisit only for a concrete noisy-manifest case or new episode export.
+
+4. P1: Packet persistence.
+   Purpose: keep NotebookPacket rows as first-class runtime DB records instead of artifact-only state.
+   Effect: downstream rebuilds can reuse sanitized packet state and critical-view additions.
+   Requirements: runtime DB availability and explicit rebuild/readback commands.
+   State: implemented; runtime DB rows remain local and untracked.
+   Owner: assistant.
+   Next move: validate or regenerate the active runtime packet/export if a checkout lacks the needed ignored artifacts.
+
+5. P2: Source expansion.
+   Purpose: grow source coverage while preserving RSS-first and metadata-first intake.
+   Effect: source pools can distinguish vendor, standards, independent, technical, and critical-view candidate sources without broad crawling.
+   Requirements: curated feed/source metadata and operator/editor review for candidate adoption.
+   State: implemented as metadata-only source pools; no broad crawler, Inoreader OAuth, failed-feed rescue blocker, or automatic adoption exists.
+   Owner: assistant for registry/tooling; operator/editor for source adoption.
+   Next move: tune source metadata deliberately in a separate slice if needed.
+
+6. P2: M7 series / channel memory.
+   Purpose: preserve approved episode continuity without turning follow-up seeds into approved stories.
+   Effect: series reports stay readable and future episodes can append validated memory records.
+   Requirements: an operator-approved second episode record, explicit selected follow-up seed, or a concrete downstream failure/artifact path.
+   State: seed, report, append workflow, and source-role backfill are implemented for the active series; no autonomous recommendation or topic approval exists.
+   Owner: operator/editor owns story approval; assistant owns validation and append/report tooling.
+   Next move: append only when an approved episode record exists, or return to normal source/story selection when a follow-up seed is explicitly selected.
 
 ## Restart Commands
 
