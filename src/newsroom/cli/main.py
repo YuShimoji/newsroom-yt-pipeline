@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
+
+import yaml
 
 from newsroom.clustering.story_clusterer import StoryClusterer
 from newsroom.config import DEFAULT_SERIES_CONFIG, load_series, load_source_feeds
@@ -17,6 +20,16 @@ from newsroom.editorial.channel_memory import (
 )
 from newsroom.ingest.inoreader_client import InoreaderClient
 from newsroom.ingest.rss_client import RssClient
+from newsroom.ingest.source_import import (
+    load_opml_sources,
+    reader_sources_to_feeds,
+    source_feed_to_config,
+)
+from newsroom.ingest.source_smoke import (
+    SourceSmokeResult,
+    build_source_smoke_evidence,
+    render_source_smoke_markdown,
+)
 from newsroom.adapters.ymm4_export import (
     DEFAULT_EXPORT_ROOT,
     build_ymm4_package,
@@ -86,6 +99,27 @@ def build_parser() -> argparse.ArgumentParser:
 
     fetch_parser = subparsers.add_parser("fetch", help="Fetch source feeds")
     fetch_parser.add_argument("--source", choices=["rss", "inoreader", "all"], default="rss")
+    fetch_parser.add_argument("-n", "--limit", type=int, default=20, help="Max entries per Inoreader stream")
+
+    source_parser = subparsers.add_parser("source", help="Source feed management")
+    source_sub = source_parser.add_subparsers(dest="source_command", required=True)
+
+    source_list = source_sub.add_parser("list", help="List configured source feeds")
+    source_list.add_argument("--format", choices=["markdown", "json"], default="markdown")
+
+    source_import = source_sub.add_parser("import-opml", help="Convert an OPML export into reviewed source feed config")
+    source_import.add_argument("--opml", required=True, help="OPML subscription list exported outside the repo")
+    source_import.add_argument("--format", choices=["yaml", "json", "markdown"], default="yaml")
+    source_import.add_argument("--enable", action="store_true", help="Mark imported feeds enabled; default is disabled for review")
+    source_import.add_argument("--source-type", default="unknown", help="source_type to place on imported feeds")
+    source_import.add_argument("-o", "--output", help="Write output to a file instead of stdout")
+
+    source_smoke = source_sub.add_parser("smoke", help="Run a sanitized source coverage smoke")
+    source_smoke.add_argument("--source", choices=["rss", "inoreader"], default="rss")
+    source_smoke.add_argument("--opml", help="Smoke an OPML export without committing it")
+    source_smoke.add_argument("--format", choices=["markdown", "json"], default="markdown")
+    source_smoke.add_argument("-n", "--limit", type=int, default=20, help="Max entries to inspect per source or stream")
+    source_smoke.add_argument("-o", "--output", help="Write evidence to a file instead of stdout")
 
     report_parser = subparsers.add_parser("report", help="Print candidate reports")
     report_group = report_parser.add_mutually_exclusive_group()
@@ -493,8 +527,16 @@ def cmd_fetch(args: argparse.Namespace) -> int:
 
     if args.source == "inoreader":
         client = InoreaderClient.from_config_path(args.config)
-        print(client.describe_stub())
-        return 2
+        try:
+            articles = client.fetch_configured_streams(limit=args.limit)
+        except ValueError as exc:
+            print(client.describe_stub())
+            print(str(exc))
+            return 2
+        for article in articles:
+            upsert_article(db_path, article)
+        print(f"Inoreader fetch complete: stored_or_updated={len(articles)}")
+        return 0
 
     feeds = load_source_feeds(args.config)
     rss_feeds = [feed for feed in feeds if feed.enabled and feed.kind == "rss"]
@@ -528,6 +570,206 @@ def cmd_fetch(args: argparse.Namespace) -> int:
             print(f"- {failure}")
         return 1 if total_seen == 0 else 0
     return 0
+
+
+def cmd_source(args: argparse.Namespace) -> int:
+    if args.source_command == "list":
+        feeds = load_source_feeds(args.config)
+        text = _render_source_list(feeds, args.format)
+        print(text, end="" if text.endswith("\n") else "\n")
+        return 0
+    if args.source_command == "import-opml":
+        reader_sources = load_opml_sources(args.opml)
+        feeds = reader_sources_to_feeds(
+            reader_sources,
+            enabled=args.enable,
+            source_type=args.source_type,
+        )
+        text = _render_imported_sources(feeds, args.format)
+        _write_or_print(text, args.output)
+        return 0
+    if args.source_command == "smoke":
+        return _cmd_source_smoke(args)
+    print(f"Unsupported source subcommand: {args.source_command}")
+    return 2
+
+
+def _cmd_source_smoke(args: argparse.Namespace) -> int:
+    if args.opml and args.source == "inoreader":
+        print("Error: --opml cannot be combined with --source inoreader")
+        return 2
+
+    representative_articles: list[Article] = []
+    results: list[SourceSmokeResult] = []
+
+    if args.source == "inoreader":
+        client = InoreaderClient.from_config_path(args.config)
+        try:
+            sources = client.load_subscription_sources()
+            streams = client.streams or ()
+            if not streams:
+                articles = client.fetch_stream(
+                    "user/-/state/com.google/reading-list",
+                    sources=sources,
+                    limit=args.limit,
+                )
+                results.append(
+                    SourceSmokeResult(
+                        source_id="reading_list",
+                        status="fetched" if articles else "empty",
+                        entry_count=len(articles),
+                        shown_count=min(len(articles), args.limit),
+                    )
+                )
+                representative_articles.extend(articles[: args.limit])
+            else:
+                for stream in streams:
+                    articles = client.fetch_stream(
+                        stream.stream_id,
+                        sources=sources,
+                        limit=args.limit,
+                    )
+                    results.append(
+                        SourceSmokeResult(
+                            source_id=stream.id,
+                            status="fetched" if articles else "empty",
+                            entry_count=len(articles),
+                            shown_count=min(len(articles), args.limit),
+                        )
+                    )
+                    representative_articles.extend(articles[: args.limit])
+        except Exception as exc:
+            sources = []
+            results.append(SourceSmokeResult(source_id="inoreader", status="error", error=str(exc)))
+        evidence = build_source_smoke_evidence(
+            input_kind="Inoreader read-only",
+            sources=sources,
+            results=results,
+            representative_articles=representative_articles,
+        )
+        _write_or_print(_render_source_smoke(evidence, args.format), args.output)
+        return _source_smoke_exit_code(evidence)
+
+    if args.opml:
+        sources = reader_sources_to_feeds(load_opml_sources(args.opml), enabled=True)
+        input_kind = "OPML export"
+    else:
+        sources = [
+            feed
+            for feed in load_source_feeds(args.config)
+            if feed.enabled and feed.kind == "rss"
+        ]
+        input_kind = "configured RSS feeds"
+
+    client = RssClient()
+    for source in sources:
+        try:
+            articles = client.fetch(source)
+        except Exception as exc:
+            results.append(SourceSmokeResult(source_id=source.id, status="error", error=str(exc)))
+            continue
+        results.append(
+            SourceSmokeResult(
+                source_id=source.id,
+                status="fetched" if articles else "empty",
+                entry_count=len(articles),
+                shown_count=min(len(articles), args.limit),
+            )
+        )
+        representative_articles.extend(articles[: args.limit])
+
+    evidence = build_source_smoke_evidence(
+        input_kind=input_kind,
+        sources=sources,
+        results=results,
+        representative_articles=representative_articles,
+    )
+    _write_or_print(_render_source_smoke(evidence, args.format), args.output)
+    return _source_smoke_exit_code(evidence)
+
+
+def _render_imported_sources(feeds: list, output_format: str) -> str:
+    payload = {"feeds": [source_feed_to_config(feed) for feed in feeds]}
+    if output_format == "json":
+        return json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
+    if output_format == "yaml":
+        return yaml.safe_dump(payload, allow_unicode=True, sort_keys=False)
+    lines = [
+        "| id | name | enabled | reader_categories | tags |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for feed in feeds:
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    _markdown_cell(feed.id),
+                    _markdown_cell(feed.name),
+                    _markdown_cell(str(feed.enabled).lower()),
+                    _markdown_cell(", ".join(feed.reader_categories)),
+                    _markdown_cell(", ".join(feed.tags)),
+                ]
+            )
+            + " |"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def _render_source_list(feeds: list, output_format: str) -> str:
+    if output_format == "json":
+        return json.dumps([source_feed_to_config(feed) for feed in feeds], ensure_ascii=False, indent=2) + "\n"
+    lines = [
+        "| id | name | kind | enabled | source_role | source_pool_id | tags |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
+    ]
+    for feed in feeds:
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    _markdown_cell(feed.id),
+                    _markdown_cell(feed.name),
+                    _markdown_cell(feed.kind),
+                    _markdown_cell(str(feed.enabled).lower()),
+                    _markdown_cell(feed.source_role or ""),
+                    _markdown_cell(feed.source_pool_id or ""),
+                    _markdown_cell(", ".join(feed.tags)),
+                ]
+            )
+            + " |"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def _render_source_smoke(evidence: dict[str, object], output_format: str) -> str:
+    if output_format == "json":
+        return json.dumps(evidence, ensure_ascii=False, indent=2) + "\n"
+    return render_source_smoke_markdown(evidence)
+
+
+def _source_smoke_exit_code(evidence: dict[str, object]) -> int:
+    counts = evidence.get("fetch_status_counts")
+    if not isinstance(counts, dict):
+        return 1
+    if int(evidence.get("source_count", 0)) == 0:
+        return 1
+    if counts.get("error", 0) and not counts.get("fetched", 0):
+        return 1
+    return 0
+
+
+def _write_or_print(text: str, output: str | None) -> None:
+    if output:
+        path = Path(output)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+        print(f"Wrote {path}")
+        return
+    print(text, end="" if text.endswith("\n") else "\n")
+
+
+def _markdown_cell(value: str) -> str:
+    return value.replace("|", "\\|").replace("\n", " ")
 
 
 def cmd_report(args: argparse.Namespace) -> int:
@@ -1458,6 +1700,7 @@ def main(argv: list[str] | None = None) -> int:
 
     dispatchers = {
         "fetch": cmd_fetch,
+        "source": cmd_source,
         "report": cmd_report,
         "cluster": cmd_cluster,
         "score": cmd_score,

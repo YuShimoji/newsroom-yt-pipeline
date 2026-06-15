@@ -107,6 +107,7 @@ Copilot の権限管理はどこが危ないのか
 
 - RSS / Inoreader 設定。
 - 記事取得。
+- OPML import / source list readback / sanitized source smoke。
 - 記事 DB。
 - 重複排除。
 - 話題クラスタリング。
@@ -129,14 +130,36 @@ Copilot の権限管理はどこが危ないのか
 
 ### 6.3 統合方式
 
-次のいずれかで統合します。
+現在の統合方式は JSON / CSV / Markdown の schema 境界に限定します。
 
-- subprocess 呼び出し。
-- ローカル path dependency。
-- pip dependency。
-- JSON / CSV / Markdown の schema 境界。
+初期案にあった subprocess 呼び出し、ローカル path dependency、pip dependency、共有コード化は DR-006 により採用しません。NLMYTGen は newsroom の出力ディレクトリを入力として独立に処理し、newsroom 側は NLMYTGen の実装やローカル配置へ依存しない形を維持します。
 
-共有 GUI コード化はしません。
+運用時の接続境界は `docs/NLMYTGEN_BOUNDARY.md` に固定し、export bundle の形、NLMYTGen へ渡せる artifact、禁止する結合、copy-in / read-only reference の判断をそこで確認します。
+
+### 6.4 RSS / Reader 後継境界
+
+NLMYTGen 側で暫定的に扱っていた RSS / OPML / Inoreader / source smoke は、Newsroom 側の upstream source management へ移します。
+
+Newsroom 側で保持するもの:
+
+- `SourceFeed` と source pool metadata。
+- OPML export から reviewed source config を作る `source import-opml`。
+- configured source を読む `source list`。
+- raw OPML / token / private feed URL / full article body を evidence に出さない `source smoke`。
+- RSS / Atom fetch から article ledger へ保存する `fetch --source rss`。
+- 一時環境変数 token だけを使う read-only Inoreader fetch。
+
+Newsroom 側でも保持しないもの:
+
+- Inoreader OAuth app / refresh token persistence。
+- unread/read sync。
+- subscription mutation。
+- background polling。
+- broad crawling。
+- automatic source adoption。
+- NotebookLM API automation。
+
+NLMYTGen 側の旧 `fetch-topics` は、source取得の後継ではなく互換参照である。今後の source intake 改善は Newsroom 側で行い、NLMYTGen は Newsroom export bundle を受け取って YMM4 CSV / adapter / review proof へ接続する。
 
 ## 7. 外部仕様の確認メモ
 
@@ -147,7 +170,7 @@ Copilot の権限管理はどこが危ないのか
 設計上の扱い:
 
 - 任意の高機能取材デスク。
-- MVP は通常 RSS から開始し、Inoreader は後続または stub から開始。
+- MVP は通常 RSS から開始する。Inoreader は OAuth / token storage を後続に残しつつ、read-only access token での限定取得だけを扱える。
 
 確認事項:
 
@@ -1024,6 +1047,8 @@ M5 以後の想定:
 ```
 
 ## 19. 初回 Agent への投入指示
+
+この節は初期 MVP 作成時の履歴プロンプトです。現在の再開時にそのまま実行しないでください。現在の作業指示は `docs/HANDOFF.md`、`docs/RUNTIME_STATE.md`、`docs/META_REVIEW_LEDGER.md`、および `docs/verification/` の最新監査記録で上書きされます。
 
 ```text
 docs/PROJECT_SPEC.md を一次仕様として扱ってください。

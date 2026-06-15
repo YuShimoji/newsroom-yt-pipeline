@@ -41,6 +41,25 @@ Fetch enabled RSS feeds from `configs/sources.yml`:
 newsroom fetch --source rss
 ```
 
+Inspect configured sources without fetching:
+
+```bash
+newsroom source list
+```
+
+Import a human RSS reader OPML export into reviewed source-feed YAML:
+
+```bash
+newsroom source import-opml --opml _local/rss/feeds.opml -o _tmp/imported_sources.yml
+```
+
+Run a sanitized source smoke without committing raw OPML, private feed URLs, or
+article titles:
+
+```bash
+newsroom source smoke --opml _local/rss/feeds.opml -o docs/verification/SOURCE-SMOKE-EVIDENCE.md
+```
+
 Deliberate source-pool metadata lives in `configs/source_pools.yml`. Feed rows
 may reference a `source_pool_id` so packet sources can carry roles such as
 `vendor_official`, `standards_body`, or `critical_view_candidate`; this does not
@@ -92,6 +111,8 @@ python -m pytest -q
 This repository owns source ingest, article ledger, story clustering, scoring, NotebookLM packet preparation, script workbench interfaces, visual planning interfaces, and rights manifests.
 
 `NLMYTGen` remains a downstream adapter for NotebookLM/YMM4 conversion. News ingestion, source strategy, rights management, channel planning, and publishing decisions should not be moved into `NLMYTGen`.
+
+The operational handoff boundary is tracked in [`docs/NLMYTGEN_BOUNDARY.md`](docs/NLMYTGEN_BOUNDARY.md).
 
 ## Non-Scope For M1
 

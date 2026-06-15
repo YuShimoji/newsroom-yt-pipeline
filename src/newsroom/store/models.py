@@ -38,6 +38,11 @@ class SourceFeed:
     kind: str
     url: str | None = None
     inoreader_stream_id: str | None = None
+    reader: str | None = None
+    reader_feed_id: str | None = None
+    html_url: str | None = None
+    icon_url: str | None = None
+    reader_categories: list[str] = field(default_factory=list)
     source_type: str = "unknown"
     source_role: str | None = None
     source_pool_id: str | None = None
@@ -62,6 +67,9 @@ class SourceFeed:
         raw_tags = data.get("tags") or []
         if not isinstance(raw_tags, list):
             raise ValueError(f"SourceFeed {feed_id!r} tags must be a list")
+        raw_reader_categories = data.get("reader_categories") or []
+        if not isinstance(raw_reader_categories, list):
+            raise ValueError(f"SourceFeed {feed_id!r} reader_categories must be a list")
 
         return cls(
             id=feed_id,
@@ -69,6 +77,19 @@ class SourceFeed:
             kind=kind,
             url=data.get("url"),
             inoreader_stream_id=data.get("inoreader_stream_id"),
+            reader=(str(data.get("reader")).strip() or None)
+            if data.get("reader") is not None
+            else None,
+            reader_feed_id=(str(data.get("reader_feed_id")).strip() or None)
+            if data.get("reader_feed_id") is not None
+            else None,
+            html_url=(str(data.get("html_url")).strip() or None)
+            if data.get("html_url") is not None
+            else None,
+            icon_url=(str(data.get("icon_url")).strip() or None)
+            if data.get("icon_url") is not None
+            else None,
+            reader_categories=[str(category) for category in raw_reader_categories],
             source_type=str(data.get("source_type") or "unknown"),
             source_role=validate_source_role(data.get("source_role"), f"SourceFeed {feed_id!r}"),
             source_pool_id=(str(data.get("source_pool_id")).strip() or None)

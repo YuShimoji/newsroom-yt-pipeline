@@ -92,6 +92,36 @@ feeds:
     assert feeds[0].tags == ["pool/standards", "watch/ai-risk"]
 
 
+def test_load_source_feeds_preserves_reader_metadata(tmp_path):
+    config = tmp_path / "sources.yml"
+    config.write_text(
+        """
+feeds:
+  - id: reader_feed
+    name: Reader Feed
+    kind: rss
+    url: https://example.com/feed.xml
+    reader: opml
+    reader_feed_id: feed/example
+    html_url: https://example.com/
+    icon_url: https://example.com/icon.png
+    reader_categories:
+      - Tech
+    tags:
+      - reader/tech
+""",
+        encoding="utf-8",
+    )
+
+    feeds = load_source_feeds(config)
+
+    assert feeds[0].reader == "opml"
+    assert feeds[0].reader_feed_id == "feed/example"
+    assert feeds[0].html_url == "https://example.com/"
+    assert feeds[0].icon_url == "https://example.com/icon.png"
+    assert feeds[0].reader_categories == ["Tech"]
+
+
 def test_unknown_source_role_rejects(tmp_path):
     config = tmp_path / "source_pools.yml"
     config.write_text(

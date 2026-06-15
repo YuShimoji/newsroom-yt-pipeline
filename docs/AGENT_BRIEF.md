@@ -1,6 +1,6 @@
 # Agent Brief: newsroom-yt-pipeline
 
-`docs/PROJECT_SPEC.md` を一次仕様として扱ってください。この文書は初回実装 Agent に渡す短い実行ブリーフです。
+この文書は初回実装 Agent に渡した履歴ブリーフです。現在の作業では、`docs/PROJECT_SPEC.md` の決定記録、`docs/NLMYTGEN_BOUNDARY.md`、`docs/HANDOFF.md`、`docs/RUNTIME_STATE.md`、`docs/META_REVIEW_LEDGER.md`、および `docs/verification/` の最新監査記録を優先してください。
 
 ## 目的
 
@@ -54,6 +54,8 @@
 - LLM による最終台本生成。
 - 広範な crawler。
 
+現在の後継境界では、NLMYTGen 側に残っていた RSS / OPML / Reader 価値は Newsroom の source management として扱います。OPML import、source list readback、sanitized source smoke、RSS fetch、read-only Inoreader fetch は Newsroom 側の責務です。Inoreader OAuth / token storage / unread-read sync / subscription mutation / background polling は引き続き非目的です。
+
 ## 責務境界
 
 `newsroom-yt-pipeline` が持つもの:
@@ -75,7 +77,7 @@
 - YMM4 CSV conversion。
 - 既存の YMM4 direction IR / patch support。
 
-統合は subprocess、package dependency、local path dependency、または schema 境界で行ってください。
+統合は CSV / JSON / Markdown の schema 境界に限定します。subprocess、package dependency、local path dependency、共有コード化は、`docs/PROJECT_SPEC.md` の DR-006 により現在の方針から外します。
 
 ## Human approval を残すもの
 
@@ -95,13 +97,6 @@
 - README が目的、scope、non-scope、次 milestone を説明している。
 - focused tests が通る。
 
-## 残作業の報告形式
+## 現在の報告の考え方
 
-残作業は以下を含めて報告してください。
-
-- purpose
-- effect
-- requirements
-- state
-- owner
-- next move
+この初期ブリーフの英語ラベル列挙は、現在の完了報告テンプレートとして使いません。複数の選択肢や残作業がある場合は、実際の判断軸に合わせた比較表と、次に着手しやすい入口を自然文で示してください。

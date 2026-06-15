@@ -36,6 +36,7 @@ feeds:
 
 inoreader:
   enabled: false
+  access_token_env: NEWSROOM_INOREADER_ACCESS_TOKEN
   client_id_env: INOREADER_CLIENT_ID
   client_secret_env: INOREADER_CLIENT_SECRET
   token_store: data/secrets/inoreader_token.json
