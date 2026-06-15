@@ -41,6 +41,7 @@ nav:
       - Project Rule Alignment 2026-06-14: docs/verification/PROJECT-RULE-ALIGNMENT-2026-06-14.md
       - Handoff Inventory 2026-06-10: docs/verification/NEWSROOM-HANDOFF-INVENTORY-2026-06-10.md
   - Artifacts:
+      - Review Artifacts: artifacts/ARTIFACTS.md
       - Approved Materializations: docs/approved_materializations/README.md
       - Channel Memory: docs/channel_memory/README.md
   - Prompts:

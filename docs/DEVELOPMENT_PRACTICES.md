@@ -70,3 +70,5 @@ PR creation is not the default workflow. Prefer local diff, tests, and commit-bo
 ## Local Documentation View
 
 The MkDocs browser view is a review surface only. It may make existing Markdown easier to inspect or browser-translate, but it must not become a translated or summarized replacement for source documents.
+
+The `.docs-view/` tree is tracked as MkDocs source, not as generated output. Keep files there as thin snippet wrappers around the canonical Markdown paths, and keep generated HTML under the ignored `.mkdocs-site/` directory. When source Markdown is added, update the wrapper and `mkdocs.yml` nav deliberately; use `tools\generate-doc-nav.ps1` only as a candidate generator.

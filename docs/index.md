@@ -30,7 +30,7 @@ The navigation groups are practical reading buckets, not authority labels:
 | Specs | Documents that appear to describe intended scope, downstream boundaries, or operator procedure. |
 | Runtime State | Restart and current-state records that appear to be active handoff context. |
 | Development Notes | Review ledgers, rule-alignment packets, and inventory notes that appear to record implementation or handoff decisions. |
-| Artifacts | README files for tracked authority or memory artifact roots. |
+| Artifacts | The review-artifact manifest and README files for tracked authority or memory artifact roots. |
 | Prompts | Prompt templates used by operator-side or future LLM-assisted workflows. |
 
 When a document's role is uncertain, prefer reading the original file path and surrounding repository context before assigning stronger meaning to it. Some documents contain existing mojibake or mixed-language content; this view intentionally preserves that content instead of repairing or interpreting it.
@@ -46,3 +46,7 @@ powershell -ExecutionPolicy Bypass -File tools\generate-doc-nav.ps1
 ```
 
 The script prints a candidate `nav` block to standard output. Review the result before copying anything into `mkdocs.yml`.
+
+## Docs View Source Boundary
+
+The `.docs-view/` tree is intentionally tracked because MkDocs reads from a single `docs_dir`. Files there should stay as thin snippet wrappers, such as `--8<-- "docs/RUNTIME_STATE.md"`, pointing back to the original repository Markdown. The generated site output is `.mkdocs-site/` and remains ignored.

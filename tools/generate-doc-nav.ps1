@@ -81,6 +81,7 @@ function Get-Category {
         "^docs/(HANDOFF|RUNTIME_STATE)\.md$" { return "Runtime State" }
         "^docs/(META_REVIEW_LEDGER)\.md$" { return "Development Notes" }
         "^docs/verification/" { return "Development Notes" }
+        "^artifacts/" { return "Artifacts" }
         "^docs/(approved_materializations|channel_memory)/" { return "Artifacts" }
         "^prompts/" { return "Prompts" }
         default { return "Misc" }
