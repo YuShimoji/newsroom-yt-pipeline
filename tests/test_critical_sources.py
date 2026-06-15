@@ -17,12 +17,19 @@ from newsroom.store.db import (
 from newsroom.store.models import Article, GlossaryTerm, NotebookPacket, SourceRef, StoryCluster
 
 
-def _article(seed: str, source_type: str = "official") -> Article:
+def _article(
+    seed: str,
+    source_type: str = "official",
+    source_role: str | None = None,
+    source_pool_id: str | None = None,
+) -> Article:
     return Article.create(
         url=f"https://example.com/{seed}",
         title=f"Source article {seed}",
         source_name=f"Source {seed}",
         source_type=source_type,
+        source_role=source_role,
+        source_pool_id=source_pool_id,
         published_at="2026-05-18T01:00:00+00:00",
         fetched_at="2026-05-18T02:00:00+00:00",
     )
@@ -138,6 +145,66 @@ def test_packet_add_critical_existing_article_flows_into_packet_artifact(tmp_pat
     sources = json.loads((packet_dirs[0] / "sources.json").read_text(encoding="utf-8"))
     assert sources["critical_views"][0]["article_id"] == critical.id
     assert sources["critical_views"][0]["source_name"] == critical.source_name
+
+
+def test_packet_critical_list_reads_back_recorded_sources(tmp_path, capsys):
+    db_path = tmp_path / "newsroom.sqlite"
+    primary = _article("primary", source_type="official")
+    critical = _article(
+        "critical",
+        source_type="commentary",
+        source_role="critical_view_candidate",
+        source_pool_id="critical_view_candidates",
+    )
+    cluster = _cluster(primary)
+    upsert_article(db_path, primary)
+    upsert_article(db_path, critical)
+    replace_clusters_for_date(db_path, cluster.cluster_date, [cluster])
+    add_story_critical_source(
+        db_path,
+        cluster_id=cluster.id,
+        article_id=critical.id,
+        note="counter framing",
+        created_at="2026-05-18T03:00:00+00:00",
+    )
+
+    markdown_exit = main(
+        [
+            "--db",
+            str(db_path),
+            "packet",
+            "critical-list",
+            "--story",
+            cluster.id,
+        ]
+    )
+    markdown_output = capsys.readouterr().out
+
+    assert markdown_exit == 0
+    assert f"Critical-view sources for {cluster.id}: 1" in markdown_output
+    assert critical.id in markdown_output
+    assert "critical_view_candidate" in markdown_output
+    assert "https://example.com" not in markdown_output
+
+    json_exit = main(
+        [
+            "--db",
+            str(db_path),
+            "packet",
+            "critical-list",
+            "--story",
+            cluster.id,
+            "--format",
+            "json",
+        ]
+    )
+    payload = json.loads(capsys.readouterr().out)
+
+    assert json_exit == 0
+    assert payload["critical_view_count"] == 1
+    assert payload["critical_views"][0]["article_id"] == critical.id
+    assert payload["critical_views"][0]["source_pool_id"] == "critical_view_candidates"
+    assert "url" not in payload["critical_views"][0]
 
 
 def test_packet_build_persists_packet_and_show_reads_back(tmp_path, capsys):

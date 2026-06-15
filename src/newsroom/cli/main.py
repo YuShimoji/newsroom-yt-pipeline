@@ -217,6 +217,17 @@ def build_parser() -> argparse.ArgumentParser:
     packet_critical.add_argument("--published-at", help="Manual source published timestamp")
     packet_critical.add_argument("--license-hint", help="Manual source license hint")
     packet_critical.add_argument("--note", help="Operator note explaining the critical angle")
+    packet_critical_list = packet_sub.add_parser(
+        "critical-list",
+        help="Read back recorded critical-view sources for a story",
+    )
+    packet_critical_list.add_argument("--story", required=True, help="Story cluster id")
+    packet_critical_list.add_argument(
+        "--format",
+        choices=["markdown", "json"],
+        default="markdown",
+        help="Output format for the readback",
+    )
 
     script_parser = subparsers.add_parser("script", help="Script workbench operations")
     script_sub = script_parser.add_subparsers(dest="script_command", required=True)
@@ -984,6 +995,8 @@ def cmd_packet(args: argparse.Namespace) -> int:
         return _cmd_packet_show(args, db_path)
     if args.packet_command == "add-critical":
         return _cmd_packet_add_critical(args, db_path)
+    if args.packet_command == "critical-list":
+        return _cmd_packet_critical_list(args, db_path)
     print(f"Unsupported packet subcommand: {args.packet_command}")
     return 2
 
@@ -1086,6 +1099,64 @@ def _cmd_packet_add_critical(args: argparse.Namespace, db_path: Path) -> int:
     print(f"Title: {article.title}")
     print("Rebuild the packet to carry this source into downstream artifacts.")
     return 0
+
+
+def _cmd_packet_critical_list(args: argparse.Namespace, db_path: Path) -> int:
+    found = _find_cluster(db_path, args.story)
+    if found is None:
+        print(f"Story cluster not found: {args.story}")
+        return 1
+    cluster, _ = found
+    articles = list_story_critical_source_articles(db_path, cluster.id)
+
+    if args.format == "json":
+        payload = {
+            "story_cluster_id": cluster.id,
+            "critical_view_count": len(articles),
+            "critical_views": [
+                _critical_source_readback_payload(article) for article in articles
+            ],
+        }
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        return 0
+
+    print(f"Critical-view sources for {cluster.id}: {len(articles)}")
+    if not articles:
+        print("No critical-view sources recorded. Use packet add-critical after an operator source decision.")
+        return 0
+
+    print("| article_id | source_name | source_type | source_role | source_pool_id | title | published_at |")
+    print("| --- | --- | --- | --- | --- | --- | --- |")
+    for article in articles:
+        payload = _critical_source_readback_payload(article)
+        print(
+            "| "
+            + " | ".join(
+                [
+                    _markdown_cell(str(payload["article_id"])),
+                    _markdown_cell(str(payload["source_name"])),
+                    _markdown_cell(str(payload["source_type"])),
+                    _markdown_cell(str(payload["source_role"])),
+                    _markdown_cell(str(payload["source_pool_id"])),
+                    _markdown_cell(str(payload["title"])),
+                    _markdown_cell(str(payload["published_at"])),
+                ]
+            )
+            + " |"
+        )
+    return 0
+
+
+def _critical_source_readback_payload(article: Article) -> dict[str, str | None]:
+    return {
+        "article_id": article.id,
+        "source_name": article.source_name,
+        "source_type": article.source_type,
+        "source_role": article.source_role,
+        "source_pool_id": article.source_pool_id,
+        "title": article.title,
+        "published_at": article.published_at,
+    }
 
 
 def _build_packet_for_cluster(
