@@ -1,6 +1,6 @@
 # Handoff
 
-Last updated: 2026-06-10
+Last updated: 2026-06-15
 
 ## Restart Order
 
@@ -37,6 +37,12 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 
 - Branch: `main`
 - Remote: `origin/main`
+- Remote sync handoff on 2026-06-15:
+  - Started clean on `main` at `14c1e4f feat: tighten quote manifest review levels` with `HEAD...origin/main = 4 0`.
+  - Local commits being handed off: `baabcd6 docs: add development practice docs view`, `d7f2bd7 feat: add critical source readback`, `d90452a docs: record review artifact contract`, and `14c1e4f feat: tighten quote manifest review levels`.
+  - This handoff update keeps the restart context in tracked docs before pushing to `origin/main`; after sync, another terminal should `git pull --ff-only origin main`, read this file and `docs\RUNTIME_STATE.md`, then run local validation.
+  - Latest validation before sync: `.venv\Scripts\python.exe -m pytest -q` -> 116 passed; `git diff --check` -> passed; `.venv\Scripts\python.exe -m mkdocs build --strict` -> passed; synthetic `packet critical-list --format json` smoke returned one critical view and no URL field.
+  - The remote sync does not include runtime DBs, generated export bundles, proof screenshots, YMM4 geometry, `.ymmp` files, NotebookLM/YMM4 automation, YouTube publishing, or raw source bodies.
 - Newsroom handoff inventory record on 2026-06-10:
   - Recorded the read-only inventory of active export `data\exports\episode_756343df9853` in `docs\verification\NEWSROOM-HANDOFF-INVENTORY-2026-06-10.md`.
   - The export folder exists with 9 handoff files: manifest, script CSV/IR, source list, visual plan/IR, asset manifest, quote manifest, and YMM4 notes.
