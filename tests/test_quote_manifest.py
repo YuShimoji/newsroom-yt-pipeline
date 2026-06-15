@@ -132,7 +132,7 @@ def test_quote_manifest_covers_text_and_source_card_screenshot():
         if quote.quote_type == "text" and quote.source_ref == "article_a"
     )
     assert fact_quote.purpose == "evidence"
-    assert fact_quote.review_level == "citation_only"
+    assert fact_quote.review_level == "source_reference"
     assert fact_quote.source_role == "primary"
     assert fact_quote.risk_level == "low"
     assert "seg_facts" in fact_quote.quoted_scope
@@ -146,7 +146,7 @@ def test_quote_manifest_covers_text_and_source_card_screenshot():
 
     screenshot = next(quote for quote in manifest.quotes if quote.quote_type == "screenshot")
     assert screenshot.source_ref == "article_a"
-    assert screenshot.review_level == "screenshot"
+    assert screenshot.review_level == "screenshot_candidate"
     assert screenshot.approval_state == "human_required"
     assert "source-card screenshot" in screenshot.necessity
     assert screenshot.risk_level == "medium"
@@ -255,7 +255,7 @@ def test_quote_manifest_ignores_unknown_sources_and_deduplicates():
     text_quotes = [quote for quote in manifest.quotes if quote.quote_type == "text"]
     assert len(text_quotes) == 1
     assert text_quotes[0].source_ref == "article_a"
-    assert text_quotes[0].review_level == "citation_only"
+    assert text_quotes[0].review_level == "source_reference"
     assert text_quotes[0].approval_state == "citation_only"
 
 
@@ -274,6 +274,6 @@ def test_quote_manifest_round_trips_through_yaml(tmp_path):
     payload = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
     assert payload["episode_id"] == "plan_test"
     assert len(payload["quotes"]) == 4
-    assert payload["quotes"][0]["review_level"] == "citation_only"
+    assert payload["quotes"][0]["review_level"] == "source_reference"
     assert payload["quotes"][0]["approval_state"] == "citation_only"
     assert payload["quotes"][0]["source_role"] == "primary"

@@ -53,6 +53,8 @@ Keep human approval for quotes, external images and screenshots, audio license c
 
 QuoteManifest and AssetManifest are review indexes. They are not automatic legal clearance, publication approval, or final asset-use approval.
 
+In QuoteManifest rows, `review_level: source_reference` means an ordinary source reference or attribution row. It is distinct from `review_level: direct_quote`, `review_level: screenshot_candidate`, and `review_level: data_use`, which remain human-review intents when present. `approval_state: citation_only` may be used for source-reference rows, but it is not a direct-quote, screenshot, or data-use approval.
+
 ## Evidence Discipline
 
 Completion claims must include the commands run, validation results, changed files, artifact paths when artifacts exist, and repo state. Distinguish implemented, inspected, generated, diagnostic-only, and operator-pending states.

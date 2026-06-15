@@ -283,7 +283,7 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 - purpose: reduce noisy `human_required` quote rows.
 - effect: review focuses on direct quote / screenshot / data-use intent instead of every source-backed segment.
 - requirements: distinguish citation-only `source_refs` from direct quote or screenshot intent.
-- state: implemented for the active path. Citation-only text rows carry `review_level: citation_only` / `approval_state: citation_only`; direct quote, screenshot, and data-use intent remain `human_required`. This initially left 10 citation-only text rows and 1 screenshot row; the subsequent visual/asset/screenshot gate removed the active screenshot intent. The 5 C1/NIST rows remain present as `source_role: critical_view`.
+- state: implemented for the active path. Ordinary source-reference text rows now carry `review_level: source_reference` / `approval_state: citation_only`; direct quote, screenshot-candidate, and data-use intent remain `human_required`. Earlier generated runtime artifacts may still show the old `review_level: citation_only` label until regenerated. The subsequent visual/asset/screenshot gate removed the active screenshot intent. The 5 C1/NIST rows remain present as `source_role: critical_view`.
 - owner: assistant.
 - next move: superseded by the remaining visual/asset/screenshot gate below for the active export. Do not use QuoteManifest tightening to clear `speculation_vs_fact` or broad `needs_human_review`.
 

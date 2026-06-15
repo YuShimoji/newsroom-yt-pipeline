@@ -28,6 +28,11 @@ _PURPOSE_BY_CLAIM_TYPE: dict[str, str] = {
 _DIRECT_QUOTE_CLAIM_TYPES = {"direct_quote", "quote"}
 _DATA_USE_CLAIM_TYPES = {"data", "data_use"}
 
+REVIEW_LEVEL_SOURCE_REFERENCE = "source_reference"
+REVIEW_LEVEL_DIRECT_QUOTE = "direct_quote"
+REVIEW_LEVEL_SCREENSHOT_CANDIDATE = "screenshot_candidate"
+REVIEW_LEVEL_DATA_USE = "data_use"
+
 
 class QuoteManifestBuilder:
     """Build the M6.3 quote review manifest from script and visual intent.
@@ -94,22 +99,26 @@ def _text_quote_entry(
     source_role: str,
 ) -> QuoteEntry:
     review_level = _text_review_level(segment)
-    quote_type = "data" if review_level == "data_use" else "text"
-    approval_state = "citation_only" if review_level == "citation_only" else "human_required"
-    risk_level = "low" if review_level == "citation_only" else "medium"
+    quote_type = "data" if review_level == REVIEW_LEVEL_DATA_USE else "text"
+    approval_state = (
+        "citation_only"
+        if review_level == REVIEW_LEVEL_SOURCE_REFERENCE
+        else "human_required"
+    )
+    risk_level = "low" if review_level == REVIEW_LEVEL_SOURCE_REFERENCE else "medium"
     claim_type = segment.claim_type.strip().lower()
     purpose = _PURPOSE_BY_CLAIM_TYPE.get(claim_type, "explanation")
 
-    if review_level == "citation_only":
+    if review_level == REVIEW_LEVEL_SOURCE_REFERENCE:
         necessity = (
-            f"Segment {segment.id} cites this source for attribution or evidence; "
+            f"Segment {segment.id} references this source for attribution or evidence; "
             "no direct quotation, screenshot, or data extraction is planned."
         )
         distinction_method = (
             "Keep attribution in the source list or narration notes; do not present "
             "source wording as a quote unless a direct-quote review row is added."
         )
-    elif review_level == "data_use":
+    elif review_level == REVIEW_LEVEL_DATA_USE:
         necessity = (
             f"Segment {segment.id} uses source-backed data intent; verify the data "
             "selection, transformation, denominator, and attribution before publishing."
@@ -154,12 +163,12 @@ def _text_review_level(segment: ScriptSegment) -> str:
     if claim_type in _DATA_USE_CLAIM_TYPES or any(
         ref.startswith(("data:", "data_use:")) for ref in visual_refs
     ):
-        return "data_use"
+        return REVIEW_LEVEL_DATA_USE
     if claim_type in _DIRECT_QUOTE_CLAIM_TYPES or any(
         ref.startswith(("quote:", "direct_quote:")) for ref in visual_refs
     ):
-        return "direct_quote"
-    return "citation_only"
+        return REVIEW_LEVEL_DIRECT_QUOTE
+    return REVIEW_LEVEL_SOURCE_REFERENCE
 
 
 def _screenshot_quote_entry(
@@ -188,7 +197,7 @@ def _screenshot_quote_entry(
         attribution=_attribution(source),
         risk_level="medium",
         approval_state="human_required",
-        review_level="screenshot",
+        review_level=REVIEW_LEVEL_SCREENSHOT_CANDIDATE,
         source_role=source_role,
     )
 
