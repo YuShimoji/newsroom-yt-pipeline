@@ -1,0 +1,1 @@
+--8<-- "docs/PROJECT_SPEC.md"

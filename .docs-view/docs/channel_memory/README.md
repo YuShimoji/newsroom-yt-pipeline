@@ -1,0 +1,1 @@
+--8<-- "docs/channel_memory/README.md"

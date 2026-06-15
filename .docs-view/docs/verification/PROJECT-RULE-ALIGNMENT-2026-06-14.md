@@ -1,0 +1,1 @@
+--8<-- "docs/verification/PROJECT-RULE-ALIGNMENT-2026-06-14.md"

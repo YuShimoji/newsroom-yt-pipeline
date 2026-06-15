@@ -1,0 +1,1 @@
+--8<-- "docs/approved_materializations/README.md"

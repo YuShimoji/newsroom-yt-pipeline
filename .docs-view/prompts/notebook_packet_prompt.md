@@ -1,0 +1,1 @@
+--8<-- "prompts/notebook_packet_prompt.md"

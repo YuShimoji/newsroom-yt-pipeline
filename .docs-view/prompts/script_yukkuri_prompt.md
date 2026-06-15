@@ -1,0 +1,1 @@
+--8<-- "prompts/script_yukkuri_prompt.md"

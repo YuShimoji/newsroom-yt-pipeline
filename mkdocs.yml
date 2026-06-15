@@ -1,0 +1,49 @@
+site_name: newsroom-yt-pipeline Local Docs
+site_description: Local browser view for repository Markdown review and browser-assisted translation checks.
+docs_dir: .docs-view
+site_dir: .mkdocs-site
+use_directory_urls: true
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - fenced_code
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.snippets:
+      base_path:
+        - .
+      check_paths: true
+  - pymdownx.superfences
+
+nav:
+  - Overview:
+      - Local Documentation View: index.md
+      - Repository README: repository-readme.md
+      - Development Practices: docs/DEVELOPMENT_PRACTICES.md
+  - Specs:
+      - Project Spec: docs/PROJECT_SPEC.md
+      - Agent Brief: docs/AGENT_BRIEF.md
+      - NLMYTGen Boundary: docs/NLMYTGEN_BOUNDARY.md
+      - YMM4 Import Proof Procedure: docs/YMM4_IMPORT_PROOF.md
+  - Runtime State:
+      - Handoff: docs/HANDOFF.md
+      - Runtime State: docs/RUNTIME_STATE.md
+  - Development Notes:
+      - Meta-Review Ledger: docs/META_REVIEW_LEDGER.md
+      - Project Rule Alignment 2026-06-14: docs/verification/PROJECT-RULE-ALIGNMENT-2026-06-14.md
+      - Handoff Inventory 2026-06-10: docs/verification/NEWSROOM-HANDOFF-INVENTORY-2026-06-10.md
+  - Artifacts:
+      - Approved Materializations: docs/approved_materializations/README.md
+      - Channel Memory: docs/channel_memory/README.md
+  - Prompts:
+      - NotebookLM Packet Prompt: prompts/notebook_packet_prompt.md
+      - Script Anchor Prompt: prompts/script_anchor_prompt.md
+      - Script Yukkuri Prompt: prompts/script_yukkuri_prompt.md

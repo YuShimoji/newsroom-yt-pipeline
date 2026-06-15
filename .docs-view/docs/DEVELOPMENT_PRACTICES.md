@@ -1,0 +1,1 @@
+--8<-- "docs/DEVELOPMENT_PRACTICES.md"

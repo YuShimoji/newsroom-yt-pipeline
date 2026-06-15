@@ -1,0 +1,1 @@
+--8<-- "prompts/script_anchor_prompt.md"

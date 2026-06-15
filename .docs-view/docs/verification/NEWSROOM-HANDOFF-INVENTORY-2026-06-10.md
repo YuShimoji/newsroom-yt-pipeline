@@ -1,0 +1,1 @@
+--8<-- "docs/verification/NEWSROOM-HANDOFF-INVENTORY-2026-06-10.md"

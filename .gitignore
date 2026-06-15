@@ -5,6 +5,7 @@ __pycache__/
 .venv/
 build/
 dist/
+.mkdocs-site/
 data/*.sqlite
 data/*.sqlite-shm
 data/*.sqlite-wal
