@@ -4,10 +4,21 @@ Last updated: 2026-06-17
 
 This ledger preserves supervision decisions that should survive restarts. Keep it short; do not turn it into a runtime-state duplicate.
 
+## 2026-06-17 Remote Sync Approval Gate
+
+- current_task: preserve all local project context and reflect the local `main` state to `origin/main` for immediate restart from another terminal.
+- decision: push approved after divergence check and handoff refresh.
+- reason: user explicitly requested remote reflection; `git fetch --prune origin` left `main` local-ahead-only at `HEAD...origin/main = 2 0`.
+- active_artifact: `docs/HANDOFF.md` and `docs/RUNTIME_STATE.md` carry the restart packet; `artifacts/ARTIFACTS.md` carries review artifact identity/access metadata.
+- true_blockers: none if validation passes and push does not require force.
+- stale_or_false_blockers: the earlier v1.8 push deferral is superseded by this explicit sync request.
+- next_allowed_work: validate, commit this handoff refresh, push `main`, verify `HEAD...origin/main = 0 0`, then resume from a fresh terminal with `git pull --ff-only origin main`.
+- prohibited_work: do not force-push, do not add runtime DB/export/proof/private/source artifacts, and do not start a broad feature lane inside the sync handoff.
+
 ## 2026-06-17 v1.8 Review/Autonomy Alignment Gate
 
 - current_task: preserve the completed cockpit/access commit and align repo docs plus artifact metadata with the v1.8 Freeform Review / Long-Run Autonomy contract.
-- decision: local docs/manifest alignment; no push in this slice.
+- decision: local docs/manifest alignment; push deferred until a separate explicit approval.
 - reason: `main` is clean and local-ahead-only at `00cd5d3`, but this operating context does not explicitly approve pushing `main` to `origin/main`.
 - active_artifact: `local_docs_view` remains the review surface for canonical Markdown, with `artifacts/ARTIFACTS.md` as the tracked manifest.
 - true_blockers: none for local alignment. Push remains a user/owner decision because it changes remote state.

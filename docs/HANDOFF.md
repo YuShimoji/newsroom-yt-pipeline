@@ -44,9 +44,15 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 
 - Branch: `main`
 - Remote: `origin/main`
+- Remote sync handoff on 2026-06-17:
+  - User explicitly requested preserving all project context and reflecting local state to `origin/main` so another terminal can resume immediately.
+  - Pre-sync verification after `git fetch --prune origin`: `main` at `1e331fc docs: align freeform review autonomy contract`, `HEAD...origin/main = 2 0`, and the worktree was clean.
+  - Local commits being synced: `00cd5d3 docs: add operation cockpit access launcher`, `1e331fc docs: align freeform review autonomy contract`, and this handoff refresh commit.
+  - Validation before this handoff refresh commit: `python -m pytest -q` -> 116 passed; `git diff --check` -> passed; `python -m mkdocs build --strict` -> passed; synthetic `packet critical-list --format json` smoke returned one critical-view row with no URL field; `scripts\operator\open_dashboard.ps1 -NoBrowser` exited 0.
+  - After pulling this sync, a fresh terminal should read `docs\HANDOFF.md`, `docs\RUNTIME_STATE.md`, `docs\DEVELOPMENT_PRACTICES.md`, and `artifacts\ARTIFACTS.md`, then rerun local validation before choosing the next scoped lane.
 - v1.8 Freeform Review / Long-Run Autonomy alignment on 2026-06-17:
   - Verified this checkout on `main` at `00cd5d3 docs: add operation cockpit access launcher`, with `HEAD...origin/main = 1 0` and a clean worktree before the alignment edits.
-  - Push was not performed because this operating context did not explicitly approve pushing the local-ahead commit.
+  - Push was initially deferred because the v1.8 slice did not explicitly approve pushing the local-ahead commit; the later remote-sync request on 2026-06-17 supersedes that deferral.
   - The active documentation target is the Operation Cockpit / review-access contract, not a broad feature lane such as QuoteManifest tightening.
   - Validation passed for the local alignment: full pytest, whitespace diff check, MkDocs strict build, synthetic `packet critical-list --format json` smoke, and docs launcher smoke.
 - Remote sync handoff on 2026-06-15:
