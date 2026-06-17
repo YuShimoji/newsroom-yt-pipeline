@@ -41,6 +41,14 @@ Human preview is not required for synthetic fixtures, schema/readback work, CLI 
 
 When preview becomes necessary, prepare a decision packet before stopping. Include the repo-relative files to open, commands to run, observation points, expected pass/fail signals, fallback path, one recommended default, and rejected alternatives.
 
+## Freeform Review And Autonomy
+
+User-facing review requests must accept freeform comments. Do not require fixed labels or phrases such as `accept`, `reject`, or `small_adjustment`. Agents may internally normalize a freeform response into target, intent, constraints, and confidence, but the user should not be asked to rewrite feedback into labels.
+
+When an artifact needs review, include a Review Card near the artifact access details. The card should name the target, list no more than three things to look at, state that freeform review is accepted, give natural examples of useful feedback, and explain how the agent will interpret the response and continue. If review would be useful later but is not a stop condition, record it as Review Debt and keep working. If no review is needed, state that Review Card / Review Debt is none.
+
+Use long-run autonomy for in-scope, reversible work. When no true stop condition is present, execute the next one to three scoped actions instead of only listing them. If validation fails, form a narrow hypothesis and try at least one scoped fix before stopping. Stop only for real blockers such as destructive changes, unresolved branch divergence, missing approval for an irreversible boundary, validation failing twice after a scoped fix, or low-confidence review interpretation that would materially change artifact direction.
+
 ## Boundary Rules
 
 `newsroom-yt-pipeline` owns upstream editorial OS concerns: RSS/source selection, article ledger, clustering, scoring, rights index, VisualIR, AssetManifest, QuoteManifest, review packets, and future approved series memory.
@@ -63,11 +71,11 @@ Do not claim YMM4 GUI import proof from CLI export inspection alone. `newsroom e
 
 ## Operation Cockpit Closeout
 
-Use an Operation Cockpit closeout for restart, handoff, review-access, artifact, or supervision work. The closeout should make the current state, expected-versus-actual result, changed files, review artifacts, command/action ledger, user-side work, agent-side next actions, goal contribution, decision packet, and continuation state visible without requiring the reader to reopen every file.
+Use an Operation Cockpit closeout for restart, handoff, review-access, artifact, or supervision work. The closeout should make the current state, expected-versus-actual result, changed files, review artifacts, Review Card / Review Debt, Freeform Review Intake Result, command/action ledger, user-side work, agent-side next actions, goal contribution, decision packet, and continuation state visible without requiring the reader to reopen every file.
 
 For reviewable artifacts, report identity and access separately. Identity should include `artifact_id`, repo-relative path, manifest location when one exists, and the source of truth. Access should be one of a preview URL, a repo-local launcher, an open command with shell and cwd, or a verified temporary full path only as supplemental evidence.
 
-Action ledger entries should identify whether the action was executed by the agent, left for the agent to run later, required from the user, user-open-only, reference-only, or explicitly out of scope. Keep next actions short and concrete; do not include a full next-agent prompt unless a fresh handoff gate is actually triggered.
+Action ledger entries should identify whether the action was executed by the agent, left for the agent to run later, required from the user, user-open-only, user freeform review, reference-only, or explicitly out of scope. Use `USER_REVIEW_FREEFORM` when the user is invited to review an artifact in natural language. Keep next actions short and concrete; do not include a full next-agent prompt unless a fresh handoff gate is actually triggered.
 
 ## Repository Hygiene
 

@@ -1,8 +1,19 @@
 # Meta-Review Ledger
 
-Last updated: 2026-06-08
+Last updated: 2026-06-17
 
 This ledger preserves supervision decisions that should survive restarts. Keep it short; do not turn it into a runtime-state duplicate.
+
+## 2026-06-17 v1.8 Review/Autonomy Alignment Gate
+
+- current_task: preserve the completed cockpit/access commit and align repo docs plus artifact metadata with the v1.8 Freeform Review / Long-Run Autonomy contract.
+- decision: local docs/manifest alignment; no push in this slice.
+- reason: `main` is clean and local-ahead-only at `00cd5d3`, but this operating context does not explicitly approve pushing `main` to `origin/main`.
+- active_artifact: `local_docs_view` remains the review surface for canonical Markdown, with `artifacts/ARTIFACTS.md` as the tracked manifest.
+- true_blockers: none for local alignment. Push remains a user/owner decision because it changes remote state.
+- stale_or_false_blockers: missing fixed review labels are not a blocker; user feedback is valid as freeform text and can be normalized internally by the agent.
+- next_allowed_work: commit the validated v1.8 docs/manifest alignment, then keep future review requests in Review Card / Review Debt form.
+- prohibited_work: do not require user-facing fixed labels, do not force-push or auto-push without explicit approval, and do not start broad feature work before this alignment is validated.
 
 ## 2026-06-04 Gate
 

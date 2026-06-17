@@ -28,6 +28,10 @@ http://127.0.0.1:8000/
 
 Use the browser's page translation feature, such as Chrome, Edge, or a DeepL extension, as a temporary reading aid. Do not save browser-translated text back into this repository unless a separate editorial task explicitly asks for a reviewed translation.
 
+## Review Input
+
+Feedback on this docs view may be written in ordinary freeform language. Fixed response labels are not required. Useful comments can point to a document that looks stale, an access route that fails, a section that needs a Review Card, or a place where the original Markdown should remain the source of truth.
+
 ## How The Tree Is Organized
 
 The navigation groups are practical reading buckets, not authority labels:

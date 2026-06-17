@@ -1,6 +1,6 @@
 # Handoff
 
-Last updated: 2026-06-15
+Last updated: 2026-06-17
 
 ## Restart Order
 
@@ -33,10 +33,22 @@ Then read:
 
 There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is later added; do not turn it into roadmap, status, closeout, or history.
 
+## Review And Autonomy Contract
+
+- Review input from the user is freeform. Do not ask for fixed phrases such as `accept`, `reject`, or `small_adjustment`; interpret natural feedback internally by target, intent, constraints, and confidence.
+- When review is needed, place a Review Card beside the artifact access details with the target, up to three checkpoints, freeform examples, and the agent's planned handling. If review is useful but not blocking, record Review Debt and keep moving.
+- Operation Cockpit closeouts should include Freeform Review Intake Result, Action Ledger, User-Side Work, Agent-Side Work, Goal Stack contribution, Decision Packet, and Continuation State when those sections are relevant to the checkpoint.
+- In long-run autonomy, continue through the next one to three scoped, reversible actions when no true stop condition is present. Do not convert missing optional review into a stop unless the wrong interpretation would materially change artifact direction.
+
 ## Current State
 
 - Branch: `main`
 - Remote: `origin/main`
+- v1.8 Freeform Review / Long-Run Autonomy alignment on 2026-06-17:
+  - Verified this checkout on `main` at `00cd5d3 docs: add operation cockpit access launcher`, with `HEAD...origin/main = 1 0` and a clean worktree before the alignment edits.
+  - Push was not performed because this operating context did not explicitly approve pushing the local-ahead commit.
+  - The active documentation target is the Operation Cockpit / review-access contract, not a broad feature lane such as QuoteManifest tightening.
+  - Validation passed for the local alignment: full pytest, whitespace diff check, MkDocs strict build, synthetic `packet critical-list --format json` smoke, and docs launcher smoke.
 - Remote sync handoff on 2026-06-15:
   - Started clean on `main` at `14c1e4f feat: tighten quote manifest review levels` with `HEAD...origin/main = 4 0`.
   - Local commits being handed off: `baabcd6 docs: add development practice docs view`, `d7f2bd7 feat: add critical source readback`, `d90452a docs: record review artifact contract`, and `14c1e4f feat: tighten quote manifest review levels`.
