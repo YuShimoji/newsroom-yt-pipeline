@@ -9,6 +9,7 @@ from newsroom.store.db import (
     add_story_critical_source,
     init_db,
     load_notebook_packet_for_story,
+    list_story_critical_sources,
     list_story_critical_source_articles,
     replace_clusters_for_date,
     upsert_article,
@@ -184,6 +185,8 @@ def test_packet_critical_list_reads_back_recorded_sources(tmp_path, capsys):
     assert f"Critical-view sources for {cluster.id}: 1" in markdown_output
     assert critical.id in markdown_output
     assert "critical_view_candidate" in markdown_output
+    assert "counter framing" in markdown_output
+    assert "2026-05-18T03:00:00+00:00" in markdown_output
     assert "https://example.com" not in markdown_output
 
     json_exit = main(
@@ -204,6 +207,8 @@ def test_packet_critical_list_reads_back_recorded_sources(tmp_path, capsys):
     assert payload["critical_view_count"] == 1
     assert payload["critical_views"][0]["article_id"] == critical.id
     assert payload["critical_views"][0]["source_pool_id"] == "critical_view_candidates"
+    assert payload["critical_views"][0]["note"] == "counter framing"
+    assert payload["critical_views"][0]["recorded_at"] == "2026-05-18T03:00:00+00:00"
     assert "url" not in payload["critical_views"][0]
 
 
@@ -367,6 +372,9 @@ def test_story_critical_sources_schema_is_idempotent_for_existing_db(tmp_path):
 
     critical_sources = list_story_critical_source_articles(db_path, cluster.id)
     assert [source.id for source in critical_sources] == [article.id]
+    critical_records = list_story_critical_sources(db_path, cluster.id)
+    assert critical_records[0].note == "updated note"
+    assert critical_records[0].created_at == "2026-05-18T04:00:00+00:00"
 
 
 def test_export_rebuild_prefers_refreshed_review_manifest_roots(tmp_path):

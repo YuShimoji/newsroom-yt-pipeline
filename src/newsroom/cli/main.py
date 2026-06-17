@@ -71,6 +71,7 @@ from newsroom.store.db import (
     list_articles_for_date,
     list_articles_in_date_range,
     list_clusters_for_date,
+    list_story_critical_sources,
     list_story_critical_source_articles,
     list_topic_scores_for_date,
     load_episode_plan,
@@ -1107,28 +1108,36 @@ def _cmd_packet_critical_list(args: argparse.Namespace, db_path: Path) -> int:
         print(f"Story cluster not found: {args.story}")
         return 1
     cluster, _ = found
-    articles = list_story_critical_source_articles(db_path, cluster.id)
+    records = list_story_critical_sources(db_path, cluster.id)
 
     if args.format == "json":
         payload = {
             "story_cluster_id": cluster.id,
-            "critical_view_count": len(articles),
+            "critical_view_count": len(records),
             "critical_views": [
-                _critical_source_readback_payload(article) for article in articles
+                _critical_source_readback_payload(
+                    record.article,
+                    record.note,
+                    record.created_at,
+                )
+                for record in records
             ],
         }
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 0
 
-    print(f"Critical-view sources for {cluster.id}: {len(articles)}")
-    if not articles:
+    print(f"Critical-view sources for {cluster.id}: {len(records)}")
+    if not records:
         print("No critical-view sources recorded. Use packet add-critical after an operator source decision.")
         return 0
 
-    print("| article_id | source_name | source_type | source_role | source_pool_id | title | published_at |")
-    print("| --- | --- | --- | --- | --- | --- | --- |")
-    for article in articles:
-        payload = _critical_source_readback_payload(article)
+    print(
+        "| article_id | source_name | source_type | source_role | source_pool_id | "
+        "title | published_at | note | recorded_at |"
+    )
+    print("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
+    for record in records:
+        payload = _critical_source_readback_payload(record.article, record.note, record.created_at)
         print(
             "| "
             + " | ".join(
@@ -1140,6 +1149,8 @@ def _cmd_packet_critical_list(args: argparse.Namespace, db_path: Path) -> int:
                     _markdown_cell(str(payload["source_pool_id"])),
                     _markdown_cell(str(payload["title"])),
                     _markdown_cell(str(payload["published_at"])),
+                    _markdown_cell(str(payload["note"])),
+                    _markdown_cell(str(payload["recorded_at"])),
                 ]
             )
             + " |"
@@ -1147,7 +1158,9 @@ def _cmd_packet_critical_list(args: argparse.Namespace, db_path: Path) -> int:
     return 0
 
 
-def _critical_source_readback_payload(article: Article) -> dict[str, str | None]:
+def _critical_source_readback_payload(
+    article: Article, note: str | None, recorded_at: str
+) -> dict[str, str | None]:
     return {
         "article_id": article.id,
         "source_name": article.source_name,
@@ -1156,6 +1169,8 @@ def _critical_source_readback_payload(article: Article) -> dict[str, str | None]
         "source_pool_id": article.source_pool_id,
         "title": article.title,
         "published_at": article.published_at,
+        "note": note,
+        "recorded_at": recorded_at,
     }
 
 
