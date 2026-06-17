@@ -4,7 +4,15 @@ This local MkDocs view exists only to make the repository Markdown easier to ins
 
 ## Open Locally
 
-From the repository root on Windows PowerShell:
+From the repository root on Windows PowerShell, use the repo-local launcher:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\operator\open_dashboard.ps1
+```
+
+The launcher resolves the repository root dynamically, starts the MkDocs view on `http://127.0.0.1:8000/` if it is not already running, and opens the browser. If you need to keep the browser closed while checking the server, add `-NoBrowser`.
+
+Fallback command:
 
 ```powershell
 .venv\Scripts\Activate.ps1

@@ -1,6 +1,15 @@
 # Runtime State
 
-Last updated: 2026-06-15
+Last updated: 2026-06-17
+
+## Current Capsule
+
+- Verification base for this resumed terminal/thread: `main` at `90ddfb5 docs: refresh remote sync handoff`; after `git fetch --prune origin`, `HEAD...origin/main` was `0 0` and the worktree was clean before the cockpit/access compliance slice.
+- Expected prior commits are available and included in the current history: `baabcd6 docs: add development practice docs view` and `d7f2bd7 feat: add critical source readback` are present locally and on `origin/main`.
+- Active review artifacts are tracked through `artifacts/ARTIFACTS.md`: `local_docs_view` for browser review of canonical Markdown through `.docs-view/`, and `critical_source_readback_cli` for URL-suppressed diagnostic readback of DB-recorded critical-view sources.
+- Current next actions are narrow: run local validation after any cockpit/access edits, open the local docs view through `scripts\operator\open_dashboard.ps1` when browser review is needed, then continue at most one scoped backlog item only after validation stays green.
+- Human-required gates remain unchanged: final script/publication/legal/rights decisions, external image or screenshot approval, YMM4 GUI/subtitle/overlay/final geometry proof, NotebookLM live/API execution, YouTube publishing, Inoreader OAuth, and broad crawling are not cleared by this capsule.
+- True blockers for this compliance slice: none. Downstream YMM4 or publication work still requires a concrete returned artifact, proof, log, or explicit operator/editorial decision.
 
 ## Sync Point
 

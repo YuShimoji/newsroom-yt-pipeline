@@ -61,6 +61,14 @@ Completion claims must include the commands run, validation results, changed fil
 
 Do not claim YMM4 GUI import proof from CLI export inspection alone. `newsroom export inspect` can validate bundle consistency; it cannot prove YMM4 accepted the CSV, subtitle placement, overlay safety, final geometry, render quality, or publishing readiness.
 
+## Operation Cockpit Closeout
+
+Use an Operation Cockpit closeout for restart, handoff, review-access, artifact, or supervision work. The closeout should make the current state, expected-versus-actual result, changed files, review artifacts, command/action ledger, user-side work, agent-side next actions, goal contribution, decision packet, and continuation state visible without requiring the reader to reopen every file.
+
+For reviewable artifacts, report identity and access separately. Identity should include `artifact_id`, repo-relative path, manifest location when one exists, and the source of truth. Access should be one of a preview URL, a repo-local launcher, an open command with shell and cwd, or a verified temporary full path only as supplemental evidence.
+
+Action ledger entries should identify whether the action was executed by the agent, left for the agent to run later, required from the user, user-open-only, reference-only, or explicitly out of scope. Keep next actions short and concrete; do not include a full next-agent prompt unless a fresh handoff gate is actually triggered.
+
 ## Repository Hygiene
 
 Do not commit raw real news bodies, large real URL or title lists, raw OPML, secrets, tokens, private local traces, runtime DBs, generated export bundles, proof screenshots, or operator-private evidence.
