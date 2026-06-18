@@ -1,6 +1,6 @@
 # Handoff
 
-Last updated: 2026-06-17
+Last updated: 2026-06-18
 
 ## Restart Order
 
@@ -24,14 +24,17 @@ python -m pip install -e .[dev]
 
 Then read:
 
-1. `README.md`
-2. `docs/HANDOFF.md`
-3. `docs/RUNTIME_STATE.md`
-4. `docs/YMM4_IMPORT_PROOF.md`
-5. `docs/PROJECT_SPEC.md` only when the specification boundary is needed
-6. `docs/META_REVIEW_LEDGER.md` only when blocker/scope review context is needed
+1. `AGENTS.md`
+2. `README.md`
+3. `docs/HANDOFF.md`
+4. `docs/RUNTIME_STATE.md`
+5. `docs/DEVELOPMENT_PRACTICES.md`
+6. `artifacts/ARTIFACTS.md` when reviewable artifacts are involved
+7. `docs/YMM4_IMPORT_PROOF.md` when YMM4 proof state is involved
+8. `docs/PROJECT_SPEC.md` only when the specification boundary is needed
+9. `docs/META_REVIEW_LEDGER.md` only when blocker/scope review context is needed
 
-There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is later added; do not turn it into roadmap, status, closeout, or history.
+Root `AGENTS.md` is a thin pointer into the restart docs. Do not turn it into roadmap, status, closeout, or history.
 
 ## Review And Autonomy Contract
 
@@ -44,6 +47,12 @@ There is no root `AGENTS.md` in this checkout. Keep `AGENTS.md` thin if one is l
 
 - Branch: `main`
 - Remote: `origin/main`
+- Cross-terminal context sync on 2026-06-18:
+  - Started from `main` / `origin/main` parity at `bce6a31 feat: read back critical source notes`; `HEAD...origin/main = 0 0`; the only local dirty item was thin untracked `AGENTS.md`.
+  - Added root `AGENTS.md` as a tracked, minimal entry point and refreshed `docs/HANDOFF.md` / `docs/RUNTIME_STATE.md` so another terminal can resume from project files instead of chat context.
+  - Recovery commit `bce6a31` is the current implementation baseline on remote and makes `packet critical-list` read back `note` and `recorded_at` without exposing source URLs.
+  - Backup branch `backup/local-main-641e14e-before-ed35d9d-sync` preserves the stale divergent local branch at `641e14e`; it is evidence only and must not be merged into `main` unless a future audit explicitly asks for it.
+  - Validation for this context sync: `python -m pytest -q` passed with 116 tests; `git diff --check` passed; synthetic `packet critical-list --format json` smoke returned one critical-view row with `url_field_present=false`; MkDocs strict build was unavailable because `.venv` does not currently have `mkdocs`.
 - Remote sync handoff on 2026-06-17:
   - User explicitly requested preserving all project context and reflecting local state to `origin/main` so another terminal can resume immediately.
   - Pre-sync verification after `git fetch --prune origin`: `main` at `1e331fc docs: align freeform review autonomy contract`, `HEAD...origin/main = 2 0`, and the worktree was clean.

@@ -1,9 +1,15 @@
 # Runtime State
 
-Last updated: 2026-06-17
+Last updated: 2026-06-18
 
 ## Current Capsule
 
+- Current remote-sync checkpoint on 2026-06-18: `main` and `origin/main` were at `bce6a31 feat: read back critical source notes` with `HEAD...origin/main = 0 0` before this docs refresh. The only local dirty item was thin untracked `AGENTS.md`.
+- This handoff refresh tracks root `AGENTS.md` as a minimal repo-local instruction entry point and keeps durable restart context in `docs/HANDOFF.md` and `docs/RUNTIME_STATE.md`.
+- Current implementation baseline: `bce6a31` is on `origin/main`; `packet critical-list --format json` includes `note` and `recorded_at` while keeping source URLs out of diagnostic readback.
+- Stale divergent work remains preserved on `backup/local-main-641e14e-before-ed35d9d-sync` at `641e14e feat: add critical view source readback`; this branch is evidence only and should not be merged into `main` without an explicit future audit.
+- Validation for this context sync: `python -m pytest -q` passed with 116 tests; `git diff --check` passed; synthetic `packet critical-list --format json` smoke returned `url_field_present=false` and note readback; `python -m mkdocs build --strict` was not run because `.venv` lacks `mkdocs`.
+- Current next actions are narrow: push this docs handoff refresh to `origin/main`, verify `HEAD...origin/main = 0 0`, then let the next terminal pull and choose one scoped lane from the Handoff Snapshot.
 - Verification base for this resumed terminal/thread: `main` at `90ddfb5 docs: refresh remote sync handoff`; after `git fetch --prune origin`, `HEAD...origin/main` was `0 0` and the worktree was clean before the cockpit/access compliance slice.
 - v1.8 Freeform Review / Long-Run Autonomy alignment resumed on `main` at `00cd5d3 docs: add operation cockpit access launcher`; `HEAD...origin/main` was `1 0` and the worktree was clean before local alignment edits.
 - Remote sync handoff approved on 2026-06-17: after `git fetch --prune origin`, `main` was clean at `1e331fc docs: align freeform review autonomy contract` with `HEAD...origin/main = 2 0`; this handoff refresh records the approval to push the local cockpit/access and v1.8 alignment context to `origin/main` without force.
