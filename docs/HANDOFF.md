@@ -1,6 +1,6 @@
 # Handoff
 
-Last updated: 2026-06-18
+Last updated: 2026-06-19
 
 ## Restart Order
 
@@ -47,6 +47,12 @@ Root `AGENTS.md` is a thin pointer into the restart docs. Do not turn it into ro
 
 - Branch: `main`
 - Remote: `origin/main`
+- Cross-terminal context sync on 2026-06-19:
+  - User explicitly requested preserving all current project context and reflecting local state to `origin/main` for immediate restart from another terminal.
+  - `git fetch --prune origin` showed `origin/main` had advanced from `ed35d9d` to `3235175`; local `main` was behind by 2 commits with no divergence.
+  - Fast-forwarded with `git pull --ff-only origin main` to `3235175 docs: refresh remote handoff context`, which includes `bce6a31 feat: read back critical source notes` and the tracked root `AGENTS.md` handoff entry point.
+  - Validation before this handoff refresh commit: `python -m pytest -q` -> 116 passed; `git diff --check` -> passed; `python -m mkdocs build --strict` -> passed after stopping a stale local MkDocs server; synthetic `packet critical-list --format json` smoke returned one critical-view row with note/readback and no URL field; `scripts\operator\open_dashboard.ps1 -NoBrowser` exited 0.
+  - This handoff refresh records the 2026-06-19 sync state before pushing; after pulling it, a fresh terminal should read `AGENTS.md`, `docs\HANDOFF.md`, `docs\RUNTIME_STATE.md`, `docs\DEVELOPMENT_PRACTICES.md`, and `artifacts\ARTIFACTS.md`, then rerun local validation before choosing one scoped lane.
 - Cross-terminal context sync on 2026-06-18:
   - Started from `main` / `origin/main` parity at `bce6a31 feat: read back critical source notes`; `HEAD...origin/main = 0 0`; the only local dirty item was thin untracked `AGENTS.md`.
   - Added root `AGENTS.md` as a tracked, minimal entry point and refreshed `docs/HANDOFF.md` / `docs/RUNTIME_STATE.md` so another terminal can resume from project files instead of chat context.

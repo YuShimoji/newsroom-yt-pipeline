@@ -1,15 +1,20 @@
 # Runtime State
 
-Last updated: 2026-06-18
+Last updated: 2026-06-19
 
 ## Current Capsule
 
+- Current remote-sync checkpoint on 2026-06-19: after `git fetch --prune origin`, local `main` at `ed35d9d` was behind `origin/main` at `3235175` by `0 2` with no divergence; `git pull --ff-only origin main` fast-forwarded the checkout to `3235175 docs: refresh remote handoff context`.
+- Current implementation baseline: `3235175` is on `origin/main` before this 2026-06-19 handoff refresh. It includes `bce6a31 feat: read back critical source notes`, tracked root `AGENTS.md`, and the 2026-06-18 context-sync docs.
+- This handoff refresh preserves the current restart context in tracked docs before pushing a small sync record to `origin/main`; no runtime DB/export/proof/screenshot, raw article body, OPML dump, token, private trace, `.ymmp`, YouTube publishing output, NotebookLM/YMM4 automation, or broad crawling output is part of the sync.
+- Validation for this 2026-06-19 handoff refresh: `python -m pytest -q` passed with 116 tests; `git diff --check` passed; `python -m mkdocs build --strict` passed after stopping a stale local MkDocs server; synthetic `packet critical-list --format json` smoke returned one critical-view row with note/readback and no URL field; `scripts\operator\open_dashboard.ps1 -NoBrowser` exited 0.
+- Current next actions are narrow: commit this validated handoff refresh, push `main`, verify `HEAD...origin/main = 0 0`, then let the next terminal pull and choose one scoped lane from the Handoff Snapshot.
 - Current remote-sync checkpoint on 2026-06-18: `main` and `origin/main` were at `bce6a31 feat: read back critical source notes` with `HEAD...origin/main = 0 0` before this docs refresh. The only local dirty item was thin untracked `AGENTS.md`.
 - This handoff refresh tracks root `AGENTS.md` as a minimal repo-local instruction entry point and keeps durable restart context in `docs/HANDOFF.md` and `docs/RUNTIME_STATE.md`.
 - Current implementation baseline: `bce6a31` is on `origin/main`; `packet critical-list --format json` includes `note` and `recorded_at` while keeping source URLs out of diagnostic readback.
 - Stale divergent work remains preserved on `backup/local-main-641e14e-before-ed35d9d-sync` at `641e14e feat: add critical view source readback`; this branch is evidence only and should not be merged into `main` without an explicit future audit.
 - Validation for this context sync: `python -m pytest -q` passed with 116 tests; `git diff --check` passed; synthetic `packet critical-list --format json` smoke returned `url_field_present=false` and note readback; `python -m mkdocs build --strict` was not run because `.venv` lacks `mkdocs`.
-- Current next actions are narrow: push this docs handoff refresh to `origin/main`, verify `HEAD...origin/main = 0 0`, then let the next terminal pull and choose one scoped lane from the Handoff Snapshot.
+- Previous next action from the 2026-06-18 sync was completed by the pushed `3235175 docs: refresh remote handoff context`.
 - Verification base for this resumed terminal/thread: `main` at `90ddfb5 docs: refresh remote sync handoff`; after `git fetch --prune origin`, `HEAD...origin/main` was `0 0` and the worktree was clean before the cockpit/access compliance slice.
 - v1.8 Freeform Review / Long-Run Autonomy alignment resumed on `main` at `00cd5d3 docs: add operation cockpit access launcher`; `HEAD...origin/main` was `1 0` and the worktree was clean before local alignment edits.
 - Remote sync handoff approved on 2026-06-17: after `git fetch --prune origin`, `main` was clean at `1e331fc docs: align freeform review autonomy contract` with `HEAD...origin/main = 2 0`; this handoff refresh records the approval to push the local cockpit/access and v1.8 alignment context to `origin/main` without force.
@@ -24,6 +29,7 @@ Last updated: 2026-06-18
 
 ## Sync Point
 
+- Remote sync handoff on 2026-06-19: user requested preserving all context and reflecting local state to remote for immediate restart. This run fast-forwarded from `ed35d9d` to `3235175`, then prepares this docs-only sync record for push. Next terminal should `git pull --ff-only origin main`, read `AGENTS.md`, `docs\HANDOFF.md`, `docs\RUNTIME_STATE.md`, `docs\DEVELOPMENT_PRACTICES.md`, and `artifacts\ARTIFACTS.md`, then rerun validation before continuing.
 - Remote sync handoff on 2026-06-17: user explicitly requested that all local project context be preserved in tracked docs and reflected to `origin/main` for immediate restart from another terminal. The sync target includes `00cd5d3 docs: add operation cockpit access launcher`, `1e331fc docs: align freeform review autonomy contract`, and this handoff refresh commit. No force push, runtime DB/export/proof/screenshot, raw article body, OPML dump, token, private trace, `.ymmp`, YouTube publishing output, NotebookLM/YMM4 automation, or broad crawling output is part of this sync.
 - Remote sync handoff on 2026-06-15: prepared the local context for `origin/main` after the boundary audit and QuoteManifest naming slice. Before this handoff update, `main` was clean at `14c1e4f`, `HEAD...origin/main` was `4 0`, and the four local commits were `baabcd6`, `d7f2bd7`, `d90452a`, and `14c1e4f`. The next terminal should `git pull --ff-only origin main`, read `docs\HANDOFF.md`, `docs\RUNTIME_STATE.md`, `docs\DEVELOPMENT_PRACTICES.md`, and `artifacts\ARTIFACTS.md`, then rerun local validation before continuing. No runtime DB/export/proof/screenshot, YMM4 GUI automation, NotebookLM live/API automation, `.ymmp`, YouTube, or raw source body was promoted.
 - `autonomous_foundation_run` checkpoint on 2026-06-15: started on `main` at `e6b81ab` with `HEAD...origin/main` = `0 0`. The checkout already had local docs-view changes from the prior local documentation task (`.docs-view/`, `docs/index.md`, `mkdocs.yml`, `tools/generate-doc-nav.ps1`, and `.gitignore`); these were docs/tooling only, contained no code/runtime/generated artifact/secret/raw news data, and were adopted/tightened rather than discarded. No pull was run because the branch was already in sync and the worktree was intentionally dirty.

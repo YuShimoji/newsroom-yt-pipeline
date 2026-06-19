@@ -1,8 +1,19 @@
 # Meta-Review Ledger
 
-Last updated: 2026-06-17
+Last updated: 2026-06-19
 
 This ledger preserves supervision decisions that should survive restarts. Keep it short; do not turn it into a runtime-state duplicate.
+
+## 2026-06-19 Cross-Terminal Sync Gate
+
+- current_task: preserve current project context and reflect the local checkout to `origin/main` for immediate restart from another terminal.
+- decision: fast-forward first, then docs-only handoff refresh and push.
+- reason: `git fetch --prune origin` showed local `main` behind `origin/main` by `0 2` with no divergence; a fast-forward safely brought the checkout to `3235175`.
+- active_artifact: `AGENTS.md`, `docs/HANDOFF.md`, `docs/RUNTIME_STATE.md`, `docs/DEVELOPMENT_PRACTICES.md`, and `artifacts/ARTIFACTS.md` form the restart packet.
+- true_blockers: none if validation passes and push does not require force.
+- stale_or_false_blockers: the backup branch `backup/local-main-641e14e-before-ed35d9d-sync` is evidence only and not part of this mainline sync.
+- next_allowed_work: validate, commit the 2026-06-19 handoff refresh, push `main`, verify `HEAD...origin/main = 0 0`, then let the next terminal resume from tracked docs.
+- prohibited_work: do not force-push, merge the backup branch, add runtime/private/source artifacts, or start a broad feature lane inside this sync handoff.
 
 ## 2026-06-17 Remote Sync Approval Gate
 
