@@ -4,6 +4,11 @@ Last updated: 2026-06-20
 
 ## Current Capsule
 
+- Current NLMYTGen export fixture slice on 2026-06-20: added a fake-only upstream export fixture and contract/readback for downstream NLMYTGen readiness probes.
+- Active reference artifact: `newsroom-export-fixture-for-nlmytgen` in `artifacts/ARTIFACTS.md`. Source files are `samples/_probe/newsroom_handoff/newsroom_export_fixture_v1.json`, `docs/integration/NEWSROOM_EXPORT_FIXTURE_FOR_NLMYTGEN_V1.md`, and `tests/test_newsroom_export_fixture.py`.
+- Scope of this fixture slice is contract/readback only. It does not fetch RSS/Inoreader/web pages, access external URLs, download media, add credentials, modify NLMYTGen, create render outputs, clear rights/provenance holds, or imply production/YMM4 readiness.
+- Validation for this fixture slice: focused fixture tests passed with 5 tests; full `.venv\Scripts\python.exe -m pytest -q` passed with 121 tests; `git diff --check` passed; `.venv\Scripts\python.exe -m mkdocs build --strict` passed; added fixture/doc/test URL scan returned no matches; prescribed-response requirement scan returned no matches; conflict-marker scan returned no matches.
+- Continuation after this slice: use the fake fixture for NLMYTGen-side validator/checklist alignment only. Replace fake values with a real export bundle only after a reviewed newsroom packet exists and rights/provenance/media/human-review holds are resolved.
 - Current v1.11 cockpit / stable-meter alignment on 2026-06-20: after `git fetch --prune origin`, `origin/main` advanced from `3235175` to `7460ee6`; `git pull --ff-only origin main` fast-forwarded this checkout to `7460ee6 docs: refresh 2026-06-19 sync handoff`.
 - Pre-edit verification for this alignment: branch `main`, `HEAD...origin/main = 0 0`, worktree clean, and target repo/thread matched the supervisor prompt.
 - Active reference artifact: `newsroom-cockpit-governance` in `artifacts/ARTIFACTS.md`. Its source-of-truth guidance is `docs/DEVELOPMENT_PRACTICES.md`; restart/readback state remains `docs/HANDOFF.md` and this file.

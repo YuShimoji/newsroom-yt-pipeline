@@ -1,0 +1,431 @@
+{
+  "schema_version": "newsroom_export_fixture.v1",
+  "fixture_id": "newsroom_export_fixture_for_nlmytgen_v1",
+  "review_status": "fake_only_contract_probe",
+  "episode_id": "episode_fake_nlmytgen_delta_v1",
+  "title": "Fake upstream export delta for NLMYTGen",
+  "topic_summary": "Fake placeholder summary for validating the newsroom to NLMYTGen export contract shape.",
+  "source_notes": [
+    {
+      "source_id": "source_fake_primary_001",
+      "role": "primary_source",
+      "source_name": "Fake Official Source",
+      "title": "Fake primary source placeholder",
+      "url_status": "omitted_fake_fixture",
+      "source_confidence": "medium_fake",
+      "review_status": "fake_only"
+    },
+    {
+      "source_id": "source_fake_critical_001",
+      "role": "critical_view",
+      "source_name": "Fake Critical View",
+      "title": "Fake critical source placeholder",
+      "url_status": "omitted_fake_fixture",
+      "source_confidence": "low_fake",
+      "review_status": "hold_for_review"
+    }
+  ],
+  "provenance": {
+    "source_collection": "not_performed",
+    "rss_fetch": "not_performed",
+    "inoreader_fetch": "not_performed",
+    "web_access": "not_performed",
+    "external_downloads": "not_performed",
+    "raw_article_body_included": false,
+    "real_urls_included": false,
+    "notes": "Fixture exists only to stabilize field ownership and failure behavior before real packet work."
+  },
+  "rights_summary": {
+    "status": "hold_for_review",
+    "media_availability": "none_in_fixture",
+    "external_assets": "not_included",
+    "quote_clearance": "not_requested",
+    "publication_approval": "not_granted",
+    "failure_behavior": "block_transfer"
+  },
+  "notebooklm_packet": {
+    "packet_id": "packet_fake_nlmytgen_delta_v1",
+    "format_hint": "manual_bridge_seed",
+    "source_refs": [
+      "source_fake_primary_001",
+      "source_fake_critical_001"
+    ],
+    "transcript_seed": {
+      "status": "fake_seed",
+      "summary": "Fake transcript seed only; not NotebookLM output and not approved narration."
+    },
+    "notebooklm_api_status": "not_performed"
+  },
+  "script_beats": [
+    {
+      "beat_id": "beat_fake_intro_001",
+      "stable_id": "scriptbeat_fake_intro_001",
+      "chapter_id": "chapter_fake_intro",
+      "summary": "Introduce the fake topic and promise a review-safe handoff.",
+      "source_refs": [],
+      "visual_refs": [
+        "visual_fake_title_card_001"
+      ],
+      "review_status": "fake_only"
+    },
+    {
+      "beat_id": "beat_fake_claim_001",
+      "stable_id": "scriptbeat_fake_claim_001",
+      "chapter_id": "chapter_fake_claim",
+      "summary": "Present a fake claim with fake primary and fake critical source coverage.",
+      "source_refs": [
+        "source_fake_primary_001",
+        "source_fake_critical_001"
+      ],
+      "visual_refs": [
+        "visual_fake_evidence_card_001"
+      ],
+      "review_status": "hold_for_review"
+    }
+  ],
+  "visual_plan": [
+    {
+      "visual_id": "visual_fake_title_card_001",
+      "stable_id": "visualslot_fake_title_card_001",
+      "beat_id": "beat_fake_intro_001",
+      "unit_type": "title_card",
+      "asset_policy": "local_template_only",
+      "approval_state": "fake_only",
+      "notes": "Fake visual unit for adapter field coverage."
+    },
+    {
+      "visual_id": "visual_fake_evidence_card_001",
+      "stable_id": "visualslot_fake_evidence_card_001",
+      "beat_id": "beat_fake_claim_001",
+      "unit_type": "claim_evidence_card",
+      "asset_policy": "local_template_only",
+      "approval_state": "hold_for_review",
+      "notes": "No screenshot or external media is supplied."
+    }
+  ],
+  "g28_slot_hints": [
+    {
+      "slot_id": "g28_slot_fake_title_001",
+      "visual_id": "visual_fake_title_card_001",
+      "hint_type": "text_safe_area",
+      "recommended_role": "title_safe_readback",
+      "geometry_authority": "downstream_nlmytgen",
+      "notes": "Newsroom carries intent only; final YMM4 geometry remains downstream."
+    },
+    {
+      "slot_id": "g28_slot_fake_evidence_001",
+      "visual_id": "visual_fake_evidence_card_001",
+      "hint_type": "evidence_label_group",
+      "recommended_role": "source_and_counterpoint_readback",
+      "geometry_authority": "downstream_nlmytgen",
+      "notes": "Stable ids are provided so NLMYTGen can map slots without scraping source text."
+    }
+  ],
+  "review_warnings": [
+    {
+      "warning_id": "warning_fake_rights_hold",
+      "severity": "hold_for_review",
+      "message": "Rights, provenance, and media availability are fake-only and must be reviewed before transfer."
+    },
+    {
+      "warning_id": "warning_fake_no_production_readiness",
+      "severity": "block_transfer",
+      "message": "Fixture validates shape only; it does not imply production or YMM4 readiness."
+    }
+  ],
+  "downstream_readiness": {
+    "nlmytgen_ingest": "warn",
+    "transfer_candidate": "block_transfer",
+    "human_review": "hold_for_review",
+    "production_ymm4": "fail",
+    "reason": "Fake fixture has no real source authority, rights clearance, media availability, or human approval."
+  },
+  "export_metadata": {
+    "created_at": "2026-06-20T00:00:00Z",
+    "created_by": "newsroom-yt-pipeline fake fixture",
+    "source_repo": "newsroom-yt-pipeline",
+    "intended_consumer": "NLMYTGen downstream adapter readiness probe",
+    "contains_real_news": false,
+    "contains_credentials": false,
+    "contains_media": false,
+    "contains_external_downloads": false
+  },
+  "source_confidence": {
+    "overall": "fake_only",
+    "primary_source_coverage": "fake_placeholder",
+    "critical_view_coverage": "fake_placeholder",
+    "notes": "Confidence values exist to stabilize contract fields, not to evaluate real reporting."
+  },
+  "editorial_priority": {
+    "level": "medium_fake",
+    "reason": "Placeholder for downstream prioritization tests."
+  },
+  "reviewer_notes": [
+    {
+      "note_id": "reviewer_note_fake_001",
+      "status": "reference_only",
+      "text": "Freeform reviewer notes are allowed; fixed response labels are not required."
+    }
+  ],
+  "localization_notes": {
+    "language": "ja-JP",
+    "speaker_label_policy": "fake_anchor_label_only",
+    "translation_status": "not_requested"
+  },
+  "channel_metadata": {
+    "series_id": "series_fake_nlmytgen_delta",
+    "package_id": "package_fake_nlmytgen_delta_v1",
+    "channel_context_status": "fake_only"
+  },
+  "boundary_assertions": {
+    "rss_source_discovery_owner": "newsroom-yt-pipeline",
+    "source_rights_owner": "newsroom-yt-pipeline_with_human_review",
+    "nlmytgen_must_not": [
+      "scrape_articles",
+      "infer_missing_rights",
+      "fetch_external_urls",
+      "download_media",
+      "perform_publishing",
+      "treat_fake_fixture_as_real_approval"
+    ],
+    "production_readiness_implied": false,
+    "ymm4_geometry_authority": "downstream_nlmytgen"
+  },
+  "field_contract": [
+    {
+      "field": "episode_id",
+      "owner": "newsroom-yt-pipeline",
+      "required_before": [
+        "NLMYTGen ingest"
+      ],
+      "source_within_newsroom": "export metadata",
+      "fake_fixture_value": "episode_fake_nlmytgen_delta_v1",
+      "nlmytgen_expected_consumer": "handoff manifest mapper",
+      "failure_behavior": "fail",
+      "implementation_status": "fake_only",
+      "next_action": "replace with real export episode id when real packet is approved"
+    },
+    {
+      "field": "title",
+      "owner": "newsroom-yt-pipeline",
+      "required_before": [
+        "NLMYTGen ingest"
+      ],
+      "source_within_newsroom": "episode plan title",
+      "fake_fixture_value": "Fake upstream export delta for NLMYTGen",
+      "nlmytgen_expected_consumer": "operator review header",
+      "failure_behavior": "warn",
+      "implementation_status": "fake_only",
+      "next_action": "replace with reviewed title"
+    },
+    {
+      "field": "topic_summary",
+      "owner": "newsroom-yt-pipeline",
+      "required_before": [
+        "human review"
+      ],
+      "source_within_newsroom": "story packet summary",
+      "fake_fixture_value": "fake placeholder summary",
+      "nlmytgen_expected_consumer": "packet readiness checklist",
+      "failure_behavior": "hold_for_review",
+      "implementation_status": "fake_only",
+      "next_action": "replace with human-reviewed summary"
+    },
+    {
+      "field": "source_notes",
+      "owner": "newsroom-yt-pipeline",
+      "required_before": [
+        "transfer candidate"
+      ],
+      "source_within_newsroom": "NotebookPacket source refs and critical views",
+      "fake_fixture_value": "two fake source notes without URLs",
+      "nlmytgen_expected_consumer": "source/provenance readback",
+      "failure_behavior": "block_transfer",
+      "implementation_status": "fake_only",
+      "next_action": "replace with sanitized source refs after source approval"
+    },
+    {
+      "field": "provenance",
+      "owner": "newsroom-yt-pipeline",
+      "required_before": [
+        "transfer candidate"
+      ],
+      "source_within_newsroom": "article ledger and packet build readback",
+      "fake_fixture_value": "all collection actions marked not_performed",
+      "nlmytgen_expected_consumer": "provenance gate",
+      "failure_behavior": "block_transfer",
+      "implementation_status": "policy_only",
+      "next_action": "populate from real ledger without raw bodies or URLs"
+    },
+    {
+      "field": "rights_summary",
+      "owner": "newsroom-yt-pipeline_with_human_review",
+      "required_before": [
+        "transfer candidate",
+        "human review"
+      ],
+      "source_within_newsroom": "asset and quote manifests plus human review",
+      "fake_fixture_value": "hold_for_review",
+      "nlmytgen_expected_consumer": "rights gate",
+      "failure_behavior": "block_transfer",
+      "implementation_status": "policy_only",
+      "next_action": "record reviewed rights state before transfer"
+    },
+    {
+      "field": "notebooklm_packet",
+      "owner": "newsroom-yt-pipeline",
+      "required_before": [
+        "NLMYTGen ingest"
+      ],
+      "source_within_newsroom": "NotebookPacket builder",
+      "fake_fixture_value": "fake manual_bridge_seed packet",
+      "nlmytgen_expected_consumer": "packet input adapter",
+      "failure_behavior": "fail",
+      "implementation_status": "fake_only",
+      "next_action": "supply sanitized packet or transcript seed from approved story"
+    },
+    {
+      "field": "script_beats",
+      "owner": "newsroom-yt-pipeline",
+      "required_before": [
+        "NLMYTGen ingest"
+      ],
+      "source_within_newsroom": "ScriptIR segments",
+      "fake_fixture_value": "two fake stable script beats",
+      "nlmytgen_expected_consumer": "script beat mapper",
+      "failure_behavior": "fail",
+      "implementation_status": "fake_only",
+      "next_action": "map from ScriptIR segment ids"
+    },
+    {
+      "field": "visual_plan",
+      "owner": "newsroom-yt-pipeline",
+      "required_before": [
+        "NLMYTGen ingest"
+      ],
+      "source_within_newsroom": "VisualIR and visual_plan.md",
+      "fake_fixture_value": "two fake visual units",
+      "nlmytgen_expected_consumer": "visual adapter mapper",
+      "failure_behavior": "warn",
+      "implementation_status": "fake_only",
+      "next_action": "map from VisualIR units"
+    },
+    {
+      "field": "g28_slot_hints",
+      "owner": "newsroom-yt-pipeline_for_intent_only",
+      "required_before": [
+        "optional enrichment"
+      ],
+      "source_within_newsroom": "visual intent readback",
+      "fake_fixture_value": "two fake G-28 slot hints",
+      "nlmytgen_expected_consumer": "G-28 layout contract mapper",
+      "failure_behavior": "warn",
+      "implementation_status": "fake_only",
+      "next_action": "keep geometry authority downstream while passing stable ids"
+    },
+    {
+      "field": "review_warnings",
+      "owner": "newsroom-yt-pipeline",
+      "required_before": [
+        "human review"
+      ],
+      "source_within_newsroom": "export inspector and review manifests",
+      "fake_fixture_value": "rights hold and no production readiness",
+      "nlmytgen_expected_consumer": "readiness checklist",
+      "failure_behavior": "hold_for_review",
+      "implementation_status": "fake_only",
+      "next_action": "replace with real export warnings"
+    },
+    {
+      "field": "downstream_readiness",
+      "owner": "newsroom-yt-pipeline",
+      "required_before": [
+        "transfer candidate"
+      ],
+      "source_within_newsroom": "export inspector plus human approval state",
+      "fake_fixture_value": "warn/block_transfer/hold/fail",
+      "nlmytgen_expected_consumer": "transfer gate",
+      "failure_behavior": "block_transfer",
+      "implementation_status": "fake_only",
+      "next_action": "promote only after real packet review"
+    },
+    {
+      "field": "export_metadata",
+      "owner": "newsroom-yt-pipeline",
+      "required_before": [
+        "NLMYTGen ingest"
+      ],
+      "source_within_newsroom": "export manifest",
+      "fake_fixture_value": "fake fixture metadata",
+      "nlmytgen_expected_consumer": "manifest provenance",
+      "failure_behavior": "fail",
+      "implementation_status": "fake_only",
+      "next_action": "replace with real export metadata"
+    },
+    {
+      "field": "source_confidence",
+      "owner": "newsroom-yt-pipeline",
+      "required_before": [
+        "optional enrichment"
+      ],
+      "source_within_newsroom": "source role and review metadata",
+      "fake_fixture_value": "fake_only",
+      "nlmytgen_expected_consumer": "operator checklist",
+      "failure_behavior": "warn",
+      "implementation_status": "fake_only",
+      "next_action": "replace with reviewed confidence if available"
+    },
+    {
+      "field": "editorial_priority",
+      "owner": "newsroom-yt-pipeline_with_human_review",
+      "required_before": [
+        "optional enrichment"
+      ],
+      "source_within_newsroom": "editorial planning",
+      "fake_fixture_value": "medium_fake",
+      "nlmytgen_expected_consumer": "operator sorting",
+      "failure_behavior": "warn",
+      "implementation_status": "fake_only",
+      "next_action": "replace with real priority only after editor selection"
+    },
+    {
+      "field": "reviewer_notes",
+      "owner": "newsroom-yt-pipeline_with_human_review",
+      "required_before": [
+        "human review"
+      ],
+      "source_within_newsroom": "operator review notes",
+      "fake_fixture_value": "freeform note placeholder",
+      "nlmytgen_expected_consumer": "review intake",
+      "failure_behavior": "hold_for_review",
+      "implementation_status": "fake_only",
+      "next_action": "use freeform reviewer notes without prescribed response words"
+    },
+    {
+      "field": "localization_notes",
+      "owner": "newsroom-yt-pipeline",
+      "required_before": [
+        "optional enrichment"
+      ],
+      "source_within_newsroom": "script/speaker policy",
+      "fake_fixture_value": "ja-JP fake speaker label policy",
+      "nlmytgen_expected_consumer": "speaker/localization mapper",
+      "failure_behavior": "warn",
+      "implementation_status": "fake_only",
+      "next_action": "replace with real speaker and locale policy"
+    },
+    {
+      "field": "channel_metadata",
+      "owner": "newsroom-yt-pipeline",
+      "required_before": [
+        "optional enrichment"
+      ],
+      "source_within_newsroom": "series/channel memory",
+      "fake_fixture_value": "fake series/package ids",
+      "nlmytgen_expected_consumer": "package grouping",
+      "failure_behavior": "warn",
+      "implementation_status": "fake_only",
+      "next_action": "replace with approved channel memory metadata"
+    }
+  ]
+}

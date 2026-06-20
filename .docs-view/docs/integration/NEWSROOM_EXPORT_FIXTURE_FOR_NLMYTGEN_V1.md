@@ -1,0 +1,1 @@
+--8<-- "docs/integration/NEWSROOM_EXPORT_FIXTURE_FOR_NLMYTGEN_V1.md"
