@@ -28,6 +28,7 @@ Use one active lane at a time. Do not mix implementation lanes unless an explici
 | `packet_persistence` | Make NotebookPacket less artifact-only and more durable as record/readback. | DB record/readback, CLI inspect, and downstream reuse. |
 | `source_expansion` | RSS-first source expansion without broad crawler, OAuth, or feed-rescue blockers. | Source config, OPML import, sanitized source smoke, and read-only fetch paths. |
 | `series_memory` | P2/M7 lane for approved continuity records. | Do not implement or append without explicit selection and approved input. |
+| `cockpit_reporting_alignment` | Keep Operation Cockpit, stable meters, review access, and supervisor relay guidance coherent. | Docs/report guidance, artifact manifest identity/access, runtime capsule updates, and validation only. |
 
 ## Default No-op Rule
 
@@ -76,6 +77,26 @@ Use an Operation Cockpit closeout for restart, handoff, review-access, artifact,
 For reviewable artifacts, report identity and access separately. Identity should include `artifact_id`, repo-relative path, manifest location when one exists, and the source of truth. Access should be one of a preview URL, a repo-local launcher, an open command with shell and cwd, or a verified temporary full path only as supplemental evidence.
 
 Action ledger entries should identify whether the action was executed by the agent, left for the agent to run later, required from the user, user-open-only, user freeform review, reference-only, or explicitly out of scope. Use `USER_REVIEW_FREEFORM` when the user is invited to review an artifact in natural language. Keep next actions short and concrete; do not include a full next-agent prompt unless a fresh handoff gate is actually triggered.
+
+## Operation Cockpit v1.11 Report Contract
+
+Supervisor-facing reports should start with a Routing Header:
+
+```text
+[ROUTE: newsroom-yt-pipeline | AGENT->SUPERVISOR | slice:<slice_id> | turn:<turn_id> | target:<thread_or_channel> | artifact:<artifact_id_or_none> | reply:<thread_or_channel> | confidence:<high|medium|low>]
+```
+
+Use `target` and `reply` to prevent thread confusion. Use `artifact:none` only when there is no reviewable or reference artifact.
+
+Report mode should match the checkpoint: `compact` for no-change validation or a small readback, `standard` for normal scoped work, and `full` for supervisor relay, artifact access, review debt, or handoff checkpoints. Avoid repeating long assurances; restate only the boundary that changed, the validation result, and the next owned move.
+
+The Completion Matrix is the source of truth for progress. Each row should include `gate`, `done`, `total`, `unknown`, `missing`, and an `ASCII_SAFE` meter. For `total <= 12`, use an exact meter such as `[#####-] 5/6`. For `total > 12`, use a scaled 10-slot meter such as `[########--] 14/18`. If the denominator, meter method, or evaluation axis changes, include a Metric Change Note. Do not use Unicode block or shaded characters, emoji meters, full-width block meters, or decorative glyph meters in chat reports or fenced code blocks. Dashboard HTML may use CSS, progress, or SVG meters only when the underlying source data still preserves `done`, `total`, `unknown`, and `missing`.
+
+The Turn Calendar should be a compact planning/readback table with `turn`, `owner`, `weight`, `estimate`, `goal`, `deliverable`, `gate`, `status`, and `branch`. Weight uses `W1` through `W5` plus an ASCII bar, for example `W3 [###--]`. Do not turn the calendar into a broad roadmap; keep it tied to the active slice and the next one to three reversible actions.
+
+The Action Ledger type should be one of `EXECUTED_BY_AGENT`, `AGENT_TO_RUN`, `USER_RUN_REQUIRED`, `USER_OPEN_ONLY`, `USER_REVIEW_FREEFORM`, `REFERENCE_ONLY`, or `DO_NOT_RUN`. Commands that were actually run belong in `EXECUTED_BY_AGENT`; commands for the user belong only in `USER_RUN_REQUIRED` when human-owned execution is truly required.
+
+Supervisor Relay is slice-specific. A normal Agent report should not include a generic next-Agent prompt or direct correction text for another thread. Include a next-Agent prompt only when the Handoff Gate is true: the current agent cannot responsibly continue, a fresh terminal/thread is required, and the prompt names purpose, effect, requirements, state, owner, and next move.
 
 ## Repository Hygiene
 

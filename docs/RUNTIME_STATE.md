@@ -1,9 +1,16 @@
 # Runtime State
 
-Last updated: 2026-06-19
+Last updated: 2026-06-20
 
 ## Current Capsule
 
+- Current v1.11 cockpit / stable-meter alignment on 2026-06-20: after `git fetch --prune origin`, `origin/main` advanced from `3235175` to `7460ee6`; `git pull --ff-only origin main` fast-forwarded this checkout to `7460ee6 docs: refresh 2026-06-19 sync handoff`.
+- Pre-edit verification for this alignment: branch `main`, `HEAD...origin/main = 0 0`, worktree clean, and target repo/thread matched the supervisor prompt.
+- Active reference artifact: `newsroom-cockpit-governance` in `artifacts/ARTIFACTS.md`. Its source-of-truth guidance is `docs/DEVELOPMENT_PRACTICES.md`; restart/readback state remains `docs/HANDOFF.md` and this file.
+- Current report contract: Operation Cockpit v1.11 reports start with a Routing Header, use Completion Matrix rows with `done`, `total`, `unknown`, `missing`, and `ASCII_SAFE` meters, include artifact identity/access when artifacts exist, use a Turn Calendar with `W1` through `W5` plus ASCII bars, and avoid next-Agent prompts unless the Handoff Gate is true.
+- Scope of this alignment is docs/report governance plus docs-view dependency reproducibility. No runtime DB/export/proof/screenshot, raw article body, raw URL/title list, OPML dump, token, private trace, `.ymmp`, NotebookLM/YMM4 automation, YouTube publishing output, source adoption, or broad crawling output is part of this slice.
+- Validation for this v1.11 alignment: `.venv\Scripts\python.exe -m pytest -q` passed with 116 tests; `git diff --check` passed; `.venv\Scripts\python.exe -m mkdocs build --strict` passed; `scripts\operator\open_dashboard.ps1 -Port 8011 -NoBrowser` exited 0 and the temporary server was not left running; synthetic `packet critical-list --format json` smoke returned one critical-view row with no URL field; non-ASCII chat/report meter search returned no matches.
+- Current next move after validation: commit one focused docs alignment; do not push unless explicitly approved in the current run. After alignment, return to the normal handoff choices: approved second episode record, explicit follow-up seed selection, or concrete downstream failure evidence.
 - Current remote-sync checkpoint on 2026-06-19: after `git fetch --prune origin`, local `main` at `ed35d9d` was behind `origin/main` at `3235175` by `0 2` with no divergence; `git pull --ff-only origin main` fast-forwarded the checkout to `3235175 docs: refresh remote handoff context`.
 - Current implementation baseline: `3235175` is on `origin/main` before this 2026-06-19 handoff refresh. It includes `bce6a31 feat: read back critical source notes`, tracked root `AGENTS.md`, and the 2026-06-18 context-sync docs.
 - This handoff refresh preserves the current restart context in tracked docs before pushing a small sync record to `origin/main`; no runtime DB/export/proof/screenshot, raw article body, OPML dump, token, private trace, `.ymmp`, YouTube publishing output, NotebookLM/YMM4 automation, or broad crawling output is part of the sync.

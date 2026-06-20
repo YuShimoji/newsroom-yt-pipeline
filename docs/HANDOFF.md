@@ -1,6 +1,6 @@
 # Handoff
 
-Last updated: 2026-06-19
+Last updated: 2026-06-20
 
 ## Restart Order
 
@@ -40,13 +40,21 @@ Root `AGENTS.md` is a thin pointer into the restart docs. Do not turn it into ro
 
 - Review input from the user is freeform. Do not ask for fixed phrases such as `accept`, `reject`, or `small_adjustment`; interpret natural feedback internally by target, intent, constraints, and confidence.
 - When review is needed, place a Review Card beside the artifact access details with the target, up to three checkpoints, freeform examples, and the agent's planned handling. If review is useful but not blocking, record Review Debt and keep moving.
-- Operation Cockpit closeouts should include Freeform Review Intake Result, Action Ledger, User-Side Work, Agent-Side Work, Goal Stack contribution, Decision Packet, and Continuation State when those sections are relevant to the checkpoint.
+- Operation Cockpit v1.11 closeouts should include a Routing Header, Current State, Completion Matrix, expected-vs-actual result, changed files or `none`, artifact identity/access, Review Card / Review Debt, Action Ledger, User-Side Work, Agent-Side Work, Goal Stack, Turn Calendar, Decision Packet, Metric Change Note when needed, and Continuation State.
+- Completion Matrix rows must expose `done`, `total`, `unknown`, `missing`, and an `ASCII_SAFE` meter. Use `#` and `-` only, such as `[#####-] 5/6` or `[########--] 14/18`; do not use Unicode block/shaded characters, emoji meters, full-width block meters, or decorative glyph meters in chat reports.
+- Supervisor Relay is slice-specific. Do not include a next-Agent prompt in normal reports unless the Handoff Gate is true and the report names purpose, effect, requirements, state, owner, and next move.
 - In long-run autonomy, continue through the next one to three scoped, reversible actions when no true stop condition is present. Do not convert missing optional review into a stop unless the wrong interpretation would materially change artifact direction.
 
 ## Current State
 
 - Branch: `main`
 - Remote: `origin/main`
+- v1.11 cockpit / stable-meter alignment on 2026-06-20:
+  - `git fetch --prune origin` showed `origin/main` advanced from `3235175` to `7460ee6`; `git pull --ff-only origin main` fast-forwarded this checkout to `7460ee6 docs: refresh 2026-06-19 sync handoff`.
+  - Verified `main`, `HEAD...origin/main = 0 0`, and a clean worktree before scoped docs edits.
+  - Active reference artifact is `newsroom-cockpit-governance` in `artifacts/ARTIFACTS.md`; source-of-truth guidance is in `docs/DEVELOPMENT_PRACTICES.md`, with continuation state in `docs/RUNTIME_STATE.md`.
+  - Scope is docs/report governance plus docs-view dependency reproducibility: Routing Header, Completion Matrix, `ASCII_SAFE` meters, Turn Calendar, Report Mode, Supervisor Relay, artifact identity/access, Handoff Gate behavior, and `mkdocs-material` in the `dev` extra.
+  - Validation for this alignment: `.venv\Scripts\python.exe -m pytest -q` -> 116 passed; `git diff --check` -> passed; `.venv\Scripts\python.exe -m mkdocs build --strict` -> passed; `scripts\operator\open_dashboard.ps1 -Port 8011 -NoBrowser` -> exited 0 and the temporary server was not left running; synthetic `packet critical-list --format json` smoke returned one critical-view row with no URL field; non-ASCII chat/report meter search returned no matches.
 - Cross-terminal context sync on 2026-06-19:
   - User explicitly requested preserving all current project context and reflecting local state to `origin/main` for immediate restart from another terminal.
   - `git fetch --prune origin` showed `origin/main` had advanced from `ed35d9d` to `3235175`; local `main` was behind by 2 commits with no divergence.

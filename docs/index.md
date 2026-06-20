@@ -32,6 +32,10 @@ Use the browser's page translation feature, such as Chrome, Edge, or a DeepL ext
 
 Feedback on this docs view may be written in ordinary freeform language. Fixed response labels are not required. Useful comments can point to a document that looks stale, an access route that fails, a section that needs a Review Card, or a place where the original Markdown should remain the source of truth.
 
+## Operation Cockpit Guidance
+
+For supervisor-facing report guidance, read `docs/DEVELOPMENT_PRACTICES.md` first and use `artifacts/ARTIFACTS.md` for reviewable artifact identity and access. The current continuation state remains in `docs/RUNTIME_STATE.md`; the short restart packet remains `docs/HANDOFF.md`.
+
 ## How The Tree Is Organized
 
 The navigation groups are practical reading buckets, not authority labels:
