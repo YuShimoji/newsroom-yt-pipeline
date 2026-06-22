@@ -1,6 +1,6 @@
 # Handoff
 
-Last updated: 2026-06-20
+Last updated: 2026-06-22
 
 ## Restart Order
 
@@ -49,6 +49,14 @@ Root `AGENTS.md` is a thin pointer into the restart docs. Do not turn it into ro
 
 - Branch: `main`
 - Remote: `origin/main`
+- Cross-terminal context sync on 2026-06-22:
+  - User requested preserving all current project context in tracked project files and reflecting local state to `origin/main` for immediate restart from another terminal.
+  - Pre-edit sync check: `git fetch --prune origin` completed, `HEAD...origin/main = 0 0`, and the worktree was clean at `912ce3b feat: validate NLMYTGen export fixture`.
+  - Latest pushed implementation baseline before this handoff refresh is the NLMYTGen fake export fixture contract/readback slice. The active reference artifact remains `newsroom-export-fixture-for-nlmytgen` in `artifacts/ARTIFACTS.md`.
+  - Local ignored runtime artifacts are present in this checkout under `data\` and `.mkdocs-site\`; they are evidence only and are not part of the push. Current local `export inspect --episode-dir data\exports\episode_756343df9853` read back PASS / `No issues found.`
+  - `series report --series copilot_watch` read back one active episode, Microsoft Blog as `vendor_official / microsoft_official / official`, NIST as `standards_body / standards_body / official`, and follow-up seeds still marked as seeds, not approved stories.
+  - Validation for this handoff refresh: fixture test passed with 5 tests; full `.venv\Scripts\python.exe -m pytest -q` passed with 121 tests; `git diff --check` passed; `.venv\Scripts\python.exe -m mkdocs build --strict` passed with the existing Material for MkDocs upstream warning only; conflict-marker scan returned no matches.
+  - Next terminal should `git pull --ff-only origin main`, read `AGENTS.md`, this file, `docs\RUNTIME_STATE.md`, `docs\DEVELOPMENT_PRACTICES.md`, and `artifacts\ARTIFACTS.md`, then rerun local validation before choosing one scoped lane.
 - v1.11 cockpit / stable-meter alignment on 2026-06-20:
   - `git fetch --prune origin` showed `origin/main` advanced from `3235175` to `7460ee6`; `git pull --ff-only origin main` fast-forwarded this checkout to `7460ee6 docs: refresh 2026-06-19 sync handoff`.
   - Verified `main`, `HEAD...origin/main = 0 0`, and a clean worktree before scoped docs edits.
